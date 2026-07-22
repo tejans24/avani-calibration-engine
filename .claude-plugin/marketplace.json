@@ -1,0 +1,13 @@
+{
+  "name": "avani",
+  "owner": {
+    "name": "Avani"
+  },
+  "plugins": [
+    {
+      "name": "avani-core",
+      "source": "./plugins/avani-core",
+      "description": "Tier 1 universal standards: security, git workflow, code style, testing discipline. Always enabled."
+    }
+  ]
+}

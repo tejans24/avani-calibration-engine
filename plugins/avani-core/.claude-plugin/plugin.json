@@ -1,0 +1,5 @@
+{
+  "name": "avani-core",
+  "version": "0.1.0",
+  "description": "Universal engineering standards applied to every Avani project: security scanning, git workflow, TypeScript code style, testing discipline."
+}
