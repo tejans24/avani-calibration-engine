@@ -1,0 +1,5 @@
+{
+  "name": "avani-python",
+  "version": "0.1.0",
+  "description": "Python conventions for Avani projects: uv, ruff, pytest, FastAPI service layout, Pydantic-at-the-boundary. Enabled for any app with runtime python (small backend APIs, ML workflows, data pipelines)."
+}

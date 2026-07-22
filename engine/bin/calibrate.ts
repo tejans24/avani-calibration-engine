@@ -7,8 +7,8 @@ const USAGE = `avani calibration engine (v0.3 scaffold — engine not implemente
 Usage: calibrate <subcommand>
 
   init       Start intake for a new project
-  calibrate  Intake -> dials + plugin selection
-  generate   Emit artifacts to ./.staging/
+  calibrate  Intake -> dials + plugin/blueprint selection
+  generate   Stamp blueprints + emit artifacts to ./.staging/
   retro      Compare engine decisions vs. overrides
 
 Exit codes: 0 success, 1 validation failure, 2 review rejected
@@ -24,7 +24,7 @@ export function run(argv: string[]): number {
     console.error(`Unknown subcommand: ${cmd}\n\n${USAGE}`);
     return 1;
   }
-  console.log(`'${cmd}' is not implemented yet — see SPEC.md §8 for the roadmap.`);
+  console.log(`'${cmd}' is not implemented yet — see SPEC.md §10 for the roadmap.`);
   return 0;
 }
 

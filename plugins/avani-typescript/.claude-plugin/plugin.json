@@ -1,0 +1,5 @@
+{
+  "name": "avani-typescript",
+  "version": "0.1.0",
+  "description": "TypeScript conventions for Avani projects: strict mode, naming, Zod-at-the-boundary, service-oriented structure. Enabled for any app with runtime ts-nextjs."
+}

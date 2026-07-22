@@ -7,7 +7,17 @@
     {
       "name": "avani-core",
       "source": "./plugins/avani-core",
-      "description": "Tier 1 universal standards: security, git workflow, code style, testing discipline. Always enabled."
+      "description": "Tier 1 universal standards (language-agnostic): security, git workflow, testing discipline. Always enabled."
+    },
+    {
+      "name": "avani-typescript",
+      "source": "./plugins/avani-typescript",
+      "description": "Tier 2 language plugin: TypeScript strict conventions, Zod-at-the-boundary, service-oriented structure."
+    },
+    {
+      "name": "avani-python",
+      "source": "./plugins/avani-python",
+      "description": "Tier 2 language plugin: uv, ruff, pytest, FastAPI service layout, Pydantic-at-the-boundary."
     }
   ]
 }

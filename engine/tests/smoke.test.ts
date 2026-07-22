@@ -22,17 +22,19 @@ describe('CLI stub', () => {
 });
 
 describe('marketplace manifests', () => {
-  test('marketplace.json is valid and lists avani-core', () => {
+  const PLUGINS = ['avani-core', 'avani-typescript', 'avani-python'];
+
+  test('marketplace.json is valid and lists every plugin', () => {
     const raw = readFileSync(join(ROOT, '.claude-plugin', 'marketplace.json'), 'utf8');
     const manifest = JSON.parse(raw) as { name: string; plugins: Array<{ name: string; source: string }> };
     expect(manifest.name).toBe('avani');
-    expect(manifest.plugins.map((p) => p.name)).toContain('avani-core');
+    expect(manifest.plugins.map((p) => p.name).sort()).toEqual([...PLUGINS].sort());
   });
 
-  test('avani-core plugin.json is valid', () => {
-    const raw = readFileSync(join(ROOT, 'plugins', 'avani-core', '.claude-plugin', 'plugin.json'), 'utf8');
+  test.each(PLUGINS)('%s plugin.json is valid', (plugin) => {
+    const raw = readFileSync(join(ROOT, 'plugins', plugin, '.claude-plugin', 'plugin.json'), 'utf8');
     const manifest = JSON.parse(raw) as { name: string; version: string };
-    expect(manifest.name).toBe('avani-core');
+    expect(manifest.name).toBe(plugin);
     expect(manifest.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 });
