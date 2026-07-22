@@ -1,6 +1,6 @@
 # Avani Calibration Engine — Technical Specification
 
-**Version:** 0.4.0
+**Version:** 0.5.0
 **Status:** DRAFT (approved direction; engine implementation not started)
 **Last Updated:** 22 Jul 2026
 
@@ -8,22 +8,23 @@
 
 ## 1. Outcome
 
-The engine takes an **application spec** (raw idea + intake Q&A) and produces a repo where any Claude Code session that opens it is already an expert — in universal engineering standards *and* in that app's specific domain constraints.
+The engine takes an **application spec** (raw idea + intake Q&A) and produces a repo where any Claude Code session that opens it is already an expert — in universal engineering standards *and* in that app's specific domain constraints — with enforcement that **escalates on its own as the app matures** (§3).
 
 It emits:
 
 | Artifact | Purpose |
 |---|---|
-| `.claude/settings.json` | Declares the Avani marketplace + **selected** plugins (`extraKnownMarketplaces`, `enabledPlugins`), permissions, sensitivity-scaled hooks |
-| `CLAUDE.md` | Thin project-specific layer: architecture, commands, gotchas (< 200 lines); per-app copies in monorepos |
-| **Blueprint files** | Stamped operational machinery: npm db/migration scripts, GitHub Actions (CI + deploy-with-migrations), workspace layout (§3) |
+| `.claude/settings.json` | Declares the Avani marketplace + **selected** plugins (`extraKnownMarketplaces`, `enabledPlugins`), permissions, stage- and sensitivity-scaled hooks |
+| `CLAUDE.md` | Thin project-specific layer: architecture, commands, gotchas, the stage convention (< 200 lines); per-app copies in monorepos |
+| **Blueprint files** | Stamped operational machinery: npm db/migration scripts, GitHub Actions (thin callers of centralized reusable workflows), workspace layout (§4) |
 | `tests/invariants/*.test.ts` | Executable guarantees derived from calibration (append-only, uniqueness, fuzzing) |
 | `.mcp.json` | MCP servers matching the selected stack |
 
-**Core principle: knowledge is selected, not generated.** It lives in two centrally versioned forms, both selected by the same calibration dials:
+**Core principle: knowledge is selected, not generated.** It lives in centrally versioned forms, all selected by the same calibration dials:
 
 - **Plugins** — how Claude *behaves* (skills, hooks, procedures)
 - **Blueprints** — what gets *stamped into the repo* (scripts, workflows, config files)
+- **Reusable workflows** (`avani-actions`) — centralized CI/CD behavior the stamped workflows call into (§5)
 
 The engine's job is calibration → selection, plus generating the small project-specific residue.
 
@@ -31,40 +32,42 @@ The engine's job is calibration → selection, plus generating the small project
 
 - **Central versioning solves drift.** Improve a plugin once; the marketplace catalog pins releases (commit SHA), so existing projects stay reproducible while new projects get the latest.
 - **Namespacing.** Plugin skills are invoked as `avani-core:security-scan` — no collisions.
-- **Licensing path is built in.** A client licensing the system = access to the marketplace repo. Distribution is git.
+- **Handoff/licensing falls out for free.** Projects *reference* the marketplace, never vendoring skill source. Access to the marketplace is the license (§6).
 
 ---
 
 ## 2. Two-Tier Knowledge Model
 
-### Dials that drive selection
+### Dials (set at calibration)
 
 | Dial | Values | Notes |
 |---|---|---|
 | `correctness_bar` | basic · standard · strict · append-only | |
-| `sensitivity` | low · medium · high · protected | scales hook severity (§6) |
+| `sensitivity` | low · medium · high · protected | how careful to be with the **data** — intrinsic to the domain, roughly fixed |
 | `infra` | vercel · aws · self-hosted | |
-| `runtime` | **ts-nextjs · python** | **per-app.** Heuristic: `ts-nextjs` is the default for anything product-shaped with a UI — easiest build/deploy path wins unless disqualified. `python` when the app is a small-scale backend API, ML workflow, or data pipeline. |
-| `topology` | **single-app · monorepo** | monorepo when the project has multiple apps (§4) |
+| `runtime` | ts-nextjs · python | **per-app.** `ts-nextjs` is the default for product/UI apps (easiest build/deploy); `python` for small backend APIs, ML workflows, data pipelines |
+| `topology` | single-app · monorepo | monorepo when the project spans multiple apps (§4) |
+
+> **`stage` is a separate, mutable dimension — not a calibration dial.** It changes over the project's life and is resolved on the ground, not baked in. See §3.
 
 ### Tier 1 — Universal (always enabled)
 
-`avani-core`: **language-agnostic** standards — security scanning, git workflow, testing discipline, secrets-blocking hooks. Enabled in **every** generated project unconditionally — and installable in any existing project, engine or not. Tier 1 ships value before the engine exists.
+`avani-core`: **language-agnostic** standards — security scanning, git workflow, testing discipline, secrets-blocking hooks, **stage detection** (§3). Enabled in every generated project, and installable in any existing project.
 
 ### Tier 2 — Conditional (selected by application spec context)
 
-**Language plugins** (a mixed project enables both; each skill's `description` scopes it to its own language, so Claude applies the right conventions per file):
+**Language plugins** (a mixed project enables both; each skill's `description` scopes it to its own language):
 
 | Plugin | Contents | Selected when |
 |---|---|---|
 | `avani-typescript` | TS-strict conventions, naming, Zod-at-the-boundary, service-oriented structure | any app with `runtime = ts-nextjs` |
-| `avani-python` | uv env/deps, ruff format+lint, pytest, FastAPI service layout, Pydantic-at-the-boundary (mirrors the Zod pattern) | any app with `runtime = python` |
+| `avani-python` | uv, ruff, pytest, FastAPI service layout, Pydantic-at-the-boundary | any app with `runtime = python` |
 
 **Stack & domain plugins:**
 
 | Plugin | Contents | Selected when |
 |---|---|---|
-| `avani-nextjs` | App Router conventions, RHF + Zod forms, **Prisma + db-migrations procedure** (Next.js ⇒ Prisma, always) | `runtime = ts-nextjs` |
+| `avani-nextjs` | App Router, RHF + Zod forms, **Prisma + db-migrations procedure** | `runtime = ts-nextjs` |
 | `avani-postgis` | PostGIS setup, geo queries | geo data in profile |
 | `avani-clerk` | Roles, middleware, invite flows | `auth_model = clerk-*` |
 | `avani-stripe` | Payment invariants, webhook handlers | money transactions |
@@ -73,177 +76,228 @@ The engine's job is calibration → selection, plus generating the small project
 
 ---
 
-## 3. Blueprints — Stamped Operational Machinery
+## 3. Stage — Escalating Enforcement on the Ground
 
-Plugins carry skills/hooks/MCP servers, but they **cannot add files to a project** — no `package.json` scripts, no `.github/workflows/`. Yet every project shares the same operational machinery. That machinery is the third knowledge type:
+`sensitivity` = how careful to be with the *data* (fixed by domain). **`stage`** = how much ceremony the *process* demands *right now* (grows as the app matures: `dev → staging → production`). Orthogonal axes: a high-sensitivity app in early dev shouldn't carry prod-migration ceremony; a plain site in prod still needs deploy discipline.
 
-**A blueprint is a deterministic set of file templates in `templates/<blueprint>/`, stamped into the project by `generate`, selected by the same dials as plugins.**
+Because stage is **mutable**, it is never baked into generated files. It is resolved from the ground, so the right rules load only when the relevant action happens — Claude is not flooded with prod procedures while writing a component on a feature branch.
+
+### The `AVANI_STAGE` convention
+
+A minimal, recognizable contract every project encodes identically, with a fallback chain:
+
+1. **`AVANI_STAGE` env var** — explicit signal (`dev` | `staging` | `production`), defaults to `dev`. CI sets it per environment.
+2. **Branch mapping** (fallback) — `feature/*` → dev, `main` → staging, tagged release / prod deploy job → production. An `avani-core` hook resolves it via `git rev-parse --abbrev-ref HEAD`.
+3. **Recorded in `CLAUDE.md`** and taught by an `avani-core` skill, so Claude reads the convention instead of guessing.
+
+### Escalating enforcement
+
+Stage layers on top of sensitivity to decide which hooks are active and which procedures apply:
+
+| Stage | Enforcement |
+|---|---|
+| dev | minimal — secrets block, typecheck |
+| staging | + lint/test gates, migration guards |
+| production | + append-only enforcement, prod-migration ceremony, deploy verifications, audit logging |
+
+**Delivery is "on the ground" by construction:** hooks fire on the triggering action (a deploy command → the prod checklist is injected then), and skills surface by description (the prod-migration procedure loads only when the task matches). The strongest signal is real: prod ceremony fires because you are on a prod deploy path, not because a stale field says so.
+
+### Stage-gated blueprint stamping
+
+Promotion is not a regeneration. `calibrate` at dev stamps only CI; promoting stamps the next tier (staging, then prod deploy workflows). The project's accumulated state survives — this stays compatible with one-shot generation.
+
+---
+
+## 4. Blueprints & Multi-App Topology
+
+Plugins cannot add files to a project (no `package.json` scripts, no `.github/workflows/`). That machinery is the blueprint layer: **deterministic file templates in `templates/<blueprint>/`, stamped by `generate`, selected by the same dials.**
 
 | Blueprint | Selected when | Stamps |
 |---|---|---|
-| `ts-nextjs-prisma` | `runtime = ts-nextjs` | npm scripts: `db:migrate:dev`, `db:migrate:deploy`, `db:reset`, `db:seed`, `db:studio`; `.github/workflows/ci.yml` (typecheck, lint, test); `deploy.yml` with **`prisma migrate deploy` as a release step before the app ships** |
-| `python-fastapi` | `runtime = python` | `pyproject.toml` (uv), ruff + pytest config, service skeleton, CI workflow |
-| `monorepo-root` | `topology = monorepo` | npm-workspaces root `package.json`, `apps/`/`packages/` layout, `packages/shared` stub, root CLAUDE.md skeleton |
+| `ts-nextjs-prisma` | `runtime = ts-nextjs` | npm scripts (`db:migrate:dev`, `db:migrate:deploy`, `db:reset`, `db:seed`, `db:studio`); thin `ci.yml` / `deploy.yml` that **call reusable workflows** (§5) with `prisma migrate deploy` as the prod release step |
+| `python-fastapi` | `runtime = python` | `pyproject.toml` (uv), ruff + pytest config, service skeleton, CI caller |
+| `monorepo-root` | `topology = monorepo` | npm-workspaces root, `apps/` + `packages/shared` layout, root CLAUDE.md skeleton |
 
-**Blueprint/skill pairing.** Every blueprint with a procedure has a paired skill in the corresponding plugin. Example: `ts-nextjs-prisma` stamps the migration *commands*; `avani-nextjs:db-migrations` carries the *process* — never `prisma db push` against prod, migrations are append-only once merged, `db:reset` is dev-only, what to do when a migration fails mid-deploy. The blueprint gives every project identical commands; the skill makes Claude follow identical procedure when using them.
+**Blueprint/skill pairing.** Every blueprint with a procedure has a paired plugin skill (e.g. `ts-nextjs-prisma` ↔ `avani-nextjs:db-migrations`): the blueprint gives every project identical commands; the skill makes Claude follow identical procedure — never `db push` in prod, migrations append-only, reset is dev-only.
 
----
+### Multi-app topology
 
-## 4. Multi-App Topology
-
-When a project spans multiple apps, the strategy is **one monorepo per client project** (not per-app repos, not one giant repo for everything):
+One monorepo **per client project**:
 
 ```
 client-project/
-├── apps/
-│   ├── web/            Next.js (runtime: ts-nextjs)
-│   └── ml-api/         FastAPI (runtime: python, uv-managed)
-├── packages/
-│   └── shared/         shared Zod schemas / generated API client
-├── package.json        npm workspaces root (Turborepo only if build times demand it later)
-├── CLAUDE.md           root: topology, cross-app contracts, commands
-└── apps/*/CLAUDE.md    per-app residue
+├── apps/web/            Next.js (runtime: ts-nextjs)
+├── apps/ml-api/         FastAPI (runtime: python, uv)
+├── packages/shared/     shared Zod schemas / generated API client
+├── package.json         npm workspaces root
+├── CLAUDE.md            root: topology, cross-app contracts, stage convention
+└── apps/*/CLAUDE.md     per-app residue
 ```
 
-- **Tooling:** plain npm workspaces for the TS side; each Python app is uv-managed with its own `pyproject.toml`. No extra orchestration until proven necessary.
-- **Cross-language contract:** FastAPI's generated OpenAPI spec → generated TS client in `packages/shared`, so types stay honest across the language boundary.
-- **Engine handling is composition, not a new mode:** calibrate once per project; each app gets its own `runtime` dial, plugin selection is the union across apps (enabled at repo scope), blueprints stamp per-app, per-app CLAUDE.md carries app-specific residue.
+npm workspaces on the TS side, uv per Python app (Turborepo only if build times later demand it). Cross-language contract: FastAPI's OpenAPI spec → generated TS client in `packages/shared`. The engine handles this by composition: calibrate once per project, a `runtime` dial per app, plugin selection is the union, blueprints stamp per-app.
 
 ---
 
-## 5. Repo Structure (single repo = engine + marketplace)
+## 5. Propagation Model
+
+The recurring question — *"if I improve something here, do existing repos get it?"* — is answered by which layer the change lives in. That dependency is a design lever:
+
+| Layer | Propagation | Put here |
+|---|---|---|
+| **Plugin** (skills, hooks) | **Updatable centrally** — a live marketplace reference; bump the pin and repos pull the new behavior | Stage detection, procedures, escalating checks |
+| **Reusable workflow** (`avani-actions`) | **Updatable centrally** — repos pin `@v1`; fix once, all callers get it | Heavy CI/CD logic (deploy, migrate-on-release, verifications) |
+| **Blueprint** (stamped files) | **Frozen per repo** — the copy is the repo's; template changes help only *new* projects | Inert scaffold (file skeletons that carry no behavior) |
+
+> **Rule of thumb: volatile behavior → plugins & reusable workflows (propagates). Inert scaffold → blueprints (frozen, which is correct — a repo's skeleton shouldn't mutate under it).** For the rare need to re-stamp scaffold across repos, `calibrate sync` diffs the current template against the repo and asks for approval.
+
+Consequence: almost nothing that *matters* is frozen. Stage logic, procedures, and the deploy pipeline all live in updatable layers; only the skeleton — the part you want stable — is frozen.
+
+---
+
+## 6. Handoff & Licensing
+
+Projects **reference** the marketplace (`.claude/settings.json`), never vendoring skill source. So the deliverable's git tree carries a pointer, not your IP.
+
+- **Blueprints and the app are the client's** — real files, their deliverable, fungible scaffold.
+- **Plugins are a pointer.** With marketplace access they resolve; without it they're inert but the app still builds and runs (blueprints are real files).
+
+**Access to the marketplace is the license.** No separate licensing system to build.
+
+**Default handoff mode: reference stays, gated by access.** Generated projects keep the plugin references live — a client with access gets full AI-assist; without access, references are inert. `calibrate handoff --strip` produces a clean code-only variant when a pure deliverable is wanted.
+
+Access matrix:
+
+| Recipient | Gets |
+|---|---|
+| You + operators | full marketplace |
+| Handoff-only client | clean code (`--strip`); no references |
+| Licensing client | public + client-safe tiers; moat tier only if paid for |
+
+**Honest boundary:** "reference not copy" prevents *incidental* leakage (handing over a repo doesn't leak the moat, and a client without access gets nothing). It does not hide content from someone you've *granted* access to — once installed, a plugin's SKILL.md is readable on their machine. The boundary is who gets access; keep crown-jewel domain logic in a sparingly granted tier.
+
+> **TODO (deferred): marketplace tiering.** How to physically separate public / client-safe / moat plugins (separate repos vs. one access-controlled marketplace vs. two tiers) is not yet decided. See §13.
+
+---
+
+## 7. Repo Structure (single repo = engine + marketplace)
 
 ```
 avani-calibration-engine/
-├── .claude-plugin/
-│   └── marketplace.json          # this repo IS the marketplace
+├── .claude-plugin/marketplace.json   # this repo IS the marketplace
 ├── plugins/
-│   ├── avani-core/               # Tier 1 (language-agnostic)
-│   ├── avani-typescript/         # Tier 2 language
-│   ├── avani-python/             # Tier 2 language
-│   ├── avani-nextjs/             # Tier 2 stack (Phase 1)
-│   ├── avani-postgis/  avani-clerk/  avani-stripe/  avani-offline/
-│   └── avani-field-data/         # Tier 2 domain (moat)
-├── templates/                    # blueprints (§3)
-│   ├── ts-nextjs-prisma/
-│   ├── python-fastapi/
-│   └── monorepo-root/
+│   ├── avani-core/                    # Tier 1 (language-agnostic; stage detection)
+│   ├── avani-typescript/ avani-python/# Tier 2 language
+│   ├── avani-nextjs/ avani-postgis/ avani-clerk/ avani-stripe/ avani-offline/
+│   └── avani-field-data/              # Tier 2 domain (moat)
+├── templates/                         # blueprints (§4)
 ├── engine/
-│   ├── bin/calibrate.ts          # CLI entry
-│   ├── src/
-│   │   ├── intake/               # spec/Q&A → intake_profile.json
-│   │   ├── profiles/             # per-profile calibration modules
-│   │   ├── select/               # dials → plugins + blueprints
-│   │   └── generate/             # stamp blueprints; emit CLAUDE.md, settings, invariant tests, .mcp.json
+│   ├── bin/calibrate.ts
+│   ├── src/{intake,profiles,select,generate}/
 │   └── tests/
-├── schemas/                      # JSON Schemas: the layer contracts
-├── examples/                     # golden fixtures harvested from real shipped apps
-├── package.json                  # single root package (no monorepo)
-└── SPEC.md
+├── schemas/                           # JSON Schema contracts
+├── examples/                          # golden fixtures from shipped apps
+└── package.json                       # single root package
 ```
 
-Split the marketplace into its own repo only when licensing/access-control demands it.
+`avani-actions` (reusable CI/CD workflows, §5) and any tiered marketplaces (§6 TODO) are separate repos, added when needed.
 
 ---
 
-## 6. Pipeline
+## 8. Pipeline
 
 ```
 intake  →  calibrate  →  select  →  generate  →  review
 ```
 
-1. **Intake** — parse `intake.md` (Q&A) → `intake_profile.json`, validated against `schemas/intake-profile.schema.json`. Question sets are static templates per profile type. (AI-generated questions come later, behind a `Provider` interface — the engine is deterministic-first and runs offline.)
-2. **Calibrate** — a per-profile TypeScript module (`profiles/field-app.ts`) maps intake → dials + invariants in one typed function. With ~3 profile types, typed modules beat a JSON rules DSL: type-checked, debuggable, no expression grammar to specify. Output validated against `schemas/calibrated-config.schema.json`.
-3. **Select** — dials → `enabledPlugins` list **and blueprint list**. Tier 1 always in; Tier 2 per §2; blueprints per §3.
-4. **Generate** — stamp selected blueprints and emit the remaining artifacts (§1) into `./.staging/` **inside the project directory** (same filesystem, so `rename` promotion is atomic). Hook severity scales with the sensitivity dial:
-
-   | Sensitivity | Hooks enabled |
-   |---|---|
-   | low | secrets block only |
-   | medium | + lint/typecheck on Stop |
-   | high | + append-only enforcement, migration guards |
-   | protected | + coordinate-fuzzing checks, audit logging |
-
-5. **Review** — human gate before promoting staging → project. `generate` also emits a **review checklist** (e.g. "verify sensitivity=protected matches the client's data description") so an operator — not only the author — can run the gate.
+1. **Intake** — parse `intake.md` → `intake_profile.json`, validated against `schemas/intake-profile.schema.json`. Static question templates per profile (AI generation later, behind a `Provider` interface — deterministic-first, runs offline).
+2. **Calibrate** — per-profile TypeScript module maps intake → dials + invariants in one typed function. Typed modules beat a JSON rules DSL at this scale. Output validated against `schemas/calibrated-config.schema.json`.
+3. **Select** — dials → `enabledPlugins` + blueprint list. Tier 1 always in.
+4. **Generate** — stamp selected blueprints, emit remaining artifacts into `./.staging/` **inside the project dir** (same filesystem → atomic `rename` promotion). Hooks scale by sensitivity × stage (§3).
+5. **Review** — human gate before promotion; `generate` emits a review checklist so an operator can run it.
 
 ### Verified platform syntax (do not regress)
 
-- Permissions: `"permissions": { "deny": ["Read(./.env)", "Read(./.env.*)", "Read(./secrets/**)"] }` — *not* a top-level `deny` key.
-- MCP config: `.mcp.json` at project root with `"mcpServers"` key — *not* `.mcp/servers.json`.
-- SKILL.md frontmatter: `name`, `description`, `when_to_use`, `allowed-tools`, … — there is **no** `trigger` field; trigger phrases go in `description`/`when_to_use`.
-- Bash permission scoping: `Bash(npm run *)` (space + wildcard), not `Bash(npm)`.
-- Plugin manifest: `.claude-plugin/plugin.json` (`name` required; `version`, `description`, `author` optional). Marketplace: `.claude-plugin/marketplace.json`; install flow `/plugin marketplace add owner/repo` → `/plugin install name@marketplace`.
-- Project settings keys `extraKnownMarketplaces` + `enabledPlugins` prompt anyone opening the repo to install the declared plugins.
-- Headless cost reporting: `total_cost_usd` appears only in the final `result` message of `--output-format stream-json` (cumulative). There is no incremental `cost_update` event — any future budget enforcement must be computed from per-message token usage or `--max-turns`.
+- Permissions: `"permissions": { "deny": ["Read(./.env)", "Read(./.env.*)"] }` — not a top-level `deny` key.
+- MCP: `.mcp.json` at project root with `"mcpServers"` — not `.mcp/servers.json`.
+- SKILL.md frontmatter: `name`, `description`, `when_to_use`, `allowed-tools`, … — **no** `trigger` field.
+- Bash scoping: `Bash(npm run *)` (space + wildcard), not `Bash(npm)`.
+- Plugin manifest `.claude-plugin/plugin.json`; marketplace `.claude-plugin/marketplace.json`; install `/plugin marketplace add owner/repo` → `/plugin install name@marketplace`.
+- Project settings `extraKnownMarketplaces` + `enabledPlugins` prompt install on trust.
+- Headless cost: `total_cost_usd` only in the final `result` message (cumulative); no incremental `cost_update` event.
 
 ---
 
-## 7. Learning Loop
+## 9. Learning Loop
 
-What makes calibration compound (and the moat defensible):
-
-- Every run logs engine decisions vs. final human choices to `decisions.jsonl`:
-  `{"dial": "correctness_bar", "engine_value": "standard", "final_value": "strict", "reason": "client audit requirement"}`
-- `calibrate retro <project>` diffs them, reports divergence, and proposes edits to profile modules / the selection map.
-- **Override rate per profile** is the calibration-accuracy metric; its trend across projects is the compounding metric.
+- Every run logs engine vs. final human choices to `decisions.jsonl`: `{"dial":"correctness_bar","engine_value":"standard","final_value":"strict","reason":"client audit"}`.
+- `calibrate retro <project>` diffs them and proposes edits to profile modules / selection map.
+- **Override rate per profile** is the accuracy metric; its trend across projects is the compounding metric.
 
 ---
 
-## 8. Contracts & Testing
+## 10. Contracts & Testing
 
-- **Contracts:** `schemas/intake-profile.schema.json` and `schemas/calibrated-config.schema.json` define every layer boundary. All pipeline I/O is schema-validated.
-- **Golden fixtures:** `examples/<app>/` pairs a real input (`input.md`, `intake.md`) with expected outputs (`calibrated_config.json`, generated artifacts). CI snapshot-diffs the full pipeline. Fixtures are harvested from shipped apps — `examples/` is the primary test suite, not demo material.
+- **Contracts:** `schemas/intake-profile.schema.json`, `schemas/calibrated-config.schema.json` define every layer boundary; all pipeline I/O is validated.
+- **Golden fixtures:** `examples/<app>/` pairs a real input with expected outputs; CI snapshot-diffs the full pipeline. Harvested from shipped apps — the primary test suite.
 
 ---
 
-## 9. CLI
+## 11. CLI
 
 ```
-calibrate init       # start intake for a new project
+calibrate init       # start intake
 calibrate calibrate  # intake → dials + plugin/blueprint selection
 calibrate generate   # stamp blueprints + emit artifacts to ./.staging/
+calibrate stage      # show / promote project stage (dev → staging → production)
+calibrate sync       # re-stamp blueprints from current templates (diff + approve)
+calibrate handoff    # produce a deliverable variant (--strip for code-only)
 calibrate retro      # compare engine decisions vs. overrides
 ```
 
 | Exit code | Meaning |
 |---|---|
 | 0 | success |
-| 1 | validation failure (schema, syntax) |
+| 1 | validation failure |
 | 2 | review rejected / staging not promoted |
 
-(Codes for API/budget errors reserved for v2.)
-
-Tooling: TypeScript strict + `tsx` (no build step in dev) + `vitest`. Single root `package.json`, npm.
+Tooling: TypeScript strict + `tsx` + `vitest`. Single root `package.json`, npm.
 
 ---
 
-## 10. Roadmap
+## 12. Roadmap
 
-| Phase | Deliverable | Value shipped | Done when |
-|---|---|---|---|
-| **0 — Harvest** | Mine existing shipped apps → author `avani-core` + language plugins + `marketplace.json` | Tier 1 usable in every current project, no engine needed | avani-core installed and useful in ≥2 existing apps |
-| **1 — Tier 2 + blueprints** | Stack/domain plugins; `ts-nextjs-prisma` and `python-fastapi` blueprints; 2 golden fixtures | Knowledge + ops machinery packaged; selection still manual | Plugins enabled and blueprints stamped by hand in a real project |
-| **2 — Engine** | Schemas, intake, profile modules, selection map, generators, golden tests | < 5-min automated setup | Engine reproduces a shipped app's config with ≤ a handful of manual edits |
-| **3 — Learning loop** | `decisions.jsonl`, `retro` | Calibration compounds | First retro produces a real profile update |
-| **v2 (deferred)** | Headless session exec, budget enforcement, subagent orchestration, operator/licensing packaging | — | — |
-
-Phasing logic: each phase is independently valuable, and the engine arrives *after* the plugins and blueprints it selects among exist and have been used manually — selection rules encode real usage, not guesses.
+| Phase | Deliverable | Done when |
+|---|---|---|
+| **0 — Harvest** | Mine shipped apps → `avani-core` + language plugins + `marketplace.json` | avani-core useful in ≥2 existing apps |
+| **1 — Tier 2 + blueprints** | Stack/domain plugins; `ts-nextjs-prisma` + `python-fastapi` blueprints; `avani-actions` reusable workflows; 2 golden fixtures | Plugins + blueprints used by hand in a real project |
+| **2 — Engine** | Schemas, intake, profile modules, selection map, generators, golden tests | Engine reproduces a shipped app's config with ≤ a handful of edits |
+| **3 — Stage + CI/CD** | Stage convention + escalating hooks; multi-env deploy pipeline via reusable workflows | Promoting a project escalates enforcement without regeneration |
+| **4 — Learning loop** | `decisions.jsonl`, `retro` | First retro produces a real profile update |
+| **v2 (deferred)** | Headless exec, budget enforcement, subagents, operator/licensing packaging | — |
 
 ---
 
-## 11. Risks & Success Metrics
+## 13. Open Questions / TODO
+
+- **Marketplace tiering (deferred, §6):** separate repos (public / client-safe / moat) vs. one access-controlled marketplace vs. two tiers. Decision needed before the first client licensing handoff.
+- **`avani-actions` versioning:** moving `@v1` tag vs. pinned SHAs for reusable workflows — trade reproducibility against fix-propagation speed.
+- **Stage promotion authority:** who/what may flip a project to `production` (human-only gate vs. CI-driven), and how the audit trail records it.
+
+---
+
+## 14. Risks & Success Metrics
 
 | Risk | Mitigation |
 |---|---|
-| Claude Code plugin/skill APIs drift | Verified-syntax section (§6) tracked against docs; all AI invocations behind `Provider` interface |
-| Knowledge harvested is too app-specific to generalize | Phase 1 exit gate requires manual reuse in a *different* real project first |
-| Blueprint templates drift from what shipped projects actually use | Blueprints originate from harvested apps; golden fixtures diff stamped output in CI |
-| Operator can't run the review gate | `generate` emits an explicit review checklist |
-| Competitor copies patterns | Moat = calibration data (decisions.jsonl) + domain plugins, which compound; machinery is fungible |
+| Claude Code plugin/skill APIs drift | Verified-syntax section (§8) tracked against docs; AI invocations behind `Provider` |
+| Harvested knowledge too app-specific | Phase 1 gate requires reuse in a *different* real project first |
+| Blueprint templates drift from shipped reality | Blueprints originate from harvested apps; golden fixtures diff stamped output in CI |
+| Stamped CI can't be fixed across repos | Thin blueprints call versioned reusable workflows (§5) |
+| Competitor copies patterns | Moat = calibration data + domain plugins, which compound; machinery is fungible |
 
 | Metric | Target |
 |---|---|
-| Regeneration test: engine output vs. handwritten config of a shipped app | ≤ a handful of manual edits |
+| Regeneration test vs. handwritten config of a shipped app | ≤ a handful of edits |
 | End-to-end setup time | < 5 minutes |
 | Override rate across consecutive projects | declining |
 

@@ -11,7 +11,7 @@ describe('CLI stub', () => {
   });
 
   test('known subcommands exit 0', () => {
-    for (const cmd of ['init', 'calibrate', 'generate', 'retro']) {
+    for (const cmd of ['init', 'calibrate', 'generate', 'stage', 'sync', 'handoff', 'retro']) {
       expect(run([cmd])).toBe(0);
     }
   });

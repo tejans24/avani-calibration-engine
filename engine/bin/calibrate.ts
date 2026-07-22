@@ -1,14 +1,17 @@
 #!/usr/bin/env tsx
-const SUBCOMMANDS = ['init', 'calibrate', 'generate', 'retro'] as const;
+const SUBCOMMANDS = ['init', 'calibrate', 'generate', 'stage', 'sync', 'handoff', 'retro'] as const;
 type Subcommand = (typeof SUBCOMMANDS)[number];
 
-const USAGE = `avani calibration engine (v0.3 scaffold — engine not implemented yet)
+const USAGE = `avani calibration engine (v0.5 scaffold — engine not implemented yet)
 
 Usage: calibrate <subcommand>
 
   init       Start intake for a new project
   calibrate  Intake -> dials + plugin/blueprint selection
   generate   Stamp blueprints + emit artifacts to ./.staging/
+  stage      Show / promote project stage (dev -> staging -> production)
+  sync       Re-stamp blueprints from current templates (diff + approve)
+  handoff    Produce a deliverable variant (--strip for code-only)
   retro      Compare engine decisions vs. overrides
 
 Exit codes: 0 success, 1 validation failure, 2 review rejected
@@ -24,7 +27,7 @@ export function run(argv: string[]): number {
     console.error(`Unknown subcommand: ${cmd}\n\n${USAGE}`);
     return 1;
   }
-  console.log(`'${cmd}' is not implemented yet — see SPEC.md §10 for the roadmap.`);
+  console.log(`'${cmd}' is not implemented yet — see SPEC.md §12 for the roadmap.`);
   return 0;
 }
 
