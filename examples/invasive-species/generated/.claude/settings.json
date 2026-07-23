@@ -1,0 +1,40 @@
+{
+  "extraKnownMarketplaces": {
+    "avani": {
+      "source": {
+        "source": "github",
+        "repo": "tejans24/avani-calibration-engine"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "avani-core@avani": true,
+    "avani-typescript@avani": true,
+    "avani-nextjs@avani": true,
+    "avani-postgis@avani": true,
+    "avani-clerk@avani": true,
+    "avani-offline@avani": true,
+    "avani-field-data@avani": true
+  },
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm run typecheck && npm run lint"
+          }
+        ]
+      }
+    ]
+  }
+}

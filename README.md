@@ -75,6 +75,26 @@ The `examples/invasive-species/` fixtures are golden: `intake-profile.json` in �
 `selection-context.json` and `calibrated-config.json` out, pinned by tests, so the
 whole pipeline is snapshot-verified.
 
+## Generate layer (config → project files)
+
+`engine/src/generate/` turns a calibrated-config + selection into the emitted
+project artifacts:
+
+- `.claude/settings.json` — declares the Avani marketplace + selected plugins
+  (`enabledPlugins` as `name@avani`), sensitivity-scaled `permissions.deny`, a Stop hook
+- `CLAUDE.md` — the thin project layer: dials, stage convention, db commands, enforced invariants, gotchas
+- `.mcp.json` — MCP servers matching the stack (postgres for geo, playwright for Next.js)
+- `tests/invariants/*.test.ts` — a `test.todo` stub per selected invariant
+- `.avani/manifest.json` — engine/schema/selection versions + selection, for reproducibility
+
+```bash
+npm run calibrate -- generate examples/invasive-species/intake-profile.json --out ./out
+```
+
+`examples/invasive-species/generated/` is the committed golden output, diff-checked
+against the generator in tests. (Settings shapes verified against the Claude Code docs;
+blueprint file stamping is Phase-1 work — selected blueprints are recorded in the manifest.)
+
 ## Roadmap
 
 Phase 0 (harvest `avani-core` + language plugins from shipped apps) → Phase 1 (Tier 2 stack/domain plugins + blueprints) → Phase 2 (engine) → Phase 3 (learning loop). See SPEC.md §10.

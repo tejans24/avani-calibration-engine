@@ -1,0 +1,25 @@
+{
+  "engine_version": "0.5.0",
+  "schema_version": "1.0.0",
+  "selection_version": "1.1.0",
+  "profile": "field-app",
+  "dials": {
+    "correctness_bar": "append-only",
+    "sensitivity": "protected",
+    "infra": "vercel",
+    "runtime": "ts-nextjs",
+    "topology": "single-app"
+  },
+  "plugins": [
+    "avani-core",
+    "avani-typescript",
+    "avani-nextjs",
+    "avani-postgis",
+    "avani-clerk",
+    "avani-offline",
+    "avani-field-data"
+  ],
+  "blueprints": [
+    "ts-nextjs-prisma"
+  ]
+}

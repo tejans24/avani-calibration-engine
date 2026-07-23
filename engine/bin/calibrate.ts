@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { parseIntakeProfile } from '../src/schema/intake-profile.js';
 import { runPipeline } from '../src/pipeline.js';
+import { generateProject, writeProject } from '../src/generate/generate.js';
 
 const SUBCOMMANDS = ['init', 'calibrate', 'generate', 'stage', 'sync', 'handoff', 'retro'] as const;
 type Subcommand = (typeof SUBCOMMANDS)[number];
@@ -12,7 +13,7 @@ Usage: calibrate <subcommand>
 
   init                       Start intake for a new project
   calibrate <intake.json>    Run intake -> dials + selection -> calibrated-config
-  generate                   Stamp blueprints + emit artifacts to ./.staging/
+  generate <intake.json>     Emit project artifacts (default: ./.staging), --out <dir>
   stage                      Show / promote project stage (dev -> staging -> production)
   sync                       Re-stamp blueprints from current templates (diff + approve)
   handoff                    Produce a deliverable variant (--strip for code-only)
@@ -67,6 +68,35 @@ function runCalibrate(intakePath: string | undefined, asJson: boolean): number {
   return 0;
 }
 
+function argValue(argv: string[], flag: string): string | undefined {
+  const i = argv.indexOf(flag);
+  return i >= 0 ? argv[i + 1] : undefined;
+}
+
+function runGenerate(argv: string[]): number {
+  const intakePath = argv[1] && !argv[1].startsWith('--') ? argv[1] : undefined;
+  if (!intakePath) {
+    console.error('usage: calibrate generate <intake-profile.json> [--out <dir>]');
+    return 1;
+  }
+  const outDir = argValue(argv, '--out') ?? '.staging';
+  let intake;
+  try {
+    intake = parseIntakeProfile(JSON.parse(readFileSync(intakePath, 'utf8')));
+  } catch (err) {
+    console.error(`Invalid intake profile: ${err instanceof Error ? err.message : String(err)}`);
+    return 1;
+  }
+
+  const { config, selection } = runPipeline(intake);
+  const files = generateProject(config, selection);
+  const written = writeProject(files, outDir);
+  console.log(`\nGenerated ${written.length} files into ${outDir}/:`);
+  for (const path of written) console.log(`  ${path}`);
+  console.log('');
+  return 0;
+}
+
 export function run(argv: string[]): number {
   const cmd = argv[0];
   if (cmd === undefined || cmd === '--help' || cmd === '-h') {
@@ -78,6 +108,7 @@ export function run(argv: string[]): number {
     return 1;
   }
   if (cmd === 'calibrate') return runCalibrate(argv[1], argv.includes('--json'));
+  if (cmd === 'generate') return runGenerate(argv);
   console.log(`'${cmd}' is not implemented yet — see SPEC.md §12 for the roadmap.`);
   return 0;
 }

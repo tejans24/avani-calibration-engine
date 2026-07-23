@@ -11,7 +11,7 @@ describe('CLI stub', () => {
   });
 
   test('stubbed subcommands exit 0', () => {
-    for (const cmd of ['init', 'generate', 'stage', 'sync', 'handoff', 'retro']) {
+    for (const cmd of ['init', 'stage', 'sync', 'handoff', 'retro']) {
       expect(run([cmd])).toBe(0);
     }
   });
@@ -20,8 +20,9 @@ describe('CLI stub', () => {
     expect(run(['calibrate', join(ROOT, 'examples/invasive-species/intake-profile.json'), '--json'])).toBe(0);
   });
 
-  test('calibrate without a path is a usage error', () => {
+  test('calibrate and generate without a path are usage errors', () => {
     expect(run(['calibrate'])).toBe(1);
+    expect(run(['generate'])).toBe(1);
   });
 
   test('unknown subcommand exits 1', () => {
