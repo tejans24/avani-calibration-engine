@@ -1,0 +1,344 @@
+{
+  "version": "1.0.0",
+  "conditions": [
+    {
+      "id": "always",
+      "label": "Always",
+      "description": "Applies to every project (Tier 1 baseline)."
+    },
+    {
+      "id": "runtime:ts-nextjs",
+      "label": "runtime = ts-nextjs",
+      "description": "App runs on the TypeScript / Next.js stack."
+    },
+    {
+      "id": "runtime:python",
+      "label": "runtime = python",
+      "description": "App runs on the Python stack (small APIs, ML, data)."
+    },
+    {
+      "id": "signal:offline",
+      "label": "offline required",
+      "description": "App must function offline."
+    },
+    {
+      "id": "signal:geo",
+      "label": "protected geo",
+      "description": "App stores protected location data."
+    },
+    {
+      "id": "signal:payments",
+      "label": "payments",
+      "description": "App handles payments."
+    },
+    {
+      "id": "signal:auth-clerk",
+      "label": "auth = clerk",
+      "description": "App uses Clerk authentication."
+    },
+    {
+      "id": "correctness:append-only",
+      "label": "correctness = append-only",
+      "description": "Data provenance requires append-only records."
+    },
+    {
+      "id": "sensitivity:protected",
+      "label": "sensitivity = protected",
+      "description": "Highest data-sensitivity tier."
+    },
+    {
+      "id": "topology:monorepo",
+      "label": "topology = monorepo",
+      "description": "Project spans multiple apps."
+    },
+    {
+      "id": "domain:field-data",
+      "label": "field-data domain",
+      "description": "A field-app profile at high+ sensitivity — the domain moat."
+    }
+  ],
+  "provisions": [
+    {
+      "id": "plugin:avani-core",
+      "kind": "plugin",
+      "tier": 1,
+      "description": "Universal, language-agnostic standards: security, git workflow, testing discipline, stage detection."
+    },
+    {
+      "id": "plugin:avani-typescript",
+      "kind": "plugin",
+      "tier": 2,
+      "description": "TypeScript-strict conventions, Zod-at-the-boundary, service-oriented structure."
+    },
+    {
+      "id": "plugin:avani-python",
+      "kind": "plugin",
+      "tier": 2,
+      "description": "uv, ruff, pytest, FastAPI layout, Pydantic-at-the-boundary."
+    },
+    {
+      "id": "plugin:avani-nextjs",
+      "kind": "plugin",
+      "tier": 2,
+      "description": "App Router, RHF + Zod forms, Prisma + db-migrations procedure."
+    },
+    {
+      "id": "plugin:avani-postgis",
+      "kind": "plugin",
+      "tier": 2,
+      "description": "PostGIS setup and geo queries."
+    },
+    {
+      "id": "plugin:avani-clerk",
+      "kind": "plugin",
+      "tier": 2,
+      "description": "Clerk roles, middleware, and invite flows."
+    },
+    {
+      "id": "plugin:avani-stripe",
+      "kind": "plugin",
+      "tier": 2,
+      "description": "Stripe payment invariants and webhook handlers."
+    },
+    {
+      "id": "plugin:avani-offline",
+      "kind": "plugin",
+      "tier": 2,
+      "description": "Offline sync engine, Zustand queue, PWA manifest."
+    },
+    {
+      "id": "plugin:avani-field-data",
+      "kind": "plugin",
+      "tier": 2,
+      "description": "Domain moat: offline-sync, coordinate-fuzzing, append-only invariants."
+    },
+    {
+      "id": "blueprint:ts-nextjs-prisma",
+      "kind": "blueprint",
+      "description": "npm db scripts + CI/deploy workflows with prisma migrate deploy as a release step."
+    },
+    {
+      "id": "blueprint:python-fastapi",
+      "kind": "blueprint",
+      "description": "pyproject (uv), ruff + pytest config, service skeleton, CI caller."
+    },
+    {
+      "id": "blueprint:monorepo-root",
+      "kind": "blueprint",
+      "description": "npm-workspaces root, apps/ + packages/shared layout, root CLAUDE.md."
+    },
+    {
+      "id": "invariant:observations_append_only_never_delete",
+      "kind": "invariant",
+      "description": "Records are never deleted, only superseded with a correction flag."
+    },
+    {
+      "id": "invariant:geo_coordinate_fuzzing_public_views",
+      "kind": "invariant",
+      "description": "Public-facing exports fuzz coordinates; exact coords are admin-only."
+    },
+    {
+      "id": "invariant:observation_id_uniqueness",
+      "kind": "invariant",
+      "description": "Every observation carries a globally unique id (offline-sync idempotency)."
+    },
+    {
+      "id": "invariant:payment_amount_reconciliation",
+      "kind": "invariant",
+      "description": "Charged amounts reconcile against source-of-truth line items."
+    },
+    {
+      "id": "invariant:session_expires_event_plus_24hrs",
+      "kind": "invariant",
+      "description": "Field sessions expire 24h after the event they belong to."
+    },
+    {
+      "id": "pattern:nextjs-app-router",
+      "kind": "pattern",
+      "description": "Next.js App Router routing conventions."
+    },
+    {
+      "id": "pattern:react-hook-form-zod",
+      "kind": "pattern",
+      "description": "React Hook Form wired to shared Zod schemas."
+    },
+    {
+      "id": "pattern:zustand-offline-queue",
+      "kind": "pattern",
+      "description": "Zustand store backing an offline write queue."
+    },
+    {
+      "id": "pattern:pwa-manifest",
+      "kind": "pattern",
+      "description": "PWA manifest + service worker for installable offline use."
+    },
+    {
+      "id": "pattern:prisma-postgis",
+      "kind": "pattern",
+      "description": "Prisma with the PostGIS extension for geo columns."
+    }
+  ],
+  "edges": [
+    {
+      "condition": "always",
+      "provision": "plugin:avani-core"
+    },
+    {
+      "condition": "runtime:ts-nextjs",
+      "provision": "plugin:avani-typescript"
+    },
+    {
+      "condition": "runtime:ts-nextjs",
+      "provision": "plugin:avani-nextjs"
+    },
+    {
+      "condition": "runtime:ts-nextjs",
+      "provision": "blueprint:ts-nextjs-prisma"
+    },
+    {
+      "condition": "runtime:ts-nextjs",
+      "provision": "pattern:nextjs-app-router"
+    },
+    {
+      "condition": "runtime:ts-nextjs",
+      "provision": "pattern:react-hook-form-zod"
+    },
+    {
+      "condition": "runtime:python",
+      "provision": "plugin:avani-python"
+    },
+    {
+      "condition": "runtime:python",
+      "provision": "blueprint:python-fastapi"
+    },
+    {
+      "condition": "signal:offline",
+      "provision": "plugin:avani-offline"
+    },
+    {
+      "condition": "signal:offline",
+      "provision": "pattern:zustand-offline-queue"
+    },
+    {
+      "condition": "signal:offline",
+      "provision": "pattern:pwa-manifest"
+    },
+    {
+      "condition": "signal:offline",
+      "provision": "invariant:observation_id_uniqueness"
+    },
+    {
+      "condition": "signal:geo",
+      "provision": "plugin:avani-postgis"
+    },
+    {
+      "condition": "signal:geo",
+      "provision": "pattern:prisma-postgis"
+    },
+    {
+      "condition": "signal:geo",
+      "provision": "invariant:geo_coordinate_fuzzing_public_views"
+    },
+    {
+      "condition": "signal:payments",
+      "provision": "plugin:avani-stripe"
+    },
+    {
+      "condition": "signal:payments",
+      "provision": "invariant:payment_amount_reconciliation"
+    },
+    {
+      "condition": "signal:auth-clerk",
+      "provision": "plugin:avani-clerk"
+    },
+    {
+      "condition": "correctness:append-only",
+      "provision": "invariant:observations_append_only_never_delete"
+    },
+    {
+      "condition": "sensitivity:protected",
+      "provision": "invariant:geo_coordinate_fuzzing_public_views"
+    },
+    {
+      "condition": "topology:monorepo",
+      "provision": "blueprint:monorepo-root"
+    },
+    {
+      "condition": "domain:field-data",
+      "provision": "plugin:avani-field-data"
+    },
+    {
+      "condition": "domain:field-data",
+      "provision": "invariant:session_expires_event_plus_24hrs"
+    }
+  ],
+  "sharing": {
+    "plugin:avani-core": [
+      "always"
+    ],
+    "plugin:avani-typescript": [
+      "runtime:ts-nextjs"
+    ],
+    "plugin:avani-nextjs": [
+      "runtime:ts-nextjs"
+    ],
+    "blueprint:ts-nextjs-prisma": [
+      "runtime:ts-nextjs"
+    ],
+    "pattern:nextjs-app-router": [
+      "runtime:ts-nextjs"
+    ],
+    "pattern:react-hook-form-zod": [
+      "runtime:ts-nextjs"
+    ],
+    "plugin:avani-python": [
+      "runtime:python"
+    ],
+    "blueprint:python-fastapi": [
+      "runtime:python"
+    ],
+    "plugin:avani-offline": [
+      "signal:offline"
+    ],
+    "pattern:zustand-offline-queue": [
+      "signal:offline"
+    ],
+    "pattern:pwa-manifest": [
+      "signal:offline"
+    ],
+    "invariant:observation_id_uniqueness": [
+      "signal:offline"
+    ],
+    "plugin:avani-postgis": [
+      "signal:geo"
+    ],
+    "pattern:prisma-postgis": [
+      "signal:geo"
+    ],
+    "invariant:geo_coordinate_fuzzing_public_views": [
+      "signal:geo",
+      "sensitivity:protected"
+    ],
+    "plugin:avani-stripe": [
+      "signal:payments"
+    ],
+    "invariant:payment_amount_reconciliation": [
+      "signal:payments"
+    ],
+    "plugin:avani-clerk": [
+      "signal:auth-clerk"
+    ],
+    "invariant:observations_append_only_never_delete": [
+      "correctness:append-only"
+    ],
+    "blueprint:monorepo-root": [
+      "topology:monorepo"
+    ],
+    "plugin:avani-field-data": [
+      "domain:field-data"
+    ],
+    "invariant:session_expires_event_plus_24hrs": [
+      "domain:field-data"
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "profile": "field-app",
+  "dials": {
+    "correctness_bar": "append-only",
+    "sensitivity": "protected",
+    "infra": "vercel",
+    "runtime": "ts-nextjs",
+    "topology": "single-app"
+  },
+  "signals": {
+    "offline_required": true,
+    "has_protected_geo": true,
+    "has_payments": false,
+    "auth_clerk": true
+  }
+}

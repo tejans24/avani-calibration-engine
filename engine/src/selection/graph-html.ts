@@ -1,0 +1,222 @@
+import type { SelectionGraph } from './select.js';
+
+/**
+ * Render the selection map as a self-contained, interactive HTML page.
+ *
+ * Primary view: Branch -> options. Each branch shows the provisions it turns
+ * on, colored by kind; a provision reused by more than one branch wears a
+ * "shared" badge. Click a provision to highlight every branch that selects it
+ * (fan-in). Generated from the graph, so it never drifts from the rules.
+ */
+export function renderGraphHtml(graph: SelectionGraph): string {
+  const data = JSON.stringify(graph);
+  return `<title>Avani Selection Map</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --ground:#F5F7F7; --surface:#FFFFFF; --surface-2:#EEF1F1; --ink:#14201F; --muted:#586664;
+    --faint:#8A9896; --line:#E1E5E4; --line-strong:#CDD4D2; --accent:#0C6B73; --accent-soft:rgba(12,107,115,.10);
+    --plugin:#0C6B73; --blueprint:#C0862C; --invariant:#BC5A38; --pattern:#6E9A4E;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --shadow:0 1px 2px rgba(20,32,31,.04),0 8px 24px rgba(20,32,31,.05);
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#0C1312; --surface:#121B1A; --surface-2:#0E1716; --ink:#E7EDEB; --muted:#93A19E;
+    --faint:#64716E; --line:#203029; --line-strong:#2C3E38; --accent:#34BFC8; --accent-soft:rgba(52,191,200,.12);
+    --plugin:#34BFC8; --blueprint:#D6A24A; --invariant:#D2704A; --pattern:#88B25F;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="light"]{--ground:#F5F7F7;--surface:#FFFFFF;--surface-2:#EEF1F1;--ink:#14201F;--muted:#586664;--faint:#8A9896;--line:#E1E5E4;--line-strong:#CDD4D2;--accent:#0C6B73;--accent-soft:rgba(12,107,115,.10);--plugin:#0C6B73;--blueprint:#C0862C;--invariant:#BC5A38;--pattern:#6E9A4E;--shadow:0 1px 2px rgba(20,32,31,.04),0 8px 24px rgba(20,32,31,.05);}
+  :root[data-theme="dark"]{--ground:#0C1312;--surface:#121B1A;--surface-2:#0E1716;--ink:#E7EDEB;--muted:#93A19E;--faint:#64716E;--line:#203029;--line-strong:#2C3E38;--accent:#34BFC8;--accent-soft:rgba(52,191,200,.12);--plugin:#34BFC8;--blueprint:#D6A24A;--invariant:#D2704A;--pattern:#88B25F;--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);}
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1120px;margin:0 auto;padding:38px 24px 80px;}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 9px;}
+  h1{font-size:clamp(24px,3.6vw,34px);margin:0;letter-spacing:-.02em;font-weight:640;text-wrap:balance;}
+  .lede{color:var(--muted);max-width:60ch;margin:11px 0 0;font-size:14.5px;}
+  .mast{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;}
+  .toggle{font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:8px 12px;cursor:pointer;}
+  .toggle:hover{border-color:var(--accent);color:var(--ink);}
+  .toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .bar{display:flex;gap:12px;align-items:center;margin:26px 0 8px;flex-wrap:wrap;}
+  .search{flex:1 1 240px;display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line-strong);border-radius:9px;padding:9px 13px;}
+  .search:focus-within{border-color:var(--accent);}
+  .search input{border:0;background:transparent;color:var(--ink);font-family:var(--mono);font-size:13px;width:100%;outline:none;}
+  .search svg{flex:none;color:var(--faint);}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;color:var(--muted);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .dot{width:9px;height:9px;border-radius:3px;display:inline-block;}
+  .hint{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin:4px 0 0;}
+
+  .cards{display:grid;grid-template-columns:1fr;gap:14px;margin-top:20px;}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:16px 18px;}
+  .card.dim{opacity:.32;}
+  .card-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+  .cond-id{font-family:var(--mono);font-size:14px;font-weight:640;color:var(--ink);}
+  .cond-id.always{color:var(--accent);}
+  .cond-desc{color:var(--muted);font-size:12.5px;}
+  .prov{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{font-family:var(--mono);font-size:12px;border:1px solid var(--line-strong);border-radius:7px;padding:5px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;background:var(--surface);transition:border-color .12s,background .12s;}
+  .chip:hover{border-color:var(--accent);}
+  .chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .chip .k{width:8px;height:8px;border-radius:2px;flex:none;}
+  .chip[data-kind="plugin"] .k{background:var(--plugin);}
+  .chip[data-kind="blueprint"] .k{background:var(--blueprint);}
+  .chip[data-kind="invariant"] .k{background:var(--invariant);}
+  .chip[data-kind="pattern"] .k{background:var(--pattern);}
+  .chip .nm{color:var(--ink);}
+  .badge{font-family:var(--mono);font-size:10px;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:1px 6px;}
+  .chip.sel{border-color:var(--accent);background:var(--accent-soft);}
+  .chip.faded{opacity:.25;}
+
+  .detail{margin-top:8px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);padding:14px 16px;display:none;}
+  .detail.show{display:block;}
+  .detail h3{font-family:var(--mono);font-size:13.5px;margin:0 0 4px;color:var(--ink);}
+  .detail p{margin:0 0 10px;color:var(--muted);font-size:13px;}
+  .detail .who{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:6px;}
+  .detail .conds{display:flex;flex-wrap:wrap;gap:6px;}
+  .detail .conds code{font-family:var(--mono);font-size:12px;background:var(--surface);border:1px solid var(--line-strong);border-radius:6px;padding:3px 8px;color:var(--ink);}
+  .detail .clear{float:right;font-family:var(--mono);font-size:11px;color:var(--muted);background:transparent;border:0;cursor:pointer;}
+  .detail .clear:hover{color:var(--ink);}
+
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;}
+  footer code{font-family:var(--mono);color:var(--muted);}
+  @media (prefers-reduced-motion:no-preference){.card{animation:rise .45s cubic-bezier(.2,.7,.2,1) both;}@keyframes rise{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}}
+</style>
+<div class="wrap">
+  <header class="mast">
+    <div>
+      <p class="eyebrow" id="ver">Avani Calibration Engine · selection map</p>
+      <h1>Selection Map</h1>
+      <p class="lede">Which options each calibration branch turns on — plugins, blueprints, invariants, patterns. A provision under more than one branch is <em>shared</em>. Click any option to see every branch that selects it.</p>
+    </div>
+    <button class="toggle" id="themeToggle"><span id="themeLabel">Theme</span></button>
+  </header>
+
+  <div class="bar">
+    <label class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.6" y2="16.6"></line></svg>
+      <input id="q" type="text" placeholder="filter branches &amp; options…" autocomplete="off" spellcheck="false">
+    </label>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--plugin)"></i>plugin</span>
+      <span><i class="dot" style="background:var(--blueprint)"></i>blueprint</span>
+      <span><i class="dot" style="background:var(--invariant)"></i>invariant</span>
+      <span><i class="dot" style="background:var(--pattern)"></i>pattern</span>
+    </div>
+  </div>
+  <p class="hint" id="hint"></p>
+
+  <div class="detail" id="detail">
+    <button class="clear" id="clearSel">clear ✕</button>
+    <div class="who">selected by</div>
+    <h3 id="detailId"></h3>
+    <p id="detailDesc"></p>
+    <div class="conds" id="detailConds"></div>
+  </div>
+
+  <main class="cards" id="cards"></main>
+
+  <footer>
+    Generated from <code>engine/src/selection/</code> by <code>npm run selection:build</code> — the same rules the engine executes. Kinds: <code>plugin</code> = how Claude behaves, <code>blueprint</code> = files stamped into the repo, <code>invariant</code> = enforced guarantee, <code>pattern</code> = stack piece.
+  </footer>
+</div>
+<script>
+  const GRAPH = ${data};
+  const provById = Object.fromEntries(GRAPH.provisions.map(p => [p.id, p]));
+  const condById = Object.fromEntries(GRAPH.conditions.map(c => [c.id, c]));
+  const provsByCond = {};
+  GRAPH.edges.forEach(e => { (provsByCond[e.condition] ??= []).push(e.provision); });
+
+  const el = (t,c,h) => { const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e; };
+  const esc = s => s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+  const shortName = id => id.split(":")[1] || id;
+
+  document.getElementById("ver").textContent = "Avani Calibration Engine · selection map v" + GRAPH.version;
+
+  const cards = document.getElementById("cards");
+  GRAPH.conditions.forEach(c => {
+    const provided = provsByCond[c.id] || [];
+    if (!provided.length) return;
+    const card = el("div","card"); card.dataset.cond = c.id;
+    const head = el("div","card-head");
+    head.appendChild(el("span","cond-id"+(c.id==="always"?" always":""), esc(c.id)));
+    head.appendChild(el("span","cond-desc", esc(c.description)));
+    card.appendChild(head);
+    const prov = el("div","prov");
+    provided.forEach(pid => {
+      const p = provById[pid];
+      const n = (GRAPH.sharing[pid]||[]).length;
+      const chip = el("button","chip"); chip.dataset.kind = p.kind; chip.dataset.pid = pid; chip.type="button";
+      chip.innerHTML = '<span class="k"></span><span class="nm">'+esc(shortName(pid))+'</span>' + (n>1?'<span class="badge">shared ×'+n+'</span>':'');
+      chip.addEventListener("click", () => selectProvision(pid));
+      prov.appendChild(chip);
+    });
+    card.appendChild(prov);
+    cards.appendChild(card);
+  });
+
+  // Detail / fan-in
+  const detail = document.getElementById("detail");
+  let current = null;
+  function selectProvision(pid) {
+    if (current === pid) return clearSelection();
+    current = pid;
+    const p = provById[pid];
+    const conds = GRAPH.sharing[pid] || [];
+    document.getElementById("detailId").textContent = pid;
+    document.getElementById("detailDesc").textContent = p.description;
+    const box = document.getElementById("detailConds"); box.innerHTML = "";
+    conds.forEach(cid => { const code = el("code",null,esc(cid)); box.appendChild(code); });
+    detail.classList.add("show");
+    document.querySelectorAll(".chip").forEach(ch => {
+      const on = ch.dataset.pid === pid;
+      ch.classList.toggle("sel", on);
+      ch.classList.toggle("faded", !on);
+    });
+    document.querySelectorAll(".card").forEach(card => {
+      card.classList.toggle("dim", !conds.includes(card.dataset.cond));
+    });
+  }
+  function clearSelection() {
+    current = null;
+    detail.classList.remove("show");
+    document.querySelectorAll(".chip").forEach(ch => ch.classList.remove("sel","faded"));
+    document.querySelectorAll(".card").forEach(card => card.classList.remove("dim"));
+  }
+  document.getElementById("clearSel").addEventListener("click", clearSelection);
+
+  // Filter
+  const q = document.getElementById("q");
+  const hint = document.getElementById("hint");
+  function applyFilter() {
+    const t = q.value.trim().toLowerCase();
+    let shown = 0;
+    document.querySelectorAll(".card").forEach(card => {
+      const cond = condById[card.dataset.cond];
+      const hay = (card.dataset.cond + " " + cond.description + " " +
+        (provsByCond[card.dataset.cond]||[]).join(" ")).toLowerCase();
+      const match = !t || hay.includes(t);
+      card.style.display = match ? "" : "none";
+      if (match) shown++;
+    });
+    hint.textContent = t ? shown + " of " + GRAPH.conditions.length + " branches" :
+      GRAPH.conditions.length + " branches · " + GRAPH.provisions.length + " options · click an option to trace it";
+  }
+  q.addEventListener("input", applyFilter);
+  applyFilter();
+
+  // Theme
+  const root = document.documentElement, tl = document.getElementById("themeLabel");
+  document.getElementById("themeToggle").addEventListener("click", () => {
+    const cur = root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark":"light");
+    const next = cur === "dark" ? "light":"dark";
+    root.setAttribute("data-theme", next); tl.textContent = next==="dark"?"Dark":"Light";
+  });
+  tl.textContent = matchMedia("(prefers-color-scheme:dark)").matches ? "Dark":"Light";
+</script>
+`;
+}

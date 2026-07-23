@@ -41,6 +41,22 @@ the engine refuses a document whose major version it doesn't support. The commit
 JSON Schema is diff-checked against the Zod source in tests, so editing a schema
 without rebuilding fails CI.
 
+## Selection layer (dials → options)
+
+`engine/src/selection/` is the `select` engine layer: versioned rules mapping
+calibration dials + feature signals to the plugins, blueprints, invariants, and
+patterns a project gets. It's a DAG — a provision selected by more than one
+condition is *shared* across branches. `npm run selection:build` compiles it to
+`selection/`:
+
+- `selection-map.json` — the serialized graph (conditions, provisions, edges, sharing)
+- `selection-map.md` — branch → options docs, plus a "shared across branches" table
+- `graph.html` — a self-contained interactive explorer: pick a branch to see what it
+  turns on; click an option to trace every branch that selects it (fan-in)
+
+`select(ctx)` evaluates the rules for a calibration context; tests pin the
+invasive-species fixture's full selection and its shared nodes.
+
 ## Roadmap
 
 Phase 0 (harvest `avani-core` + language plugins from shipped apps) → Phase 1 (Tier 2 stack/domain plugins + blueprints) → Phase 2 (engine) → Phase 3 (learning loop). See SPEC.md §10.
