@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0.0",
+  "type": "field-data-collection",
+  "client_count": 1,
+  "user_count": 500,
+  "peak_concurrent": 100,
+  "annual_records": 50000,
+  "roles": ["volunteer", "coordinator", "admin"],
+  "offline_required": true,
+  "has_pii": true,
+  "has_protected_geo": true,
+  "has_money_transactions": false,
+  "data_provenance_critical": true,
+  "timeline_weeks": 6,
+  "budget_usd": 7500,
+  "ops_capacity": "low"
+}

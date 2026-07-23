@@ -23,8 +23,23 @@ examples/                         golden fixtures harvested from shipped apps
 npm install
 npm run typecheck        # tsc strict, no emit
 npm test                 # vitest
+npm run schema:build     # regenerate schemas/*.schema.json + *.md from the Zod source
 npm run calibrate -- init  # CLI stub (not implemented yet)
 ```
+
+## Schema layer (the moat's contract)
+
+The canonical knowledge structures are defined once in Zod (`engine/src/schema/`)
+and compiled to portable, vendor-neutral artifacts in `schemas/`:
+
+- `*.schema.json` — JSON Schema (LLM- and tool-consumable, cross-runtime)
+- `*.md` — generated docs (every field's `.describe()` text, searchable and reviewable)
+
+One source yields runtime validation, TypeScript types (`z.infer`), JSON Schema, and
+docs — so nothing drifts. Documents are versioned (`schemaVersion` + `SCHEMA_VERSION`);
+the engine refuses a document whose major version it doesn't support. The committed
+JSON Schema is diff-checked against the Zod source in tests, so editing a schema
+without rebuilding fails CI.
 
 ## Roadmap
 

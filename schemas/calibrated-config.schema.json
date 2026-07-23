@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://avani.dev/schemas/calibrated-config/v1.0.0",
+  "title": "calibrated-config",
+  "x-schemaVersion": "1.0.0",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Schema version this document conforms to (semver)."
+    },
+    "profile": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Profile name the calibration was run under, e.g. field-app."
+    },
+    "dials": {
+      "type": "object",
+      "properties": {
+        "correctness_bar": {
+          "type": "string",
+          "enum": [
+            "basic",
+            "standard",
+            "strict",
+            "append-only"
+          ],
+          "description": "How rigorous correctness guarantees must be. Rises with money transactions or critical data provenance."
+        },
+        "sensitivity": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "protected"
+          ],
+          "description": "How careful to be with the data. Intrinsic to the domain; scales hook severity at generation time."
+        },
+        "infra": {
+          "type": "string",
+          "enum": [
+            "vercel",
+            "aws",
+            "self-hosted"
+          ],
+          "description": "Deployment target for the app."
+        },
+        "runtime": {
+          "type": "string",
+          "enum": [
+            "ts-nextjs",
+            "python"
+          ],
+          "description": "Per-app runtime. ts-nextjs is the default for product/UI apps; python for small backend APIs, ML workflows, and data pipelines."
+        },
+        "topology": {
+          "type": "string",
+          "enum": [
+            "single-app",
+            "monorepo"
+          ],
+          "description": "Repo shape. monorepo when the project spans multiple apps (one monorepo per client project)."
+        }
+      },
+      "required": [
+        "correctness_bar",
+        "sensitivity",
+        "infra",
+        "runtime",
+        "topology"
+      ],
+      "additionalProperties": false,
+      "description": "The resolved calibration dials for the app."
+    },
+    "invariants": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Named invariants to enforce (exact-match keys, e.g. observations_append_only_never_delete)."
+    },
+    "patterns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Named stack patterns to inject, e.g. nextjs-app-router."
+    },
+    "risk_assessment": {
+      "type": "object",
+      "properties": {
+        "feasibility": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "description": "Overall feasibility rating."
+        },
+        "estimated_budget_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Estimated token/build budget in USD."
+        },
+        "estimated_infra_monthly_usd": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Estimated monthly infrastructure cost in USD."
+        },
+        "timeline_risk": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "description": "Risk that the timeline slips."
+        },
+        "mitigations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Recommended risk mitigations, e.g. start_with_mvp."
+        }
+      },
+      "required": [
+        "feasibility",
+        "estimated_budget_usd",
+        "estimated_infra_monthly_usd",
+        "timeline_risk",
+        "mitigations"
+      ],
+      "additionalProperties": false,
+      "description": "Feasibility, cost, and timeline assessment for the calibrated app."
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "profile",
+    "dials",
+    "invariants",
+    "patterns",
+    "risk_assessment"
+  ],
+  "additionalProperties": false,
+  "description": "The calibrated configuration produced from an intake profile: dials, invariants, patterns, and risk."
+}

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "1.0.0",
+  "profile": "field-app",
+  "dials": {
+    "correctness_bar": "append-only",
+    "sensitivity": "protected",
+    "infra": "vercel",
+    "runtime": "ts-nextjs",
+    "topology": "single-app"
+  },
+  "invariants": [
+    "observation_id_uniqueness",
+    "geo_coordinate_fuzzing_public_views",
+    "observations_append_only_never_delete",
+    "session_expires_event_plus_24hrs"
+  ],
+  "patterns": [
+    "nextjs-app-router",
+    "prisma-postgis",
+    "react-hook-form-zod",
+    "zustand-offline-queue",
+    "supabase-storage-media"
+  ],
+  "risk_assessment": {
+    "feasibility": "high",
+    "estimated_budget_usd": 150,
+    "estimated_infra_monthly_usd": 50,
+    "timeline_risk": "medium",
+    "mitigations": ["start_with_mvp", "skip_admin_dashboard_phase_1"]
+  }
+}
