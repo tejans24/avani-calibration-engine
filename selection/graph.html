@@ -23,29 +23,37 @@
   .wrap{max-width:1120px;margin:0 auto;padding:38px 24px 80px;}
   .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 9px;}
   h1{font-size:clamp(24px,3.6vw,34px);margin:0;letter-spacing:-.02em;font-weight:640;text-wrap:balance;}
-  .lede{color:var(--muted);max-width:60ch;margin:11px 0 0;font-size:14.5px;}
+  .lede{color:var(--muted);max-width:62ch;margin:11px 0 0;font-size:14.5px;}
   .mast{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;}
   .toggle{font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:8px 12px;cursor:pointer;}
   .toggle:hover{border-color:var(--accent);color:var(--ink);}
   .toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 
-  .bar{display:flex;gap:12px;align-items:center;margin:26px 0 8px;flex-wrap:wrap;}
+  .intro{margin-top:24px;background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:18px 20px;}
+  .intro p{margin:0 0 14px;color:var(--muted);font-size:13.5px;max-width:74ch;}
+  .roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;}
+  .role{border-left:3px solid var(--line-strong);padding:2px 0 2px 12px;}
+  .role[data-kind="plugin"]{border-color:var(--plugin);} .role[data-kind="blueprint"]{border-color:var(--blueprint);}
+  .role[data-kind="invariant"]{border-color:var(--invariant);} .role[data-kind="pattern"]{border-color:var(--pattern);}
+  .role b{font-family:var(--mono);font-size:12.5px;color:var(--ink);display:block;margin-bottom:2px;}
+  .role span{font-size:12.5px;color:var(--muted);}
+
+  .bar{display:flex;gap:12px;align-items:center;margin:24px 0 8px;flex-wrap:wrap;}
   .search{flex:1 1 240px;display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line-strong);border-radius:9px;padding:9px 13px;}
   .search:focus-within{border-color:var(--accent);}
   .search input{border:0;background:transparent;color:var(--ink);font-family:var(--mono);font-size:13px;width:100%;outline:none;}
   .search svg{flex:none;color:var(--faint);}
-  .legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;color:var(--muted);}
-  .legend span{display:inline-flex;align-items:center;gap:6px;}
-  .dot{width:9px;height:9px;border-radius:3px;display:inline-block;}
   .hint{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin:4px 0 0;}
 
-  .cards{display:grid;grid-template-columns:1fr;gap:14px;margin-top:20px;}
+  .cards{display:grid;grid-template-columns:1fr;gap:14px;margin-top:16px;}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:16px 18px;}
   .card.dim{opacity:.32;}
-  .card-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+  .card-head{margin-bottom:12px;}
+  .card-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
   .cond-id{font-family:var(--mono);font-size:14px;font-weight:640;color:var(--ink);}
   .cond-id.always{color:var(--accent);}
   .cond-desc{color:var(--muted);font-size:12.5px;}
+  .cond-rat{color:var(--faint);font-size:12.5px;margin:5px 0 0;max-width:80ch;}
   .prov{display:flex;flex-wrap:wrap;gap:8px;}
   .chip{font-family:var(--mono);font-size:12px;border:1px solid var(--line-strong);border-radius:7px;padding:5px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;background:var(--surface);transition:border-color .12s,background .12s;}
   .chip:hover{border-color:var(--accent);}
@@ -60,13 +68,17 @@
   .chip.sel{border-color:var(--accent);background:var(--accent-soft);}
   .chip.faded{opacity:.25;}
 
-  .detail{margin-top:8px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);padding:14px 16px;display:none;}
+  .detail{margin-top:8px;border:1px solid var(--accent);border-radius:11px;background:var(--surface-2);padding:16px 18px;display:none;}
   .detail.show{display:block;}
-  .detail h3{font-family:var(--mono);font-size:13.5px;margin:0 0 4px;color:var(--ink);}
-  .detail p{margin:0 0 10px;color:var(--muted);font-size:13px;}
-  .detail .who{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:6px;}
-  .detail .conds{display:flex;flex-wrap:wrap;gap:6px;}
-  .detail .conds code{font-family:var(--mono);font-size:12px;background:var(--surface);border:1px solid var(--line-strong);border-radius:6px;padding:3px 8px;color:var(--ink);}
+  .detail-id{font-family:var(--mono);font-size:14px;color:var(--ink);font-weight:640;}
+  .detail-kind{font-family:var(--mono);font-size:10.5px;padding:2px 7px;border-radius:5px;margin-left:8px;color:#fff;}
+  .detail-kind[data-kind="plugin"]{background:var(--plugin);} .detail-kind[data-kind="blueprint"]{background:var(--blueprint);}
+  .detail-kind[data-kind="invariant"]{background:var(--invariant);} .detail-kind[data-kind="pattern"]{background:var(--pattern);}
+  .detail p{margin:10px 0 0;color:var(--muted);font-size:13.5px;max-width:78ch;}
+  .detail .who{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:14px 0 6px;}
+  .detail .set{display:flex;flex-wrap:wrap;gap:6px;}
+  .detail .set code{font-family:var(--mono);font-size:12px;background:var(--surface);border:1px solid var(--line-strong);border-radius:6px;padding:3px 8px;color:var(--ink);}
+  .detail .set .link{cursor:pointer;} .detail .set .link:hover{border-color:var(--accent);color:var(--accent);}
   .detail .clear{float:right;font-family:var(--mono);font-size:11px;color:var(--muted);background:transparent;border:0;cursor:pointer;}
   .detail .clear:hover{color:var(--ink);}
 
@@ -79,51 +91,59 @@
     <div>
       <p class="eyebrow" id="ver">Avani Calibration Engine · selection map</p>
       <h1>Selection Map</h1>
-      <p class="lede">Which options each calibration branch turns on — plugins, blueprints, invariants, patterns. A provision under more than one branch is <em>shared</em>. Click any option to see every branch that selects it.</p>
+      <p class="lede">Which options each calibration branch turns on, and how they work together. Click any option to see its purpose, the companions it operates with, and every branch that selects it.</p>
     </div>
     <button class="toggle" id="themeToggle"><span id="themeLabel">Theme</span></button>
   </header>
+
+  <section class="intro">
+    <p id="composition"></p>
+    <div class="roles" id="roles"></div>
+  </section>
 
   <div class="bar">
     <label class="search">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.6" y2="16.6"></line></svg>
       <input id="q" type="text" placeholder="filter branches &amp; options…" autocomplete="off" spellcheck="false">
     </label>
-    <div class="legend">
-      <span><i class="dot" style="background:var(--plugin)"></i>plugin</span>
-      <span><i class="dot" style="background:var(--blueprint)"></i>blueprint</span>
-      <span><i class="dot" style="background:var(--invariant)"></i>invariant</span>
-      <span><i class="dot" style="background:var(--pattern)"></i>pattern</span>
-    </div>
   </div>
   <p class="hint" id="hint"></p>
 
   <div class="detail" id="detail">
     <button class="clear" id="clearSel">clear ✕</button>
+    <div><span class="detail-id" id="detailId"></span><span class="detail-kind" id="detailKind"></span></div>
+    <p id="detailPurpose"></p>
+    <div id="worksBlock" hidden><div class="who">works with — in tandem</div><div class="set" id="detailWorks"></div></div>
     <div class="who">selected by</div>
-    <h3 id="detailId"></h3>
-    <p id="detailDesc"></p>
-    <div class="conds" id="detailConds"></div>
+    <div class="set" id="detailConds"></div>
   </div>
 
   <main class="cards" id="cards"></main>
 
   <footer>
-    Generated from <code>engine/src/selection/</code> by <code>npm run selection:build</code> — the same rules the engine executes. Kinds: <code>plugin</code> = how Claude behaves, <code>blueprint</code> = files stamped into the repo, <code>invariant</code> = enforced guarantee, <code>pattern</code> = stack piece.
+    Generated from <code>engine/src/selection/</code> by <code>npm run selection:build</code> — the same rules the engine executes.
   </footer>
 </div>
 <script>
-  const GRAPH = {"version":"1.0.0","conditions":[{"id":"always","label":"Always","description":"Applies to every project (Tier 1 baseline)."},{"id":"runtime:ts-nextjs","label":"runtime = ts-nextjs","description":"App runs on the TypeScript / Next.js stack."},{"id":"runtime:python","label":"runtime = python","description":"App runs on the Python stack (small APIs, ML, data)."},{"id":"signal:offline","label":"offline required","description":"App must function offline."},{"id":"signal:geo","label":"protected geo","description":"App stores protected location data."},{"id":"signal:payments","label":"payments","description":"App handles payments."},{"id":"signal:auth-clerk","label":"auth = clerk","description":"App uses Clerk authentication."},{"id":"correctness:append-only","label":"correctness = append-only","description":"Data provenance requires append-only records."},{"id":"sensitivity:protected","label":"sensitivity = protected","description":"Highest data-sensitivity tier."},{"id":"topology:monorepo","label":"topology = monorepo","description":"Project spans multiple apps."},{"id":"domain:field-data","label":"field-data domain","description":"A field-app profile at high+ sensitivity — the domain moat."}],"provisions":[{"id":"plugin:avani-core","kind":"plugin","tier":1,"description":"Universal, language-agnostic standards: security, git workflow, testing discipline, stage detection."},{"id":"plugin:avani-typescript","kind":"plugin","tier":2,"description":"TypeScript-strict conventions, Zod-at-the-boundary, service-oriented structure."},{"id":"plugin:avani-python","kind":"plugin","tier":2,"description":"uv, ruff, pytest, FastAPI layout, Pydantic-at-the-boundary."},{"id":"plugin:avani-nextjs","kind":"plugin","tier":2,"description":"App Router, RHF + Zod forms, Prisma + db-migrations procedure."},{"id":"plugin:avani-postgis","kind":"plugin","tier":2,"description":"PostGIS setup and geo queries."},{"id":"plugin:avani-clerk","kind":"plugin","tier":2,"description":"Clerk roles, middleware, and invite flows."},{"id":"plugin:avani-stripe","kind":"plugin","tier":2,"description":"Stripe payment invariants and webhook handlers."},{"id":"plugin:avani-offline","kind":"plugin","tier":2,"description":"Offline sync engine, Zustand queue, PWA manifest."},{"id":"plugin:avani-field-data","kind":"plugin","tier":2,"description":"Domain moat: offline-sync, coordinate-fuzzing, append-only invariants."},{"id":"blueprint:ts-nextjs-prisma","kind":"blueprint","description":"npm db scripts + CI/deploy workflows with prisma migrate deploy as a release step."},{"id":"blueprint:python-fastapi","kind":"blueprint","description":"pyproject (uv), ruff + pytest config, service skeleton, CI caller."},{"id":"blueprint:monorepo-root","kind":"blueprint","description":"npm-workspaces root, apps/ + packages/shared layout, root CLAUDE.md."},{"id":"invariant:observations_append_only_never_delete","kind":"invariant","description":"Records are never deleted, only superseded with a correction flag."},{"id":"invariant:geo_coordinate_fuzzing_public_views","kind":"invariant","description":"Public-facing exports fuzz coordinates; exact coords are admin-only."},{"id":"invariant:observation_id_uniqueness","kind":"invariant","description":"Every observation carries a globally unique id (offline-sync idempotency)."},{"id":"invariant:payment_amount_reconciliation","kind":"invariant","description":"Charged amounts reconcile against source-of-truth line items."},{"id":"invariant:session_expires_event_plus_24hrs","kind":"invariant","description":"Field sessions expire 24h after the event they belong to."},{"id":"pattern:nextjs-app-router","kind":"pattern","description":"Next.js App Router routing conventions."},{"id":"pattern:react-hook-form-zod","kind":"pattern","description":"React Hook Form wired to shared Zod schemas."},{"id":"pattern:zustand-offline-queue","kind":"pattern","description":"Zustand store backing an offline write queue."},{"id":"pattern:pwa-manifest","kind":"pattern","description":"PWA manifest + service worker for installable offline use."},{"id":"pattern:prisma-postgis","kind":"pattern","description":"Prisma with the PostGIS extension for geo columns."}],"edges":[{"condition":"always","provision":"plugin:avani-core"},{"condition":"runtime:ts-nextjs","provision":"plugin:avani-typescript"},{"condition":"runtime:ts-nextjs","provision":"plugin:avani-nextjs"},{"condition":"runtime:ts-nextjs","provision":"blueprint:ts-nextjs-prisma"},{"condition":"runtime:ts-nextjs","provision":"pattern:nextjs-app-router"},{"condition":"runtime:ts-nextjs","provision":"pattern:react-hook-form-zod"},{"condition":"runtime:python","provision":"plugin:avani-python"},{"condition":"runtime:python","provision":"blueprint:python-fastapi"},{"condition":"signal:offline","provision":"plugin:avani-offline"},{"condition":"signal:offline","provision":"pattern:zustand-offline-queue"},{"condition":"signal:offline","provision":"pattern:pwa-manifest"},{"condition":"signal:offline","provision":"invariant:observation_id_uniqueness"},{"condition":"signal:geo","provision":"plugin:avani-postgis"},{"condition":"signal:geo","provision":"pattern:prisma-postgis"},{"condition":"signal:geo","provision":"invariant:geo_coordinate_fuzzing_public_views"},{"condition":"signal:payments","provision":"plugin:avani-stripe"},{"condition":"signal:payments","provision":"invariant:payment_amount_reconciliation"},{"condition":"signal:auth-clerk","provision":"plugin:avani-clerk"},{"condition":"correctness:append-only","provision":"invariant:observations_append_only_never_delete"},{"condition":"sensitivity:protected","provision":"invariant:geo_coordinate_fuzzing_public_views"},{"condition":"topology:monorepo","provision":"blueprint:monorepo-root"},{"condition":"domain:field-data","provision":"plugin:avani-field-data"},{"condition":"domain:field-data","provision":"invariant:session_expires_event_plus_24hrs"}],"sharing":{"plugin:avani-core":["always"],"plugin:avani-typescript":["runtime:ts-nextjs"],"plugin:avani-nextjs":["runtime:ts-nextjs"],"blueprint:ts-nextjs-prisma":["runtime:ts-nextjs"],"pattern:nextjs-app-router":["runtime:ts-nextjs"],"pattern:react-hook-form-zod":["runtime:ts-nextjs"],"plugin:avani-python":["runtime:python"],"blueprint:python-fastapi":["runtime:python"],"plugin:avani-offline":["signal:offline"],"pattern:zustand-offline-queue":["signal:offline"],"pattern:pwa-manifest":["signal:offline"],"invariant:observation_id_uniqueness":["signal:offline"],"plugin:avani-postgis":["signal:geo"],"pattern:prisma-postgis":["signal:geo"],"invariant:geo_coordinate_fuzzing_public_views":["signal:geo","sensitivity:protected"],"plugin:avani-stripe":["signal:payments"],"invariant:payment_amount_reconciliation":["signal:payments"],"plugin:avani-clerk":["signal:auth-clerk"],"invariant:observations_append_only_never_delete":["correctness:append-only"],"blueprint:monorepo-root":["topology:monorepo"],"plugin:avani-field-data":["domain:field-data"],"invariant:session_expires_event_plus_24hrs":["domain:field-data"]}};
+  const GRAPH = {"version":"1.1.0","compositionSummary":"A calibrated project composes four layers in tandem: plugins teach Claude the conventions and procedures; blueprints stamp the operational machinery those procedures drive; invariants pin the guarantees that must hold; patterns are the stack idioms the plugins apply. Each branch selects a coherent slice across all four, so the agent knows the conventions, the repo has the machinery, and the guarantees are enforced together.","kindRoles":{"plugin":"How Claude behaves — skills, hooks, and procedures loaded into the agent. Centrally versioned, referenced not copied.","blueprint":"What gets stamped into the repo — npm scripts, GitHub Actions, config files that plugins cannot add.","invariant":"A guarantee enforced by tests and hooks — a property that must hold no matter what the code does.","pattern":"A concrete stack idiom the plugins apply — the building blocks of the chosen stack."},"conditions":[{"id":"always","label":"Always","description":"Applies to every project (Tier 1 baseline).","rationale":"The floor every project stands on before any calibration — safe and consistent by default."},{"id":"runtime:ts-nextjs","label":"runtime = ts-nextjs","description":"App runs on the TypeScript / Next.js stack.","rationale":"Selects the TS conventions, the Next.js behavior + Prisma procedure, the stamped db/CI machinery, and the stack idioms — so the agent knows the stack and the repo has the commands, together."},{"id":"runtime:python","label":"runtime = python","description":"App runs on the Python stack (small APIs, ML, data).","rationale":"Python conventions plus the FastAPI/uv skeleton, so the service is idiomatic and immediately runnable."},{"id":"signal:offline","label":"offline required","description":"App must function offline.","rationale":"Offline needs three pieces in tandem: the sync engine (plugin), the queue + installable shell (patterns), and the idempotency guarantee (invariant). None works alone."},{"id":"signal:geo","label":"protected geo","description":"App stores protected location data.","rationale":"Geo data pulls in PostGIS setup, the Prisma-PostGIS pattern, and the coordinate-fuzzing guarantee."},{"id":"signal:payments","label":"payments","description":"App handles payments.","rationale":"Payments pull in the Stripe behavior and the reconciliation guarantee that keeps charges honest."},{"id":"signal:auth-clerk","label":"auth = clerk","description":"App uses Clerk authentication.","rationale":"Adds Clerk role-based access, middleware, and invite flows."},{"id":"correctness:append-only","label":"correctness = append-only","description":"Data provenance requires append-only records.","rationale":"Turns on the append-only provenance guarantee — history becomes immutable."},{"id":"sensitivity:protected","label":"sensitivity = protected","description":"Highest data-sensitivity tier.","rationale":"The top tier adds the coordinate-fuzzing guarantee on top of whatever geo handling is present — which is why that invariant is shared."},{"id":"topology:monorepo","label":"topology = monorepo","description":"Project spans multiple apps.","rationale":"Stamps the workspace root so multiple apps share code and a generated cross-language client."},{"id":"domain:field-data","label":"field-data domain","description":"A field-app profile at high+ sensitivity.","rationale":"The moat bundle: the field-data plugin and its session guarantee — reserved for field apps at high or protected sensitivity."}],"provisions":[{"id":"plugin:avani-core","kind":"plugin","description":"Universal, language-agnostic standards: security, git workflow, testing discipline, stage detection.","purpose":"The always-on floor every project stands on before any calibration. Everything else layers on top of it.","worksWith":["blueprint:monorepo-root"],"tier":1},{"id":"plugin:avani-typescript","kind":"plugin","description":"TypeScript-strict conventions, Zod-at-the-boundary, service-oriented structure.","purpose":"Makes Claude write idiomatic, strict TypeScript with validation at the boundary — applied to every file in a ts-nextjs app.","worksWith":["pattern:react-hook-form-zod","plugin:avani-nextjs"],"tier":2},{"id":"plugin:avani-python","kind":"plugin","description":"uv, ruff, pytest, FastAPI layout, Pydantic-at-the-boundary.","purpose":"Makes Claude write idiomatic Python with FastAPI + Pydantic conventions; the FastAPI OpenAPI spec is the cross-language contract.","worksWith":["blueprint:python-fastapi"],"tier":2},{"id":"plugin:avani-nextjs","kind":"plugin","description":"App Router, RHF + Zod forms, Prisma + db-migrations procedure.","purpose":"Teaches the Next.js conventions and the Prisma migration procedure (never db push in prod, migrations append-only). Pairs with the blueprint that stamps the actual commands.","worksWith":["blueprint:ts-nextjs-prisma","pattern:nextjs-app-router","pattern:react-hook-form-zod","plugin:avani-typescript"],"tier":2},{"id":"plugin:avani-postgis","kind":"plugin","description":"PostGIS setup and geo queries.","purpose":"Teaches PostGIS setup and geo queries, and carries the coordinate-fuzzing guarantee for protected location data.","worksWith":["invariant:geo_coordinate_fuzzing_public_views","pattern:prisma-postgis"],"tier":2},{"id":"plugin:avani-clerk","kind":"plugin","description":"Clerk roles, middleware, and invite flows.","purpose":"Wires Clerk authentication: role-based access, route middleware, and invite-only onboarding.","worksWith":[],"tier":2},{"id":"plugin:avani-stripe","kind":"plugin","description":"Stripe payment invariants and webhook handlers.","purpose":"Payment handling with reconciliation guarantees and the webhook-verification procedure.","worksWith":["invariant:payment_amount_reconciliation"],"tier":2},{"id":"plugin:avani-offline","kind":"plugin","description":"Offline sync engine, Zustand queue, PWA manifest.","purpose":"The offline capability: the sync engine plus the idempotency guarantee that replaying the write queue is always safe.","worksWith":["invariant:observation_id_uniqueness","pattern:pwa-manifest","pattern:zustand-offline-queue"],"tier":2},{"id":"plugin:avani-field-data","kind":"plugin","description":"Domain moat: offline-sync, coordinate-fuzzing, append-only invariants.","purpose":"The domain moat for field apps — the append-only provenance, coordinate fuzzing, and session rules that make protected field data trustworthy.","worksWith":["invariant:geo_coordinate_fuzzing_public_views","invariant:observations_append_only_never_delete","invariant:session_expires_event_plus_24hrs"],"tier":2},{"id":"blueprint:ts-nextjs-prisma","kind":"blueprint","description":"npm db scripts + CI/deploy workflows with prisma migrate deploy as a release step.","purpose":"Stamps the db commands and CI/deploy machinery that the avani-nextjs migration procedure operates on. The blueprint gives every project identical commands; the plugin makes Claude use them the same way.","worksWith":["plugin:avani-nextjs"]},{"id":"blueprint:python-fastapi","kind":"blueprint","description":"pyproject (uv), ruff + pytest config, service skeleton, CI caller.","purpose":"Stamps the uv/ruff/pytest config and FastAPI service skeleton the avani-python conventions assume.","worksWith":["plugin:avani-python"]},{"id":"blueprint:monorepo-root","kind":"blueprint","description":"npm-workspaces root, apps/ + packages/shared layout, root CLAUDE.md.","purpose":"Stamps the workspace root and apps/packages layout that lets multiple apps in one project share code and contracts.","worksWith":["plugin:avani-core"]},{"id":"invariant:observations_append_only_never_delete","kind":"invariant","description":"Records are never deleted, only superseded with a correction flag.","purpose":"The provenance guarantee: history is immutable, corrections are additive. Enforced by tests + hooks, taught by avani-field-data.","worksWith":["plugin:avani-field-data"]},{"id":"invariant:geo_coordinate_fuzzing_public_views","kind":"invariant","description":"Public-facing exports fuzz coordinates; exact coords are admin-only.","purpose":"Protects sensitive locations. Selected by two branches — any geo data, and the protected sensitivity tier — the shared guarantee.","worksWith":["plugin:avani-field-data","plugin:avani-postgis"]},{"id":"invariant:observation_id_uniqueness","kind":"invariant","description":"Every observation carries a globally unique id (offline-sync idempotency).","purpose":"Makes replaying the offline queue idempotent — the property the sync engine depends on to be safe.","worksWith":["plugin:avani-offline"]},{"id":"invariant:payment_amount_reconciliation","kind":"invariant","description":"Charged amounts reconcile against source-of-truth line items.","purpose":"Guarantees money charged always ties back to authoritative line items — no silent drift.","worksWith":["plugin:avani-stripe"]},{"id":"invariant:session_expires_event_plus_24hrs","kind":"invariant","description":"Field sessions expire 24h after the event they belong to.","purpose":"Bounds stale-credential risk for volunteers in the field by tying session life to the event, not the login.","worksWith":["plugin:avani-field-data"]},{"id":"pattern:nextjs-app-router","kind":"pattern","description":"Next.js App Router routing conventions.","purpose":"The routing idiom avani-nextjs applies across the app.","worksWith":["plugin:avani-nextjs"]},{"id":"pattern:react-hook-form-zod","kind":"pattern","description":"React Hook Form wired to shared Zod schemas.","purpose":"Forms validate against the same Zod schemas the server uses — one shape, client and server.","worksWith":["plugin:avani-nextjs","plugin:avani-typescript"]},{"id":"pattern:zustand-offline-queue","kind":"pattern","description":"Zustand store backing an offline write queue.","purpose":"The client-side write queue the offline sync engine drains when connectivity returns.","worksWith":["plugin:avani-offline"]},{"id":"pattern:pwa-manifest","kind":"pattern","description":"PWA manifest + service worker for installable offline use.","purpose":"Makes the app installable and usable with no network — the shell offline sync runs inside.","worksWith":["plugin:avani-offline"]},{"id":"pattern:prisma-postgis","kind":"pattern","description":"Prisma with the PostGIS extension for geo columns.","purpose":"The ORM wiring that lets geo queries and coordinate fuzzing work through Prisma.","worksWith":["plugin:avani-postgis"]}],"edges":[{"condition":"always","provision":"plugin:avani-core"},{"condition":"runtime:ts-nextjs","provision":"plugin:avani-typescript"},{"condition":"runtime:ts-nextjs","provision":"plugin:avani-nextjs"},{"condition":"runtime:ts-nextjs","provision":"blueprint:ts-nextjs-prisma"},{"condition":"runtime:ts-nextjs","provision":"pattern:nextjs-app-router"},{"condition":"runtime:ts-nextjs","provision":"pattern:react-hook-form-zod"},{"condition":"runtime:python","provision":"plugin:avani-python"},{"condition":"runtime:python","provision":"blueprint:python-fastapi"},{"condition":"signal:offline","provision":"plugin:avani-offline"},{"condition":"signal:offline","provision":"pattern:zustand-offline-queue"},{"condition":"signal:offline","provision":"pattern:pwa-manifest"},{"condition":"signal:offline","provision":"invariant:observation_id_uniqueness"},{"condition":"signal:geo","provision":"plugin:avani-postgis"},{"condition":"signal:geo","provision":"pattern:prisma-postgis"},{"condition":"signal:geo","provision":"invariant:geo_coordinate_fuzzing_public_views"},{"condition":"signal:payments","provision":"plugin:avani-stripe"},{"condition":"signal:payments","provision":"invariant:payment_amount_reconciliation"},{"condition":"signal:auth-clerk","provision":"plugin:avani-clerk"},{"condition":"correctness:append-only","provision":"invariant:observations_append_only_never_delete"},{"condition":"sensitivity:protected","provision":"invariant:geo_coordinate_fuzzing_public_views"},{"condition":"topology:monorepo","provision":"blueprint:monorepo-root"},{"condition":"domain:field-data","provision":"plugin:avani-field-data"},{"condition":"domain:field-data","provision":"invariant:session_expires_event_plus_24hrs"}],"sharing":{"plugin:avani-core":["always"],"plugin:avani-typescript":["runtime:ts-nextjs"],"plugin:avani-nextjs":["runtime:ts-nextjs"],"blueprint:ts-nextjs-prisma":["runtime:ts-nextjs"],"pattern:nextjs-app-router":["runtime:ts-nextjs"],"pattern:react-hook-form-zod":["runtime:ts-nextjs"],"plugin:avani-python":["runtime:python"],"blueprint:python-fastapi":["runtime:python"],"plugin:avani-offline":["signal:offline"],"pattern:zustand-offline-queue":["signal:offline"],"pattern:pwa-manifest":["signal:offline"],"invariant:observation_id_uniqueness":["signal:offline"],"plugin:avani-postgis":["signal:geo"],"pattern:prisma-postgis":["signal:geo"],"invariant:geo_coordinate_fuzzing_public_views":["signal:geo","sensitivity:protected"],"plugin:avani-stripe":["signal:payments"],"invariant:payment_amount_reconciliation":["signal:payments"],"plugin:avani-clerk":["signal:auth-clerk"],"invariant:observations_append_only_never_delete":["correctness:append-only"],"blueprint:monorepo-root":["topology:monorepo"],"plugin:avani-field-data":["domain:field-data"],"invariant:session_expires_event_plus_24hrs":["domain:field-data"]}};
   const provById = Object.fromEntries(GRAPH.provisions.map(p => [p.id, p]));
   const condById = Object.fromEntries(GRAPH.conditions.map(c => [c.id, c]));
   const provsByCond = {};
   GRAPH.edges.forEach(e => { (provsByCond[e.condition] ??= []).push(e.provision); });
 
   const el = (t,c,h) => { const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e; };
-  const esc = s => s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+  const esc = s => String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
   const shortName = id => id.split(":")[1] || id;
 
   document.getElementById("ver").textContent = "Avani Calibration Engine · selection map v" + GRAPH.version;
+  document.getElementById("composition").textContent = GRAPH.compositionSummary;
+
+  const roles = document.getElementById("roles");
+  ["plugin","blueprint","invariant","pattern"].forEach(k => {
+    const r = el("div","role"); r.dataset.kind = k;
+    r.innerHTML = "<b>"+k+"</b><span>"+esc(GRAPH.kindRoles[k])+"</span>";
+    roles.appendChild(r);
+  });
 
   const cards = document.getElementById("cards");
   GRAPH.conditions.forEach(c => {
@@ -131,8 +151,11 @@
     if (!provided.length) return;
     const card = el("div","card"); card.dataset.cond = c.id;
     const head = el("div","card-head");
-    head.appendChild(el("span","cond-id"+(c.id==="always"?" always":""), esc(c.id)));
-    head.appendChild(el("span","cond-desc", esc(c.description)));
+    const top = el("div","card-top");
+    top.appendChild(el("span","cond-id"+(c.id==="always"?" always":""), esc(c.id)));
+    top.appendChild(el("span","cond-desc", esc(c.description)));
+    head.appendChild(top);
+    head.appendChild(el("p","cond-rat", esc(c.rationale)));
     card.appendChild(head);
     const prov = el("div","prov");
     provided.forEach(pid => {
@@ -147,27 +170,40 @@
     cards.appendChild(card);
   });
 
-  // Detail / fan-in
+  // Detail / fan-in / tandem
   const detail = document.getElementById("detail");
   let current = null;
   function selectProvision(pid) {
     if (current === pid) return clearSelection();
     current = pid;
     const p = provById[pid];
-    const conds = GRAPH.sharing[pid] || [];
     document.getElementById("detailId").textContent = pid;
-    document.getElementById("detailDesc").textContent = p.description;
+    const kindTag = document.getElementById("detailKind");
+    kindTag.textContent = p.kind; kindTag.dataset.kind = p.kind;
+    document.getElementById("detailPurpose").textContent = p.purpose;
+
+    const worksBlock = document.getElementById("worksBlock");
+    const works = document.getElementById("detailWorks"); works.innerHTML = "";
+    if (p.worksWith && p.worksWith.length) {
+      worksBlock.hidden = false;
+      p.worksWith.forEach(wid => {
+        const code = el("code","link", esc(wid)); code.addEventListener("click", () => selectProvision(wid));
+        works.appendChild(code);
+      });
+    } else worksBlock.hidden = true;
+
+    const conds = GRAPH.sharing[pid] || [];
     const box = document.getElementById("detailConds"); box.innerHTML = "";
-    conds.forEach(cid => { const code = el("code",null,esc(cid)); box.appendChild(code); });
+    conds.forEach(cid => box.appendChild(el("code",null,esc(cid))));
+
     detail.classList.add("show");
     document.querySelectorAll(".chip").forEach(ch => {
       const on = ch.dataset.pid === pid;
       ch.classList.toggle("sel", on);
       ch.classList.toggle("faded", !on);
     });
-    document.querySelectorAll(".card").forEach(card => {
-      card.classList.toggle("dim", !conds.includes(card.dataset.cond));
-    });
+    document.querySelectorAll(".card").forEach(card => card.classList.toggle("dim", !conds.includes(card.dataset.cond)));
+    detail.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion:reduce)").matches ? "auto":"smooth", block: "nearest" });
   }
   function clearSelection() {
     current = null;
@@ -185,14 +221,13 @@
     let shown = 0;
     document.querySelectorAll(".card").forEach(card => {
       const cond = condById[card.dataset.cond];
-      const hay = (card.dataset.cond + " " + cond.description + " " +
-        (provsByCond[card.dataset.cond]||[]).join(" ")).toLowerCase();
+      const hay = (card.dataset.cond+" "+cond.description+" "+cond.rationale+" "+(provsByCond[card.dataset.cond]||[]).join(" ")).toLowerCase();
       const match = !t || hay.includes(t);
       card.style.display = match ? "" : "none";
       if (match) shown++;
     });
-    hint.textContent = t ? shown + " of " + GRAPH.conditions.length + " branches" :
-      GRAPH.conditions.length + " branches · " + GRAPH.provisions.length + " options · click an option to trace it";
+    hint.textContent = t ? shown+" of "+GRAPH.conditions.length+" branches" :
+      GRAPH.conditions.length+" branches · "+GRAPH.provisions.length+" options · click an option to trace it";
   }
   q.addEventListener("input", applyFilter);
   applyFilter();

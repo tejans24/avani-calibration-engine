@@ -3,10 +3,11 @@ import type { SelectionGraph } from './select.js';
 /**
  * Render the selection map as a self-contained, interactive HTML page.
  *
- * Primary view: Branch -> options. Each branch shows the provisions it turns
- * on, colored by kind; a provision reused by more than one branch wears a
- * "shared" badge. Click a provision to highlight every branch that selects it
- * (fan-in). Generated from the graph, so it never drifts from the rules.
+ * Primary view: Branch -> options. Each branch shows why its bundle belongs
+ * together and the provisions it turns on, colored by kind; a provision reused
+ * by more than one branch wears a "shared" badge. Click a provision to see its
+ * purpose, the companions it works with (in tandem), and every branch that
+ * selects it. Generated from the graph, so it never drifts from the rules.
  */
 export function renderGraphHtml(graph: SelectionGraph): string {
   const data = JSON.stringify(graph);
@@ -35,29 +36,37 @@ export function renderGraphHtml(graph: SelectionGraph): string {
   .wrap{max-width:1120px;margin:0 auto;padding:38px 24px 80px;}
   .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 9px;}
   h1{font-size:clamp(24px,3.6vw,34px);margin:0;letter-spacing:-.02em;font-weight:640;text-wrap:balance;}
-  .lede{color:var(--muted);max-width:60ch;margin:11px 0 0;font-size:14.5px;}
+  .lede{color:var(--muted);max-width:62ch;margin:11px 0 0;font-size:14.5px;}
   .mast{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;}
   .toggle{font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:8px 12px;cursor:pointer;}
   .toggle:hover{border-color:var(--accent);color:var(--ink);}
   .toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 
-  .bar{display:flex;gap:12px;align-items:center;margin:26px 0 8px;flex-wrap:wrap;}
+  .intro{margin-top:24px;background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:18px 20px;}
+  .intro p{margin:0 0 14px;color:var(--muted);font-size:13.5px;max-width:74ch;}
+  .roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;}
+  .role{border-left:3px solid var(--line-strong);padding:2px 0 2px 12px;}
+  .role[data-kind="plugin"]{border-color:var(--plugin);} .role[data-kind="blueprint"]{border-color:var(--blueprint);}
+  .role[data-kind="invariant"]{border-color:var(--invariant);} .role[data-kind="pattern"]{border-color:var(--pattern);}
+  .role b{font-family:var(--mono);font-size:12.5px;color:var(--ink);display:block;margin-bottom:2px;}
+  .role span{font-size:12.5px;color:var(--muted);}
+
+  .bar{display:flex;gap:12px;align-items:center;margin:24px 0 8px;flex-wrap:wrap;}
   .search{flex:1 1 240px;display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line-strong);border-radius:9px;padding:9px 13px;}
   .search:focus-within{border-color:var(--accent);}
   .search input{border:0;background:transparent;color:var(--ink);font-family:var(--mono);font-size:13px;width:100%;outline:none;}
   .search svg{flex:none;color:var(--faint);}
-  .legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;color:var(--muted);}
-  .legend span{display:inline-flex;align-items:center;gap:6px;}
-  .dot{width:9px;height:9px;border-radius:3px;display:inline-block;}
   .hint{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin:4px 0 0;}
 
-  .cards{display:grid;grid-template-columns:1fr;gap:14px;margin-top:20px;}
+  .cards{display:grid;grid-template-columns:1fr;gap:14px;margin-top:16px;}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:16px 18px;}
   .card.dim{opacity:.32;}
-  .card-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+  .card-head{margin-bottom:12px;}
+  .card-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
   .cond-id{font-family:var(--mono);font-size:14px;font-weight:640;color:var(--ink);}
   .cond-id.always{color:var(--accent);}
   .cond-desc{color:var(--muted);font-size:12.5px;}
+  .cond-rat{color:var(--faint);font-size:12.5px;margin:5px 0 0;max-width:80ch;}
   .prov{display:flex;flex-wrap:wrap;gap:8px;}
   .chip{font-family:var(--mono);font-size:12px;border:1px solid var(--line-strong);border-radius:7px;padding:5px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;background:var(--surface);transition:border-color .12s,background .12s;}
   .chip:hover{border-color:var(--accent);}
@@ -72,13 +81,17 @@ export function renderGraphHtml(graph: SelectionGraph): string {
   .chip.sel{border-color:var(--accent);background:var(--accent-soft);}
   .chip.faded{opacity:.25;}
 
-  .detail{margin-top:8px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);padding:14px 16px;display:none;}
+  .detail{margin-top:8px;border:1px solid var(--accent);border-radius:11px;background:var(--surface-2);padding:16px 18px;display:none;}
   .detail.show{display:block;}
-  .detail h3{font-family:var(--mono);font-size:13.5px;margin:0 0 4px;color:var(--ink);}
-  .detail p{margin:0 0 10px;color:var(--muted);font-size:13px;}
-  .detail .who{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:6px;}
-  .detail .conds{display:flex;flex-wrap:wrap;gap:6px;}
-  .detail .conds code{font-family:var(--mono);font-size:12px;background:var(--surface);border:1px solid var(--line-strong);border-radius:6px;padding:3px 8px;color:var(--ink);}
+  .detail-id{font-family:var(--mono);font-size:14px;color:var(--ink);font-weight:640;}
+  .detail-kind{font-family:var(--mono);font-size:10.5px;padding:2px 7px;border-radius:5px;margin-left:8px;color:#fff;}
+  .detail-kind[data-kind="plugin"]{background:var(--plugin);} .detail-kind[data-kind="blueprint"]{background:var(--blueprint);}
+  .detail-kind[data-kind="invariant"]{background:var(--invariant);} .detail-kind[data-kind="pattern"]{background:var(--pattern);}
+  .detail p{margin:10px 0 0;color:var(--muted);font-size:13.5px;max-width:78ch;}
+  .detail .who{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:14px 0 6px;}
+  .detail .set{display:flex;flex-wrap:wrap;gap:6px;}
+  .detail .set code{font-family:var(--mono);font-size:12px;background:var(--surface);border:1px solid var(--line-strong);border-radius:6px;padding:3px 8px;color:var(--ink);}
+  .detail .set .link{cursor:pointer;} .detail .set .link:hover{border-color:var(--accent);color:var(--accent);}
   .detail .clear{float:right;font-family:var(--mono);font-size:11px;color:var(--muted);background:transparent;border:0;cursor:pointer;}
   .detail .clear:hover{color:var(--ink);}
 
@@ -91,37 +104,37 @@ export function renderGraphHtml(graph: SelectionGraph): string {
     <div>
       <p class="eyebrow" id="ver">Avani Calibration Engine · selection map</p>
       <h1>Selection Map</h1>
-      <p class="lede">Which options each calibration branch turns on — plugins, blueprints, invariants, patterns. A provision under more than one branch is <em>shared</em>. Click any option to see every branch that selects it.</p>
+      <p class="lede">Which options each calibration branch turns on, and how they work together. Click any option to see its purpose, the companions it operates with, and every branch that selects it.</p>
     </div>
     <button class="toggle" id="themeToggle"><span id="themeLabel">Theme</span></button>
   </header>
+
+  <section class="intro">
+    <p id="composition"></p>
+    <div class="roles" id="roles"></div>
+  </section>
 
   <div class="bar">
     <label class="search">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.6" y2="16.6"></line></svg>
       <input id="q" type="text" placeholder="filter branches &amp; options…" autocomplete="off" spellcheck="false">
     </label>
-    <div class="legend">
-      <span><i class="dot" style="background:var(--plugin)"></i>plugin</span>
-      <span><i class="dot" style="background:var(--blueprint)"></i>blueprint</span>
-      <span><i class="dot" style="background:var(--invariant)"></i>invariant</span>
-      <span><i class="dot" style="background:var(--pattern)"></i>pattern</span>
-    </div>
   </div>
   <p class="hint" id="hint"></p>
 
   <div class="detail" id="detail">
     <button class="clear" id="clearSel">clear ✕</button>
+    <div><span class="detail-id" id="detailId"></span><span class="detail-kind" id="detailKind"></span></div>
+    <p id="detailPurpose"></p>
+    <div id="worksBlock" hidden><div class="who">works with — in tandem</div><div class="set" id="detailWorks"></div></div>
     <div class="who">selected by</div>
-    <h3 id="detailId"></h3>
-    <p id="detailDesc"></p>
-    <div class="conds" id="detailConds"></div>
+    <div class="set" id="detailConds"></div>
   </div>
 
   <main class="cards" id="cards"></main>
 
   <footer>
-    Generated from <code>engine/src/selection/</code> by <code>npm run selection:build</code> — the same rules the engine executes. Kinds: <code>plugin</code> = how Claude behaves, <code>blueprint</code> = files stamped into the repo, <code>invariant</code> = enforced guarantee, <code>pattern</code> = stack piece.
+    Generated from <code>engine/src/selection/</code> by <code>npm run selection:build</code> — the same rules the engine executes.
   </footer>
 </div>
 <script>
@@ -132,10 +145,18 @@ export function renderGraphHtml(graph: SelectionGraph): string {
   GRAPH.edges.forEach(e => { (provsByCond[e.condition] ??= []).push(e.provision); });
 
   const el = (t,c,h) => { const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e; };
-  const esc = s => s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+  const esc = s => String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
   const shortName = id => id.split(":")[1] || id;
 
   document.getElementById("ver").textContent = "Avani Calibration Engine · selection map v" + GRAPH.version;
+  document.getElementById("composition").textContent = GRAPH.compositionSummary;
+
+  const roles = document.getElementById("roles");
+  ["plugin","blueprint","invariant","pattern"].forEach(k => {
+    const r = el("div","role"); r.dataset.kind = k;
+    r.innerHTML = "<b>"+k+"</b><span>"+esc(GRAPH.kindRoles[k])+"</span>";
+    roles.appendChild(r);
+  });
 
   const cards = document.getElementById("cards");
   GRAPH.conditions.forEach(c => {
@@ -143,8 +164,11 @@ export function renderGraphHtml(graph: SelectionGraph): string {
     if (!provided.length) return;
     const card = el("div","card"); card.dataset.cond = c.id;
     const head = el("div","card-head");
-    head.appendChild(el("span","cond-id"+(c.id==="always"?" always":""), esc(c.id)));
-    head.appendChild(el("span","cond-desc", esc(c.description)));
+    const top = el("div","card-top");
+    top.appendChild(el("span","cond-id"+(c.id==="always"?" always":""), esc(c.id)));
+    top.appendChild(el("span","cond-desc", esc(c.description)));
+    head.appendChild(top);
+    head.appendChild(el("p","cond-rat", esc(c.rationale)));
     card.appendChild(head);
     const prov = el("div","prov");
     provided.forEach(pid => {
@@ -159,27 +183,40 @@ export function renderGraphHtml(graph: SelectionGraph): string {
     cards.appendChild(card);
   });
 
-  // Detail / fan-in
+  // Detail / fan-in / tandem
   const detail = document.getElementById("detail");
   let current = null;
   function selectProvision(pid) {
     if (current === pid) return clearSelection();
     current = pid;
     const p = provById[pid];
-    const conds = GRAPH.sharing[pid] || [];
     document.getElementById("detailId").textContent = pid;
-    document.getElementById("detailDesc").textContent = p.description;
+    const kindTag = document.getElementById("detailKind");
+    kindTag.textContent = p.kind; kindTag.dataset.kind = p.kind;
+    document.getElementById("detailPurpose").textContent = p.purpose;
+
+    const worksBlock = document.getElementById("worksBlock");
+    const works = document.getElementById("detailWorks"); works.innerHTML = "";
+    if (p.worksWith && p.worksWith.length) {
+      worksBlock.hidden = false;
+      p.worksWith.forEach(wid => {
+        const code = el("code","link", esc(wid)); code.addEventListener("click", () => selectProvision(wid));
+        works.appendChild(code);
+      });
+    } else worksBlock.hidden = true;
+
+    const conds = GRAPH.sharing[pid] || [];
     const box = document.getElementById("detailConds"); box.innerHTML = "";
-    conds.forEach(cid => { const code = el("code",null,esc(cid)); box.appendChild(code); });
+    conds.forEach(cid => box.appendChild(el("code",null,esc(cid))));
+
     detail.classList.add("show");
     document.querySelectorAll(".chip").forEach(ch => {
       const on = ch.dataset.pid === pid;
       ch.classList.toggle("sel", on);
       ch.classList.toggle("faded", !on);
     });
-    document.querySelectorAll(".card").forEach(card => {
-      card.classList.toggle("dim", !conds.includes(card.dataset.cond));
-    });
+    document.querySelectorAll(".card").forEach(card => card.classList.toggle("dim", !conds.includes(card.dataset.cond)));
+    detail.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion:reduce)").matches ? "auto":"smooth", block: "nearest" });
   }
   function clearSelection() {
     current = null;
@@ -197,14 +234,13 @@ export function renderGraphHtml(graph: SelectionGraph): string {
     let shown = 0;
     document.querySelectorAll(".card").forEach(card => {
       const cond = condById[card.dataset.cond];
-      const hay = (card.dataset.cond + " " + cond.description + " " +
-        (provsByCond[card.dataset.cond]||[]).join(" ")).toLowerCase();
+      const hay = (card.dataset.cond+" "+cond.description+" "+cond.rationale+" "+(provsByCond[card.dataset.cond]||[]).join(" ")).toLowerCase();
       const match = !t || hay.includes(t);
       card.style.display = match ? "" : "none";
       if (match) shown++;
     });
-    hint.textContent = t ? shown + " of " + GRAPH.conditions.length + " branches" :
-      GRAPH.conditions.length + " branches · " + GRAPH.provisions.length + " options · click an option to trace it";
+    hint.textContent = t ? shown+" of "+GRAPH.conditions.length+" branches" :
+      GRAPH.conditions.length+" branches · "+GRAPH.provisions.length+" options · click an option to trace it";
   }
   q.addEventListener("input", applyFilter);
   applyFilter();

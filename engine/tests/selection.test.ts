@@ -78,4 +78,20 @@ describe('emitted selection map', () => {
     const shared = buildGraph().sharing['invariant:geo_coordinate_fuzzing_public_views'];
     expect(shared?.length).toBe(2);
   });
+
+  test('carries composition detail: purpose, rationale, kind roles', () => {
+    const g = buildGraph();
+    expect(g.compositionSummary.length).toBeGreaterThan(20);
+    expect(Object.keys(g.kindRoles).sort()).toEqual(['blueprint', 'invariant', 'pattern', 'plugin']);
+    expect(g.provisions.every((p) => p.purpose.length > 0)).toBe(true);
+    expect(g.conditions.every((c) => c.rationale.length > 0)).toBe(true);
+  });
+
+  test('worksWith links are symmetric', () => {
+    const g = buildGraph();
+    const byId = Object.fromEntries(g.provisions.map((p) => [p.id, p]));
+    expect(byId['blueprint:ts-nextjs-prisma']?.worksWith).toContain('plugin:avani-nextjs');
+    // the pairing holds in both directions even though only one side declares it
+    expect(byId['plugin:avani-nextjs']?.worksWith).toContain('blueprint:ts-nextjs-prisma');
+  });
 });

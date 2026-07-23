@@ -2,6 +2,7 @@ import { PROVISION_BY_ID } from './catalog.js';
 import type { SelectionGraph } from './select.js';
 
 const KIND_ORDER = ['plugin', 'blueprint', 'invariant', 'pattern'];
+const shortName = (id: string): string => id.split(':')[1] ?? id;
 
 /** Render the selection map as human- and LLM-friendly markdown. */
 export function toMarkdown(graph: SelectionGraph): string {
@@ -12,17 +13,34 @@ export function toMarkdown(graph: SelectionGraph): string {
     provisionsByCondition.set(e.condition, list);
   }
 
-  let md = `# selection-map\n\n**Version:** ${graph.version}\n\n`;
-  md += 'The rules that turn calibration dials + signals into selected plugins, blueprints, invariants, and patterns. A provision under more than one branch is *shared* across branches.\n\n';
+  let md = `# selection-map\n\n**Version:** ${graph.version}\n\n${graph.compositionSummary}\n\n`;
+
+  md += '## How the kinds compose\n\n';
+  for (const kind of KIND_ORDER) {
+    md += `- **${kind}** — ${graph.kindRoles[kind as keyof typeof graph.kindRoles]}\n`;
+  }
+  md += '\n';
 
   md += '## Branches → options\n\n';
   for (const c of graph.conditions) {
     const provided = provisionsByCondition.get(c.id) ?? [];
-    md += `### \`${c.id}\`\n\n${c.description}\n\n`;
+    md += `### \`${c.id}\`\n\n${c.description}\n\n_${c.rationale}_\n\n`;
     for (const id of provided) {
       const p = PROVISION_BY_ID.get(id);
-      const shared = (graph.sharing[id]?.length ?? 0) > 1 ? ` _(shared ×${graph.sharing[id]?.length})_` : '';
-      md += `- \`${id}\` — ${p?.description ?? ''}${shared}\n`;
+      const shared = (graph.sharing[id]?.length ?? 0) > 1 ? ` **(shared ×${graph.sharing[id]?.length})**` : '';
+      md += `- \`${id}\` — ${p?.purpose ?? p?.description ?? ''}${shared}\n`;
+    }
+    md += '\n';
+  }
+
+  md += '## Provisions\n\n';
+  for (const kind of KIND_ORDER) {
+    const items = graph.provisions.filter((p) => p.kind === kind);
+    if (!items.length) continue;
+    md += `### ${kind}s\n\n`;
+    for (const p of items) {
+      const companions = p.worksWith.length ? ` _Works with: ${p.worksWith.map((w) => `\`${shortName(w)}\``).join(', ')}._` : '';
+      md += `- \`${p.id}\` — ${p.purpose}${companions}\n`;
     }
     md += '\n';
   }
