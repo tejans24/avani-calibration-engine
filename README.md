@@ -57,6 +57,24 @@ condition is *shared* across branches. `npm run selection:build` compiles it to
 `select(ctx)` evaluates the rules for a calibration context; tests pin the
 invasive-species fixture's full selection and its shared nodes.
 
+## End-to-end pipeline
+
+`engine/src/pipeline.ts` wires it together: `intake-profile → calibrate → SelectionContext → select → provisions`, assembled into a schema-valid `calibrated-config`.
+
+- `engine/src/calibration/` — `calibrate(intake)` maps intake facts to dials + signals (per-profile modules); `deriveRisk(intake)` produces the risk assessment.
+- `runPipeline(intake)` returns `{ context, selection, config }`. Calibration yields the dials/signals, selection yields the invariants/patterns, and the config is *assembled* from both.
+
+Run it:
+
+```bash
+npm run calibrate -- calibrate examples/invasive-species/intake-profile.json
+npm run calibrate -- calibrate examples/invasive-species/intake-profile.json --json  # just the config
+```
+
+The `examples/invasive-species/` fixtures are golden: `intake-profile.json` in →
+`selection-context.json` and `calibrated-config.json` out, pinned by tests, so the
+whole pipeline is snapshot-verified.
+
 ## Roadmap
 
 Phase 0 (harvest `avani-core` + language plugins from shipped apps) → Phase 1 (Tier 2 stack/domain plugins + blueprints) → Phase 2 (engine) → Phase 3 (learning loop). See SPEC.md §10.

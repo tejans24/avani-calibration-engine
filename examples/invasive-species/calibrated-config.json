@@ -9,23 +9,26 @@
     "topology": "single-app"
   },
   "invariants": [
-    "observation_id_uniqueness",
-    "geo_coordinate_fuzzing_public_views",
     "observations_append_only_never_delete",
+    "geo_coordinate_fuzzing_public_views",
+    "observation_id_uniqueness",
     "session_expires_event_plus_24hrs"
   ],
   "patterns": [
     "nextjs-app-router",
-    "prisma-postgis",
     "react-hook-form-zod",
     "zustand-offline-queue",
-    "supabase-storage-media"
+    "pwa-manifest",
+    "prisma-postgis"
   ],
   "risk_assessment": {
     "feasibility": "high",
     "estimated_budget_usd": 150,
     "estimated_infra_monthly_usd": 50,
     "timeline_risk": "medium",
-    "mitigations": ["start_with_mvp", "skip_admin_dashboard_phase_1"]
+    "mitigations": [
+      "start_with_mvp",
+      "defer_admin_dashboard"
+    ]
   }
 }
