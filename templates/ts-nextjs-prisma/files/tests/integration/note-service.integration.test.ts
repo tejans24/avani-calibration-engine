@@ -8,12 +8,21 @@ import { createNoteService } from '@/services/notes/note-service';
 
 // Integration tier: the service against a REAL Postgres, migrated from empty —
 // so the committed migration path is exercised on every run. No DB mocks.
-let container: StartedPostgreSqlContainer;
+//
+// Escape hatch: set TEST_DATABASE_URL to use an already-running Postgres
+// (agent sandbox without a Docker daemon, CI service container) instead of
+// testcontainers. It must point at a DISPOSABLE database — the suite runs
+// migrate deploy and wipes tables between tests. Kept separate from
+// DATABASE_URL so a dev database can never be hit by accident.
+let container: StartedPostgreSqlContainer | undefined;
 let prisma: PrismaClient;
 
 beforeAll(async () => {
-  container = await new PostgreSqlContainer('postgres:16').start();
-  const url = container.getConnectionUri();
+  let url = process.env['TEST_DATABASE_URL'];
+  if (!url) {
+    container = await new PostgreSqlContainer('postgres:16').start();
+    url = container.getConnectionUri();
+  }
   execSync('npx prisma migrate deploy', { env: { ...process.env, DATABASE_URL: url }, stdio: 'inherit' });
   prisma = new PrismaClient({ datasources: { db: { url } } });
 });

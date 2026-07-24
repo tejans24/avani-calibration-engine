@@ -23,7 +23,7 @@ That's it — `db:ready` bootstraps `.env`, the database container, migrations, 
 | `npm run db:seed:demo` | curated demo data (staging/demo) |
 | `npm run db:init` | reference data only — safe in any environment |
 | `npm test` | unit tier (services isolated, collaborators mocked) |
-| `npm run test:integration` | integration tier (real Postgres via testcontainers, migrated from empty) |
+| `npm run test:integration` | integration tier (real Postgres via testcontainers, migrated from empty); set `TEST_DATABASE_URL` to use an existing **disposable** Postgres instead of Docker |
 | `npm run test:e2e` | Playwright: critical flows + the axe a11y invariant |
 
 ## Structure
