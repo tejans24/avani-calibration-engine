@@ -11,6 +11,7 @@
   "invariants": [
     "observations_append_only_never_delete",
     "geo_coordinate_fuzzing_public_views",
+    "a11y_axe_clean",
     "observation_id_uniqueness",
     "session_expires_event_plus_24hrs"
   ],

@@ -31,7 +31,7 @@ describe('CLI stub', () => {
 });
 
 describe('marketplace manifests', () => {
-  const PLUGINS = ['avani-core', 'avani-typescript', 'avani-python'];
+  const PLUGINS = ['avani-core', 'avani-typescript', 'avani-python', 'avani-nextjs'];
 
   test('marketplace.json is valid and lists every plugin', () => {
     const raw = readFileSync(join(ROOT, '.claude-plugin', 'marketplace.json'), 'utf8');

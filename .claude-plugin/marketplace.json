@@ -15,6 +15,11 @@
       "description": "Tier 2 language plugin: TypeScript strict conventions, Zod-at-the-boundary, service-oriented structure."
     },
     {
+      "name": "avani-nextjs",
+      "source": "./plugins/avani-nextjs",
+      "description": "Tier 2 stack plugin: App Router, RHF + Zod forms, service design, Prisma db-migrations procedure. Selected when runtime is ts-nextjs."
+    },
+    {
       "name": "avani-python",
       "source": "./plugins/avani-python",
       "description": "Tier 2 language plugin: uv, ruff, pytest, FastAPI service layout, Pydantic-at-the-boundary."

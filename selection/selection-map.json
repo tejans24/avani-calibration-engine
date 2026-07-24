@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "compositionSummary": "A calibrated project composes four layers in tandem: plugins teach Claude the conventions and procedures; blueprints stamp the operational machinery those procedures drive; invariants pin the guarantees that must hold; patterns are the stack idioms the plugins apply. Each branch selects a coherent slice across all four, so the agent knows the conventions, the repo has the machinery, and the guarantees are enforced together.",
   "kindRoles": {
     "plugin": "How Claude behaves — skills, hooks, and procedures loaded into the agent. Centrally versioned, referenced not copied.",
@@ -82,7 +82,8 @@
       "description": "Universal, language-agnostic standards: security, git workflow, testing discipline, stage detection.",
       "purpose": "The always-on floor every project stands on before any calibration. Everything else layers on top of it.",
       "worksWith": [
-        "blueprint:monorepo-root"
+        "blueprint:monorepo-root",
+        "invariant:a11y_axe_clean"
       ],
       "tier": 1
     },
@@ -114,6 +115,7 @@
       "purpose": "Teaches the Next.js conventions and the Prisma migration procedure (never db push in prod, migrations append-only). Pairs with the blueprint that stamps the actual commands.",
       "worksWith": [
         "blueprint:ts-nextjs-prisma",
+        "invariant:a11y_axe_clean",
         "pattern:nextjs-app-router",
         "pattern:react-hook-form-zod",
         "plugin:avani-typescript"
@@ -220,6 +222,16 @@
       ]
     },
     {
+      "id": "invariant:a11y_axe_clean",
+      "kind": "invariant",
+      "description": "Key pages pass an axe accessibility scan with zero violations.",
+      "purpose": "The enforceable end of the accessibility standard: jsx-a11y lints at write time, axe verifies rendered pages in e2e. Semantics-based, so it holds across component libraries.",
+      "worksWith": [
+        "plugin:avani-core",
+        "plugin:avani-nextjs"
+      ]
+    },
+    {
       "id": "invariant:observation_id_uniqueness",
       "kind": "invariant",
       "description": "Every observation carries a globally unique id (offline-sync idempotency).",
@@ -319,6 +331,10 @@
       "provision": "pattern:react-hook-form-zod"
     },
     {
+      "condition": "runtime:ts-nextjs",
+      "provision": "invariant:a11y_axe_clean"
+    },
+    {
       "condition": "runtime:python",
       "provision": "plugin:avani-python"
     },
@@ -404,6 +420,9 @@
       "runtime:ts-nextjs"
     ],
     "pattern:react-hook-form-zod": [
+      "runtime:ts-nextjs"
+    ],
+    "invariant:a11y_axe_clean": [
       "runtime:ts-nextjs"
     ],
     "plugin:avani-python": [

@@ -1,6 +1,6 @@
 # selection-map
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 
 A calibrated project composes four layers in tandem: plugins teach Claude the conventions and procedures; blueprints stamp the operational machinery those procedures drive; invariants pin the guarantees that must hold; patterns are the stack idioms the plugins apply. Each branch selects a coherent slice across all four, so the agent knows the conventions, the repo has the machinery, and the guarantees are enforced together.
 
@@ -32,6 +32,7 @@ _Selects the TS conventions, the Next.js behavior + Prisma procedure, the stampe
 - `blueprint:ts-nextjs-prisma` — Stamps the db commands and CI/deploy machinery that the avani-nextjs migration procedure operates on. The blueprint gives every project identical commands; the plugin makes Claude use them the same way.
 - `pattern:nextjs-app-router` — The routing idiom avani-nextjs applies across the app.
 - `pattern:react-hook-form-zod` — Forms validate against the same Zod schemas the server uses — one shape, client and server.
+- `invariant:a11y_axe_clean` — The enforceable end of the accessibility standard: jsx-a11y lints at write time, axe verifies rendered pages in e2e. Semantics-based, so it holds across component libraries.
 
 ### `runtime:python`
 
@@ -117,10 +118,10 @@ _The moat bundle: the field-data plugin and its session guarantee — reserved f
 
 ### plugins
 
-- `plugin:avani-core` — The always-on floor every project stands on before any calibration. Everything else layers on top of it. _Works with: `monorepo-root`._
+- `plugin:avani-core` — The always-on floor every project stands on before any calibration. Everything else layers on top of it. _Works with: `monorepo-root`, `a11y_axe_clean`._
 - `plugin:avani-typescript` — Makes Claude write idiomatic, strict TypeScript with validation at the boundary — applied to every file in a ts-nextjs app. _Works with: `react-hook-form-zod`, `avani-nextjs`._
 - `plugin:avani-python` — Makes Claude write idiomatic Python with FastAPI + Pydantic conventions; the FastAPI OpenAPI spec is the cross-language contract. _Works with: `python-fastapi`._
-- `plugin:avani-nextjs` — Teaches the Next.js conventions and the Prisma migration procedure (never db push in prod, migrations append-only). Pairs with the blueprint that stamps the actual commands. _Works with: `ts-nextjs-prisma`, `nextjs-app-router`, `react-hook-form-zod`, `avani-typescript`._
+- `plugin:avani-nextjs` — Teaches the Next.js conventions and the Prisma migration procedure (never db push in prod, migrations append-only). Pairs with the blueprint that stamps the actual commands. _Works with: `ts-nextjs-prisma`, `a11y_axe_clean`, `nextjs-app-router`, `react-hook-form-zod`, `avani-typescript`._
 - `plugin:avani-postgis` — Teaches PostGIS setup and geo queries, and carries the coordinate-fuzzing guarantee for protected location data. _Works with: `geo_coordinate_fuzzing_public_views`, `prisma-postgis`._
 - `plugin:avani-clerk` — Wires Clerk authentication: role-based access, route middleware, and invite-only onboarding.
 - `plugin:avani-stripe` — Payment handling with reconciliation guarantees and the webhook-verification procedure. _Works with: `payment_amount_reconciliation`._
@@ -137,6 +138,7 @@ _The moat bundle: the field-data plugin and its session guarantee — reserved f
 
 - `invariant:observations_append_only_never_delete` — The provenance guarantee: history is immutable, corrections are additive. Enforced by tests + hooks, taught by avani-field-data. _Works with: `avani-field-data`._
 - `invariant:geo_coordinate_fuzzing_public_views` — Protects sensitive locations. Selected by two branches — any geo data, and the protected sensitivity tier — the shared guarantee. _Works with: `avani-field-data`, `avani-postgis`._
+- `invariant:a11y_axe_clean` — The enforceable end of the accessibility standard: jsx-a11y lints at write time, axe verifies rendered pages in e2e. Semantics-based, so it holds across component libraries. _Works with: `avani-core`, `avani-nextjs`._
 - `invariant:observation_id_uniqueness` — Makes replaying the offline queue idempotent — the property the sync engine depends on to be safe. _Works with: `avani-offline`._
 - `invariant:payment_amount_reconciliation` — Guarantees money charged always ties back to authoritative line items — no silent drift. _Works with: `avani-stripe`._
 - `invariant:session_expires_event_plus_24hrs` — Bounds stale-credential risk for volunteers in the field by tying session life to the event, not the login. _Works with: `avani-field-data`._
