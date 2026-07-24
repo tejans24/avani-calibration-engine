@@ -1,3 +1,6 @@
+// Loading .env here (not in each caller) means no guard can ever run without
+// it — resolveStage must see AVANI_STAGE from .env, not just the shell.
+import 'dotenv/config';
 import { execSync } from 'node:child_process';
 
 export type Stage = 'dev' | 'staging' | 'production';

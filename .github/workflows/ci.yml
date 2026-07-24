@@ -11,7 +11,8 @@ on:
     - cron: '0 9 * * 1' # weekly freshness run, Monday 09:00 UTC
   workflow_dispatch:
   push:
-    branches: [main]
+    # The repo's current default branch; drop it here if the default is ever renamed to main.
+    branches: [main, claude/avani-calibration-engine-75pkzt]
   pull_request:
 
 jobs:

@@ -21,7 +21,7 @@
     "db:studio": "prisma studio"
   },
   "prisma": {
-    "seed": "tsx db/init.ts && tsx db/seed.ts"
+    "seed": "tsx db/seed.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.0",
