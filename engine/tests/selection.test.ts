@@ -36,6 +36,7 @@ describe('select(invasive-species)', () => {
     expect(ids).toEqual(
       [
         'blueprint:ts-nextjs-prisma',
+        'invariant:a11y_axe_clean',
         'invariant:geo_coordinate_fuzzing_public_views',
         'invariant:observation_id_uniqueness',
         'invariant:observations_append_only_never_delete',

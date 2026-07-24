@@ -22,6 +22,7 @@ describe('generated project', () => {
       '.claude/settings.json',
       '.mcp.json',
       'CLAUDE.md',
+      'tests/invariants/a11y_axe_clean.test.ts',
       'tests/invariants/geo_coordinate_fuzzing_public_views.test.ts',
       'tests/invariants/observation_id_uniqueness.test.ts',
       'tests/invariants/observations_append_only_never_delete.test.ts',

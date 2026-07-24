@@ -269,13 +269,13 @@ The inconsistency across old projects is not an obstacle — **it is the disease
 | **Out (later)** | Interview, constraint graph, decision tiers, cost model, other frameworks, LLM layer, client/business mode |
 | **Success bar** | Scaffold a real project faster than `create-next-app` + manual setup; a Claude session in it is already expert; never re-have this conversation |
 
-The MVP **is the baseline** (§17): authored convergent knowledge + one stack made genuinely deep. Harvest enriches it in the background. Default stack: **TBD by owner** (the one open input).
+The MVP **is the baseline** (§17): authored convergent knowledge + one stack made genuinely deep. Harvest enriches it in the background. **Default stack (decided):** ts-nextjs + Prisma + Postgres 17, Tailwind, npm, Clerk pre-wired behind an auth adapter (keys optional — auth off until configured; *revisit:* custom auth with a management dashboard, contained to the adapter + middleware). Component behavior primitive deliberately deferred to Phase B (design tokens).
 
 ---
 
 ## 20. Roadmap
 
-Built: schema/contracts, selection map (DAG + viz), calibration, generate layer, plugins (core stub, typescript, python), end-to-end golden pipeline.
+Built: schema/contracts, selection map (DAG + viz), calibration, generate layer, plugins (core, typescript, python, nextjs), end-to-end golden pipeline — **and the MVP (A → B2 → B3)**: baseline skills (a11y + discipline in core; forms/db-migrations/service-design in nextjs; `a11y_axe_clean` invariant), the runnable `ts-nextjs-prisma` blueprint (stamped by `generate`), and `avani new` self mode with ROADMAP.md + routing-policy stamping.
 
 | Phase | Piece | Depends on |
 |---|---|---|

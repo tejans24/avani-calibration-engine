@@ -1,0 +1,10 @@
+{
+  "name": "avani-nextjs",
+  "version": "0.1.0",
+  "description": "Next.js stack conventions for Avani projects: App Router, RHF + Zod forms, service design, and the Prisma db-migrations procedure. Enabled for any app with runtime ts-nextjs.",
+  "author": {
+    "name": "Avani"
+  },
+  "homepage": "https://github.com/tejans24/avani-calibration-engine",
+  "repository": "https://github.com/tejans24/avani-calibration-engine"
+}

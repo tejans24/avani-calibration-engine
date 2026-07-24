@@ -1,19 +1,24 @@
 #!/usr/bin/env tsx
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { basename, resolve } from 'node:path';
 import { parseIntakeProfile } from '../src/schema/intake-profile.js';
 import { runPipeline } from '../src/pipeline.js';
+import { stampBlueprints } from '../src/generate/blueprints.js';
 import { generateProject, writeProject } from '../src/generate/generate.js';
+import { APP_NAME_RE, buildNewProject } from '../src/generate/new-project.js';
 
-const SUBCOMMANDS = ['init', 'calibrate', 'generate', 'stage', 'sync', 'handoff', 'retro'] as const;
+const SUBCOMMANDS = ['new', 'init', 'calibrate', 'generate', 'stage', 'sync', 'handoff', 'retro'] as const;
 type Subcommand = (typeof SUBCOMMANDS)[number];
 
-const USAGE = `avani calibration engine (v0.5 — calibrate is live; other commands stubbed)
+const USAGE = `avani calibration engine (v0.5 — new/calibrate/generate are live; other commands stubbed)
 
 Usage: calibrate <subcommand>
 
+  new <name>                 One-command project from the house preset (self mode, no interview);
+                             --out <dir> (default: ./<name>)
   init                       Start intake for a new project
   calibrate <intake.json>    Run intake -> dials + selection -> calibrated-config
-  generate <intake.json>     Emit project artifacts (default: ./.staging), --out <dir>
+  generate <intake.json>     Emit project artifacts (default: ./.staging), --out <dir> --name <app>
   stage                      Show / promote project stage (dev -> staging -> production)
   sync                       Re-stamp blueprints from current templates (diff + approve)
   handoff                    Produce a deliverable variant (--strip for code-only)
@@ -90,10 +95,39 @@ function runGenerate(argv: string[]): number {
 
   const { config, selection } = runPipeline(intake);
   const files = generateProject(config, selection);
+  if (argv.includes('--stamp')) {
+    const name = argValue(argv, '--name') ?? 'app';
+    Object.assign(files, { ...stampBlueprints(selection, { APP_NAME: name }), ...files });
+  }
   const written = writeProject(files, outDir);
   console.log(`\nGenerated ${written.length} files into ${outDir}/:`);
   for (const path of written) console.log(`  ${path}`);
   console.log('');
+  return 0;
+}
+
+function runNew(argv: string[]): number {
+  const name = argv[1] && !argv[1].startsWith('--') ? argv[1] : undefined;
+  if (!name || !APP_NAME_RE.test(name)) {
+    console.error('usage: calibrate new <name> [--out <dir>]  (name: lowercase letters, digits, dashes)');
+    return 1;
+  }
+  const outDir = resolve(argValue(argv, '--out') ?? name);
+  if (existsSync(outDir) && readdirSync(outDir).length > 0) {
+    console.error(`refusing to generate into non-empty directory: ${outDir}`);
+    return 1;
+  }
+
+  const { files, result } = buildNewProject(name);
+  const written = writeProject(files, outDir);
+
+  console.log(`\n${name} — generated from the house preset (self mode, ${result.context.dials.runtime}).`);
+  console.log(`${written.length} files in ${outDir}/\n`);
+  console.log('Next steps:');
+  console.log(`  cd ${basename(outDir) === name ? name : outDir}`);
+  console.log('  npm install');
+  console.log('  npm run dev        # starts postgres, migrates, seeds, runs the app');
+  console.log('\nThen open ROADMAP.md and take task 1: replace the exemplar domain with yours.\n');
   return 0;
 }
 
@@ -107,6 +141,7 @@ export function run(argv: string[]): number {
     console.error(`Unknown subcommand: ${cmd}\n\n${USAGE}`);
     return 1;
   }
+  if (cmd === 'new') return runNew(argv);
   if (cmd === 'calibrate') return runCalibrate(argv[1], argv.includes('--json'));
   if (cmd === 'generate') return runGenerate(argv);
   console.log(`'${cmd}' is not implemented yet — see SPEC.md §12 for the roadmap.`);

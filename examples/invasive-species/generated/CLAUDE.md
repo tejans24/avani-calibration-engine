@@ -27,6 +27,7 @@ npm run db:seed             # seed local data
 
 - `observations_append_only_never_delete` — Records are never deleted, only superseded with a correction flag.
 - `geo_coordinate_fuzzing_public_views` — Public-facing exports fuzz coordinates; exact coords are admin-only.
+- `a11y_axe_clean` — Key pages pass an axe accessibility scan with zero violations.
 - `observation_id_uniqueness` — Every observation carries a globally unique id (offline-sync idempotency).
 - `session_expires_event_plus_24hrs` — Field sessions expire 24h after the event they belong to.
 

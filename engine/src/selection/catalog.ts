@@ -9,7 +9,7 @@ import type { SelectionContext } from './context.js';
  * `sensitivity:protected`) — that fan-in is what "shared across branches" means.
  * Predicates are code, not a JSON DSL: type-checked, testable, and debuggable.
  */
-export const SELECTION_VERSION = '1.1.0';
+export const SELECTION_VERSION = '1.2.0';
 
 export type ProvisionKind = 'plugin' | 'blueprint' | 'invariant' | 'pattern';
 
@@ -147,6 +147,12 @@ export const PROVISIONS: readonly Provision[] = [
     worksWith: ['plugin:avani-postgis', 'plugin:avani-field-data'],
   },
   {
+    id: 'invariant:a11y_axe_clean', kind: 'invariant',
+    description: 'Key pages pass an axe accessibility scan with zero violations.',
+    purpose: 'The enforceable end of the accessibility standard: jsx-a11y lints at write time, axe verifies rendered pages in e2e. Semantics-based, so it holds across component libraries.',
+    worksWith: ['plugin:avani-core', 'plugin:avani-nextjs'],
+  },
+  {
     id: 'invariant:observation_id_uniqueness', kind: 'invariant',
     description: 'Every observation carries a globally unique id (offline-sync idempotency).',
     purpose: 'Makes replaying the offline queue idempotent — the property the sync engine depends on to be safe.',
@@ -223,6 +229,7 @@ export const RULES: readonly Rule[] = [
       'blueprint:ts-nextjs-prisma',
       'pattern:nextjs-app-router',
       'pattern:react-hook-form-zod',
+      'invariant:a11y_axe_clean',
     ],
   },
   { condition: 'runtime:python', provides: ['plugin:avani-python', 'blueprint:python-fastapi'] },

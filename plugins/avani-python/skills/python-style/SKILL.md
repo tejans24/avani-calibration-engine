@@ -1,6 +1,7 @@
 ---
 name: python-style
-description: Python code style and project conventions for Avani projects. Use when writing or reviewing any Python code in this project — FastAPI services, ML workflows, data pipelines. TypeScript files follow avani-typescript conventions instead.
+description: Write Python to the Avani conventions — uv, ruff, pytest, FastAPI service layout, Pydantic-at-the-boundary.
+when_to_use: When writing or reviewing any Python in this project — FastAPI services, ML workflows, data pipelines. TypeScript files follow avani-typescript conventions instead.
 ---
 
 # Avani Python Style
