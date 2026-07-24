@@ -1,5 +1,10 @@
 {
   "name": "avani-typescript",
   "version": "0.1.0",
-  "description": "TypeScript conventions for Avani projects: strict mode, naming, Zod-at-the-boundary, service-oriented structure. Enabled for any app with runtime ts-nextjs."
+  "description": "TypeScript conventions for Avani projects: strict mode, naming, Zod-at-the-boundary, service-oriented structure. Enabled for any app with runtime ts-nextjs.",
+  "author": {
+    "name": "Avani"
+  },
+  "homepage": "https://github.com/tejans24/avani-calibration-engine",
+  "repository": "https://github.com/tejans24/avani-calibration-engine"
 }

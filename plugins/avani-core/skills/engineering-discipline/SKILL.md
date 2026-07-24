@@ -1,6 +1,7 @@
 ---
 name: engineering-discipline
-description: Universal engineering discipline for all Avani projects — testing tiers, mock policy, git workflow, and the rules that keep agent output trustworthy. Use when writing tests, fixing failing tests, structuring work into commits, or reviewing changes.
+description: Apply the Avani engineering discipline — which test tier a test belongs in, what may be mocked, how to respond to a failing test, git hygiene, and the definition of done.
+when_to_use: When writing or placing tests, deciding what to mock, tempted to change a failing test's assertion, structuring work into commits, or judging whether a change is done. Especially when a test fails and the fix isn't obvious.
 ---
 
 # Engineering Discipline

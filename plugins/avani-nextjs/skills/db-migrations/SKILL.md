@@ -1,6 +1,7 @@
 ---
 name: db-migrations
-description: The Prisma database migration procedure for Avani Next.js projects. Use whenever changing prisma/schema.prisma, creating or applying migrations, seeding, or resetting a database — and before any command that touches a non-dev database.
+description: Follow the Avani Prisma migration procedure — stage-gated commands, append-only migrations, expand/contract for post-launch changes. Never db push outside dev.
+when_to_use: Whenever changing prisma/schema.prisma, creating or applying migrations, seeding or resetting a database, classifying a post-launch schema change, or before ANY command that touches a non-dev database.
 ---
 
 # Database Migrations (Prisma)

@@ -1,6 +1,7 @@
 ---
 name: accessibility
-description: Accessibility standard for all Avani projects. Use when writing or reviewing any UI code — components, forms, pages, interactive widgets — regardless of framework or component library.
+description: Write and review UI code to the Avani accessibility standard — semantics-first markup, keyboard operability, the Field contract, contrast. Applies to all UI regardless of framework or component library.
+when_to_use: Any time UI code is written or reviewed — components, forms, pages, dialogs, menus, interactive widgets. Also when a jsx-a11y lint error or axe violation needs fixing, or when choosing between native elements and custom widgets.
 ---
 
 # Accessibility Standard

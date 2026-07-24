@@ -1,6 +1,7 @@
 ---
 name: forms
-description: Form conventions for Next.js apps — React Hook Form + Zod + the Field contract. Use when building or reviewing any form, input, or client-side validation in a Next.js project.
+description: Build forms the Avani way — React Hook Form + the shared Zod schema (same shape client and server) + the Field contract for accessible error display.
+when_to_use: When building or reviewing any form, input component, or validation logic in a Next.js project — including wiring a server action to form input, or adopting a new component library's inputs.
 ---
 
 # Forms: RHF + Zod + the Field contract

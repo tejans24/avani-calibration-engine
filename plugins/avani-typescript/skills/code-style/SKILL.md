@@ -1,6 +1,7 @@
 ---
 name: code-style
-description: TypeScript code style and structure conventions for Avani projects. Use when writing or reviewing any TypeScript code in this project — new modules, refactors, or PR review.
+description: Write TypeScript to the Avani conventions — strict mode, naming, Zod-at-the-boundary, service-oriented file structure.
+when_to_use: When writing or reviewing any TypeScript in this project — new modules, refactors, PR review — or deciding where a new file belongs and what to name it.
 ---
 
 # Avani Code Style

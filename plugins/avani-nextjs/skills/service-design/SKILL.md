@@ -1,6 +1,7 @@
 ---
 name: service-design
-description: Service architecture for Avani Next.js projects — typed interfaces, Zod at the boundary, no framework imports inside services, injected collaborators. Use when adding or changing business logic, creating a service, or deciding where code belongs.
+description: Structure business logic as Avani services — explicit typed interface, Zod parse at the boundary, no framework imports, injected collaborators, tests generated with the service.
+when_to_use: When adding or changing business logic, creating a service, deciding where new code belongs, wrapping a third-party API, or when a route handler / server action starts growing logic beyond parse-call-map.
 ---
 
 # Service Design
