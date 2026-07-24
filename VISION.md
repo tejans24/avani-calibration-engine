@@ -275,7 +275,7 @@ The MVP **is the baseline** (§17): authored convergent knowledge + one stack ma
 
 ## 20. Roadmap
 
-Built: schema/contracts, selection map (DAG + viz), calibration, generate layer, plugins (core stub, typescript, python), end-to-end golden pipeline.
+Built: schema/contracts, selection map (DAG + viz), calibration, generate layer, plugins (core, typescript, python, nextjs), end-to-end golden pipeline — **and the MVP (A → B2 → B3)**: baseline skills (a11y + discipline in core; forms/db-migrations/service-design in nextjs; `a11y_axe_clean` invariant), the runnable `ts-nextjs-prisma` blueprint (stamped by `generate`), and `avani new` self mode with ROADMAP.md + routing-policy stamping.
 
 | Phase | Piece | Depends on |
 |---|---|---|

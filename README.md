@@ -1,8 +1,17 @@
 # Avani Calibration Engine
 
-Transforms an **application spec** into a calibrated Claude Code setup: universal and context-selected plugins, plus a thin layer of project-specific artifacts (`CLAUDE.md`, settings/hooks, invariant tests, `.mcp.json`).
+Transforms an **application spec** into a calibrated Claude Code setup: universal and context-selected plugins, plus a runnable blueprint skeleton and a thin layer of project-specific artifacts (`CLAUDE.md`, settings/hooks, invariant tests, `.mcp.json`).
 
-**Status:** pre-implementation. Engine mechanics are specified in [SPEC.md](./SPEC.md) (v0.5); the broader decision-architecture, standards model, LLM strategy, business model, and build roadmap are in [VISION.md](./VISION.md).
+**Status:** MVP live (`avani new`, VISION §19). Engine mechanics are specified in [SPEC.md](./SPEC.md) (v0.5); the broader decision-architecture, standards model, LLM strategy, business model, and build roadmap are in [VISION.md](./VISION.md).
+
+## The MVP — `avani new`
+
+```bash
+npm run new -- my-app          # one command -> a runnable, calibrated project
+cd my-app && npm install && npm run dev
+```
+
+Deterministic, zero LLM calls: the house preset (self mode, no interview) calibrates to the default stack and emits a **runnable** ts-nextjs + Prisma skeleton — app structure, prisma schema + initial migration, stage-guarded db scripts, deterministic seeds (factories → scenarios → env seeds), an exemplar service with unit/integration/e2e test tiers, a CI ladder — plus the engine residue (`.claude/` wired to the marketplace plugins, `CLAUDE.md`, invariant stubs) and the execution layer (`ROADMAP.md` + `.avani/routing-policy.json`).
 
 This repo is the **engine**, the **plugin marketplace**, and the **blueprint library**:
 
@@ -87,6 +96,11 @@ project artifacts:
 - `tests/invariants/*.test.ts` — a `test.todo` stub per selected invariant
 - `.avani/manifest.json` — engine/schema/selection versions + selection, for reproducibility
 
+Blueprint stamping is live for `ts-nextjs-prisma` (`templates/ts-nextjs-prisma/files/`):
+`engine/src/generate/blueprints.ts` copies the template tree deterministically, renaming
+un-dotted files (`gitignore` → `.gitignore`, `env.example` → `.env.example`) and substituting
+`{{APP_NAME}}`. `calibrate generate --stamp --name <app>` includes it; `calibrate new` always does.
+
 ```bash
 npm run calibrate -- generate examples/invasive-species/intake-profile.json --out ./out
 ```
@@ -97,4 +111,7 @@ blueprint file stamping is Phase-1 work — selected blueprints are recorded in 
 
 ## Roadmap
 
-Phase 0 (harvest `avani-core` + language plugins from shipped apps) → Phase 1 (Tier 2 stack/domain plugins + blueprints) → Phase 2 (engine) → Phase 3 (learning loop). See SPEC.md §10.
+The MVP (VISION §20 phases A → B2 → B3) is built: baseline skills (`avani-core` accessibility +
+engineering-discipline, `avani-nextjs` forms/db-migrations/service-design, the `a11y_axe_clean`
+invariant), the runnable `ts-nextjs-prisma` blueprint, and `avani new`. Next: the decision core
+(C → D → E → F — dial expansion, constraint graph, decision tiers, structured interview). See VISION.md §20.

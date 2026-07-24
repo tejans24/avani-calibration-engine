@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "calibrate": "tsx engine/bin/calibrate.ts",
+    "new": "tsx engine/bin/calibrate.ts new",
     "schema:build": "tsx engine/bin/schema-build.ts",
     "selection:build": "tsx engine/bin/selection-build.ts"
   },
