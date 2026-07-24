@@ -36,6 +36,12 @@ npm run schema:build     # regenerate schemas/*.schema.json + *.md from the Zod 
 npm run calibrate -- init  # CLI stub (not implemented yet)
 ```
 
+CI (`.github/workflows/ci.yml`) runs the engine suite plus a **template-freshness** job that
+stamps a project and takes it through install → typecheck → lint → unit → integration → build.
+The template pins only majors (caret ranges, no lockfile), so the weekly cron tests the blueprint
+against the current ecosystem — dependency rot turns up as a red run here, not in the next
+generated project.
+
 ## Schema layer (the moat's contract)
 
 The canonical knowledge structures are defined once in Zod (`engine/src/schema/`)

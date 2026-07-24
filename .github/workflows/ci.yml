@@ -1,0 +1,62 @@
+# Engine CI + template freshness. The freshness job stamps a project and takes
+# it through install -> typecheck -> lint -> unit -> integration -> build.
+# Because the template pins only majors (caret ranges, no lockfile), the weekly
+# cron effectively tests the template against the CURRENT ecosystem: green means
+# the blueprint is still fresh; red means a dependency moved under it — caught
+# here, before any real project inherits the rot.
+name: ci
+
+on:
+  schedule:
+    - cron: '0 9 * * 1' # weekly freshness run, Monday 09:00 UTC
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  template-freshness:
+    needs: engine
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Stamp a fresh project
+        run: npm run new -- fresh-app --out "$RUNNER_TEMP/fresh-app"
+      - name: Install (resolves latest deps within the template's ranges)
+        working-directory: ${{ runner.temp }}/fresh-app
+        run: npm install --no-audit --no-fund
+      - name: Prisma generate
+        working-directory: ${{ runner.temp }}/fresh-app
+        run: npx prisma generate
+      - name: Typecheck
+        working-directory: ${{ runner.temp }}/fresh-app
+        run: npm run typecheck
+      - name: Lint
+        working-directory: ${{ runner.temp }}/fresh-app
+        run: npm run lint
+      - name: Unit tier
+        working-directory: ${{ runner.temp }}/fresh-app
+        run: npm test
+      - name: Integration tier (real Postgres via testcontainers, migrated from empty)
+        working-directory: ${{ runner.temp }}/fresh-app
+        run: npm run test:integration
+      - name: Build
+        working-directory: ${{ runner.temp }}/fresh-app
+        run: npm run build
