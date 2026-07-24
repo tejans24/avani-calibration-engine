@@ -1,0 +1,28 @@
+{
+  "_comment": "LLM-authored-once sample pools, committed as static data. Runtime draws via seeded RNG (db/factories) — deterministic, reproducible, no model calls at seed time. Replace with pools for your real domain.",
+  "titles": [
+    "Kickoff checklist",
+    "API rate-limit findings",
+    "Retro action items",
+    "Deploy runbook draft",
+    "Customer feedback digest",
+    "Schema change proposal",
+    "Weekly metrics summary",
+    "Incident 0142 postmortem",
+    "Onboarding rough edges",
+    "Pricing page copy ideas",
+    "Backlog grooming notes",
+    "Edge-case: unicode titles 🚀 ünïcode"
+  ],
+  "bodies": [
+    "Short note.",
+    "A slightly longer note that spans a couple of sentences. It exists to make list layouts earn their keep.",
+    "- bullet one\n- bullet two\n- bullet three",
+    "Numbers to eyeball: 42, 1000000, -3.14, 0.",
+    "Trailing whitespace and   odd   spacing to keep rendering honest.   ",
+    "Multi-paragraph body.\n\nSecond paragraph with enough text to wrap on narrow screens and test truncation styles.",
+    "Contains \"quotes\", 'apostrophes', <angle brackets> & ampersands.",
+    "Emoji stress test: ✅ ❌ ⚠️ 🎯 — plus some CJK: 日本語のテキスト。"
+  ],
+  "categories": ["Work", "Personal", "Ideas", "Archive"]
+}

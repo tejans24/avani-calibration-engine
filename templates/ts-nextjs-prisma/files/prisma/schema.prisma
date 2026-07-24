@@ -1,0 +1,28 @@
+// Exemplar domain: notes with reference-data categories. Replace with your
+// real domain, keeping the shape: reference tables seeded by db:init, working
+// data seeded by db:seed (dev only).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id    String @id @default(cuid())
+  name  String @unique
+  notes Note[]
+}
+
+model Note {
+  id         String    @id @default(cuid())
+  title      String
+  body       String
+  category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
