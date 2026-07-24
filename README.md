@@ -2,7 +2,7 @@
 
 Transforms an **application spec** into a calibrated Claude Code setup: universal and context-selected plugins, plus a thin layer of project-specific artifacts (`CLAUDE.md`, settings/hooks, invariant tests, `.mcp.json`).
 
-**Status:** pre-implementation. The design is settled in [SPEC.md](./SPEC.md) (v0.5); engine logic is not written yet.
+**Status:** pre-implementation. Engine mechanics are specified in [SPEC.md](./SPEC.md) (v0.5); the broader decision-architecture, standards model, LLM strategy, business model, and build roadmap are in [VISION.md](./VISION.md).
 
 This repo is the **engine**, the **plugin marketplace**, and the **blueprint library**:
 
