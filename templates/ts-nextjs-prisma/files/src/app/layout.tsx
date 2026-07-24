@@ -1,5 +1,7 @@
+import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { clerkConfigured } from '@/lib/auth';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -8,14 +10,30 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return (
+  const page = (
     <html lang="en">
-      <body>
-        <header>
-          <h1>{{APP_NAME}}</h1>
+      <body className="mx-auto max-w-2xl p-4 font-sans leading-relaxed text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+        <header className="mb-6 flex items-center justify-between">
+          <h1 className="text-2xl font-bold">{{APP_NAME}}</h1>
+          {clerkConfigured ? (
+            <nav aria-label="Account">
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button type="button" className="rounded border border-neutral-400 px-3 py-1">
+                    Sign in
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
+            </nav>
+          ) : null}
         </header>
         <main>{children}</main>
       </body>
     </html>
   );
+
+  return clerkConfigured ? <ClerkProvider>{page}</ClerkProvider> : page;
 }

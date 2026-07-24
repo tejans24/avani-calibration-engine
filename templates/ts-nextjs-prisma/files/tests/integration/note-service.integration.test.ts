@@ -20,7 +20,7 @@ let prisma: PrismaClient;
 beforeAll(async () => {
   let url = process.env['TEST_DATABASE_URL'];
   if (!url) {
-    container = await new PostgreSqlContainer('postgres:16').start();
+    container = await new PostgreSqlContainer('postgres:17').start();
     url = container.getConnectionUri();
   }
   execSync('npx prisma migrate deploy', { env: { ...process.env, DATABASE_URL: url }, stdio: 'inherit' });

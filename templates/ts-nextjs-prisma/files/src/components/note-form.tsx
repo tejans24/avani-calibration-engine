@@ -6,6 +6,10 @@ import { useForm } from 'react-hook-form';
 import { createNoteAction } from '@/app/actions';
 import { NoteInputSchema, type NoteInput } from '@/schemas/note';
 
+const inputClasses =
+  'mt-1 block w-full rounded border border-neutral-300 p-2 aria-[invalid]:border-red-600 dark:border-neutral-700 dark:bg-neutral-900';
+const errorClasses = 'mt-1 text-sm text-red-700 dark:text-red-400';
+
 // Exemplar form: RHF state + the SAME Zod schema the server parses + the Field
 // contract (id / aria-invalid / aria-describedby) so errors are announced.
 export function NoteForm() {
@@ -28,40 +32,54 @@ export function NoteForm() {
   });
 
   return (
-    <form onSubmit={onSubmit} noValidate>
-      <label htmlFor="note-title">Title</label>
-      <input
-        id="note-title"
-        type="text"
-        aria-invalid={errors.title ? 'true' : undefined}
-        aria-describedby={errors.title ? 'note-title-error' : undefined}
-        {...register('title')}
-      />
-      {errors.title ? (
-        <p className="field-error" id="note-title-error">
-          {errors.title.message}
-        </p>
-      ) : null}
+    <form onSubmit={onSubmit} noValidate className="space-y-3">
+      <div>
+        <label htmlFor="note-title" className="block font-medium">
+          Title
+        </label>
+        <input
+          id="note-title"
+          type="text"
+          className={inputClasses}
+          aria-invalid={errors.title ? 'true' : undefined}
+          aria-describedby={errors.title ? 'note-title-error' : undefined}
+          {...register('title')}
+        />
+        {errors.title ? (
+          <p className={errorClasses} id="note-title-error">
+            {errors.title.message}
+          </p>
+        ) : null}
+      </div>
 
-      <label htmlFor="note-body">Body</label>
-      <textarea
-        id="note-body"
-        rows={3}
-        aria-invalid={errors.body ? 'true' : undefined}
-        aria-describedby={errors.body ? 'note-body-error' : undefined}
-        {...register('body')}
-      />
-      {errors.body ? (
-        <p className="field-error" id="note-body-error">
-          {errors.body.message}
-        </p>
-      ) : null}
+      <div>
+        <label htmlFor="note-body" className="block font-medium">
+          Body
+        </label>
+        <textarea
+          id="note-body"
+          rows={3}
+          className={inputClasses}
+          aria-invalid={errors.body ? 'true' : undefined}
+          aria-describedby={errors.body ? 'note-body-error' : undefined}
+          {...register('body')}
+        />
+        {errors.body ? (
+          <p className={errorClasses} id="note-body-error">
+            {errors.body.message}
+          </p>
+        ) : null}
+      </div>
 
-      <button type="submit" disabled={isSubmitting}>
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="rounded bg-neutral-900 px-4 py-2 text-white disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
+      >
         {isSubmitting ? 'Saving…' : 'Add note'}
       </button>
       {serverError ? (
-        <p className="field-error" role="alert">
+        <p className={errorClasses} role="alert">
           {serverError}
         </p>
       ) : null}
