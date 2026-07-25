@@ -30,7 +30,7 @@ All auth flows through the adapter in `src/lib/auth.ts` — actions and services
 | `npm run db:init` | reference data only — safe in any environment |
 | `npm test` | unit tier (services isolated, collaborators mocked) |
 | `npm run test:integration` | integration tier (real Postgres via testcontainers, migrated from empty); set `TEST_DATABASE_URL` to use an existing **disposable** Postgres instead of Docker |
-| `npm run test:e2e` | Playwright: critical flows + the axe a11y invariant |
+| `npm run test:e2e` | builds, then Playwright against `next start` on port 3001 (never the dev server's 3000): critical flows + the axe a11y invariant; needs a migrated + seeded db |
 
 ## Structure
 

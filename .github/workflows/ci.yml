@@ -43,6 +43,14 @@ jobs:
       - name: Install (resolves latest deps within the template's ranges)
         working-directory: ${{ runner.temp }}/fresh-app
         run: npm install --no-audit --no-fund
+      # Caret ranges never cross a major, so the green freshness run is blind
+      # to major-version aging by construction. This report surfaces it weekly
+      # without blocking: `npm outdated` exits 1 whenever anything is outdated,
+      # hence continue-on-error — read the step output, not its status.
+      - name: Major-drift report (informational)
+        working-directory: ${{ runner.temp }}/fresh-app
+        continue-on-error: true
+        run: npm outdated
       - name: Prisma generate
         working-directory: ${{ runner.temp }}/fresh-app
         run: npx prisma generate

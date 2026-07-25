@@ -30,3 +30,12 @@ test('a11y invariant: home page is axe-clean', async ({ page }) => {
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
 });
+
+// The branded 404 is a stamped page too — the invariant covers it.
+test('a11y invariant: 404 page is axe-clean', async ({ page }) => {
+  const response = await page.goto('/definitely-not-a-page');
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole('heading', { level: 2, name: 'Page not found' })).toBeVisible();
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+});
