@@ -48,9 +48,9 @@ Generate service + interface + unit test + mock together, in the same change:
 
 If a route handler grows an `if` beyond input parsing and status mapping, the logic belongs in a service.
 
-## Prisma stays server-side
+## ORM types stay server-side
 
-Client code never imports from `@prisma/client` — Prisma's generated types and enums don't survive the client bundle. The shared shapes the client consumes live in `src/schemas/` (`z.infer` types); enums the client needs are plain const objects there, kept in sync with the schema. Repositories are the only Prisma-aware layer.
+Client code never imports the ORM's generated client (`@prisma/client` here) — generated types and enums don't survive the client bundle, and importing them drags server-only code into it. The shared shapes the client consumes live in `src/schemas/` (`z.infer` types); enums the client needs are plain const objects there, kept in sync with the schema. Repositories are the only ORM-aware layer, which is also what makes an ORM swap a repository-layer change.
 
 ## Multi-tenant scoping
 
