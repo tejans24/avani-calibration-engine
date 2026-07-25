@@ -10,7 +10,7 @@ import { buildRoadmapMd, buildRoutingPolicy } from './roadmap.js';
  * `avani new` — self mode (VISION §19): the house preset, no interview. One
  * command -> the default stack, deterministic, zero LLM calls at runtime.
  */
-export const APP_NAME_RE = /^[a-z][a-z0-9-]*$/;
+export const APP_NAME_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 
 /**
  * The house preset: a single-owner product app on the default stack. Facts are

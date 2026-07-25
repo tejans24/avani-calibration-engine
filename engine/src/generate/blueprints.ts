@@ -20,6 +20,18 @@ export interface StampVars {
   APP_NAME: string;
 }
 
+/**
+ * Host port for the app's dev Postgres, derived deterministically from the app
+ * name (`{{DB_PORT}}` in templates). Two generated apps on one machine get
+ * different ports instead of colliding on 5432; the same name always maps to
+ * the same port, keeping stamping deterministic.
+ */
+export function dbPortFor(appName: string): number {
+  let h = 0;
+  for (const ch of appName) h = (Math.imul(h, 31) + ch.charCodeAt(0)) >>> 0;
+  return 5433 + (h % 512);
+}
+
 function listFiles(dir: string, prefix = ''): string[] {
   const out: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
@@ -30,7 +42,8 @@ function listFiles(dir: string, prefix = ''): string[] {
   return out;
 }
 
-const substitute = (content: string, vars: StampVars): string => content.replaceAll('{{APP_NAME}}', vars.APP_NAME);
+const substitute = (content: string, vars: StampVars): string =>
+  content.replaceAll('{{APP_NAME}}', vars.APP_NAME).replaceAll('{{DB_PORT}}', String(dbPortFor(vars.APP_NAME)));
 
 /** Whether a blueprint has stampable template files yet (some are still planned). */
 export function blueprintHasFiles(name: string): boolean {

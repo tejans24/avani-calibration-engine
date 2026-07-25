@@ -25,15 +25,15 @@ If a store holds rows that came from the server, that's the disease. Migrate rea
 
 ## Optimistic updates live in the cache
 
-The recipe, in order:
+The recipe, in order (plain React Query terms; with tRPC, `utils.<proc>.cancel/getData/setData/invalidate` are the same operations scoped to a procedure):
 
-1. `onMutate`: `await utils.<proc>.cancel()` → snapshot `const previousData = utils.<proc>.getData(input)` → `utils.<proc>.setData(input, updater)` with the optimistic row (creates get a `temp-${Date.now()}` id) → `return { previousData }`.
-2. `onError`: restore with `utils.<proc>.setData(input, context.previousData)`.
-3. `onSettled` (or `onSuccess`): `utils.<proc>.invalidate(input)` — the server row (real id) replaces the optimistic one and every other consumer of the same cache entry refreshes.
+1. `onMutate`: `await queryClient.cancelQueries({ queryKey })` → snapshot `const previousData = queryClient.getQueryData(queryKey)` → `queryClient.setQueryData(queryKey, updater)` with the optimistic row (creates get a `temp-${Date.now()}` id) → `return { previousData }`.
+2. `onError`: restore with `queryClient.setQueryData(queryKey, context.previousData)`.
+3. `onSettled` (or `onSuccess`): `queryClient.invalidateQueries({ queryKey })` — the server row (real id) replaces the optimistic one and every other consumer of the same cache entry refreshes.
 
 Rules that make it correct:
 
-- The cache updater must use the **exact same query input** as the reading component, or `setData` silently writes to a different cache entry.
+- The cache updater must use the **exact same query key/input** as the reading component, or `setQueryData` silently writes to a different cache entry.
 - Query inputs must be **stable, normalized values** (memoized; dates zeroed to a canonical time) or cache reads/writes miss.
 - **`temp-` ids never reach the server** — strip them before mutating (`id: id?.startsWith('temp-') ? undefined : id`) so the backend creates instead of updating.
 - Set `staleTime` deliberately on queries shared across components, so consumers don't refetch redundantly.

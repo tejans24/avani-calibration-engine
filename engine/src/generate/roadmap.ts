@@ -33,6 +33,10 @@ name models here.
 | 4 | Add the second service following the exemplar shape | todo | standard | low | interface + implementation + unit + integration tests, wired in \`src/lib/services.ts\` |
 | 5 | First deploy (dev stage) | todo | standard | medium | app reachable; CI ladder green on main |
 
+## Decisions
+
+<!-- append-only; one line per real product/architecture decision: date · decision · why (the constraint or trade-off). This log is harvested by the engine's learning loop — record the WHY, the diff already shows the what. -->
+
 ## Handoff notes
 
 <!-- newest first; one line per completed session: date · task # · what changed · anything surprising -->

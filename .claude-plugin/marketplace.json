@@ -7,7 +7,7 @@
     {
       "name": "avani-core",
       "source": "./plugins/avani-core",
-      "description": "Tier 1 universal standards (language-agnostic): security, git workflow, testing discipline, orchestration discipline. Always enabled."
+      "description": "Tier 1 universal standards (language-agnostic): accessibility, security, git workflow, testing discipline, code review, orchestration discipline. Always enabled."
     },
     {
       "name": "avani-typescript",
