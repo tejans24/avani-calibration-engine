@@ -50,6 +50,15 @@ Wrap the component library's inputs **once** in shared RHF-bound field component
 - Seed edit forms with `useForm`'s `values` option (or `reset(data)` when the data arrives) — never setState-in-effect copying server data into fields.
 - Derive reactive UI from field values with `useWatch` — a plain `watch()` call in the render path trips the React Compiler lint.
 
+## Server actions & revalidation
+
+- After a mutation, `revalidatePath` the routes that *display* the changed data — but never the route the user is currently on when that route renders a client-side success state. Revalidating re-renders the current route and swaps the client success UI for a fresh server branch mid-flow (e.g. the signup that just filled an event gets replaced by "event is full" before the user sees their confirmation). Dynamic pages recompute per request anyway, so that revalidate bought nothing.
+
+## Public (unauthenticated) forms
+
+- **Honeypot with silent accept:** include a hidden field real users never fill; when it arrives non-empty, log and return the normal success response without writing anything. An error response just teaches the bot.
+- **Idempotent by natural key:** a repeat submission returns the "already done" success state — never a duplicate row, never an error. Back it with a unique constraint on the natural key (e.g. `(eventId, email)`), not just an application-level check.
+
 ## Rules
 
 - No uncontrolled ad-hoc `useState` forms once a form has more than one field — use RHF.

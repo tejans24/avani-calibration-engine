@@ -40,3 +40,4 @@ Every form control satisfies this contract (the component library merely impleme
 
 - `eslint-plugin-jsx-a11y` runs in lint — do not disable its rules to make a component pass; fix the markup.
 - The `a11y_axe_clean` invariant runs axe against key pages in e2e. A violation is a failing build, not a warning.
+- E2E selectors double as an accessibility check: select by role and label (`getByRole`, `getByLabel`). A control that can only be found by CSS class or `input[name=...]` is missing its accessible name — fix the markup, not the selector.
