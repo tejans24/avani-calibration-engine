@@ -50,9 +50,30 @@ The engine's job is calibration → selection, plus generating the small project
 
 > **`stage` is a separate, mutable dimension — not a calibration dial.** It changes over the project's life and is resolved on the ground, not baked in. See §3.
 
+### 2.1 Durability rule — name the tool, not the release
+
+Plugins propagate centrally (§5) to projects running *different* stack versions. So a release-specific claim inside a plugin is not merely stale — it is **wrong for every project on a different version**. Telling a Next 16 project to edit `src/middleware.ts` (renamed in 16) is an active defect, not aging documentation.
+
+The split is between decisions and facts:
+
+| | Stability | Where it lives |
+|---|---|---|
+| **Tool choice** — "we use Prisma", "forms are RHF + Zod" | Stable; dial-selected | Named freely in skills. Concrete beats vague. |
+| **Release behavior** — "Prisma 7's reset no longer seeds", "renamed in Next 16" | Expires | **Not in a plugin.** Absorb into a script/gate, or quarantine under `## Stack notes (current pins)`. |
+
+Three tests for any line of skill content:
+
+1. **Version test** — would this be false after the next major? Then it isn't judgment, it's mechanism.
+2. **Tier test** — does it require one framework to parse? Tier 1 must hold for React, Svelte, Vue, and server-rendered stacks, naming frameworks only as examples. Tier 2 may be fully library-specific.
+3. **Command test** — could this be a named script instead of a description? Then make it one.
+
+**The command surface is the version-absorbing layer** (principle 2 applied to tooling): a skill teaches `npm run db:migrate:deploy`; the blueprint decides whether that is Prisma 6, Prisma 7, or something else, frozen per repo alongside that project's pins. An ORM upgrade then edits scripts, not skills.
+
+Enforced by a test (`engine/tests/smoke.test.ts`): a tool name followed by a version number in a plugin skill fails CI unless it sits under `## Stack notes (current pins)`. The gate is a floor, not a ceiling — version facts without numbers ("the new caching directive") still need judgment at review.
+
 ### Tier 1 — Universal (always enabled)
 
-`avani-core`: **language-agnostic** standards — security scanning, git workflow, testing discipline, multi-agent orchestration discipline, secrets-blocking hooks, **stage detection** (§3). Enabled in every generated project, and installable in any existing project.
+`avani-core`: **language-agnostic** standards — security scanning, git workflow, testing discipline, multi-agent orchestration discipline, secrets-blocking hooks, **stage detection** (§3). Enabled in every generated project, and installable in any existing project. Its content must read correctly in a Python or server-rendered project, not only a React one (§2.1, tier test).
 
 ### Tier 2 — Conditional (selected by application spec context)
 
