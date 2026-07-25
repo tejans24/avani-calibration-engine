@@ -68,7 +68,8 @@ jobs:
       - run: npm run db:init
       - run: npm run db:seed:demo
       - run: npx playwright install --with-deps chromium
-      - run: npm run build
+      # test:e2e chains the build itself (fresh-clone one-command property),
+      # so no separate build step here.
       - run: npm run test:e2e
       # Failure evidence: the html report carries the screenshots + traces
       # playwright.config.ts captures on failing tests.
