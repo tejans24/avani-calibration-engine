@@ -25,8 +25,9 @@ The blueprint stamps identical commands into every project; this procedure is ho
 - **Never `prisma db push` against any non-dev database.** Schema changes reach staging/production only as committed migrations applied by `db:migrate:deploy`.
 - **Migrations are append-only.** Never edit or delete a migration that has been committed; a wrong migration is corrected by a new one.
 - **Forward-only.** No down-migrations; roll forward with a correcting migration.
-- **Migrations run before app deploy** — the expand phase must be compatible with the old code (zero-downtime ordering).
+- **Migrations run before app deploy** — the expand phase must be compatible with the old code (zero-downtime ordering). Wire `db:migrate:deploy` as the deploy platform's *pre-deploy command* so code and schema ship atomically: a failed migration aborts the deploy and the old build keeps serving. Never rely on a human remembering to run migrations around a deploy.
 - `db:reset` and `db:seed` are guarded scripts that refuse when `AVANI_STAGE != dev`. Never bypass the guard.
+- **Prisma 7 gotcha:** `prisma migrate reset` no longer runs the configured seed — a `db:reset` script must chain the seed explicitly (`... reset --force && npm run db:seed`). Verify reset still seeds after a Prisma major upgrade.
 
 ## Procedure: schema change (pre-launch / dev)
 

@@ -7,7 +7,7 @@
     {
       "name": "avani-core",
       "source": "./plugins/avani-core",
-      "description": "Tier 1 universal standards (language-agnostic): security, git workflow, testing discipline. Always enabled."
+      "description": "Tier 1 universal standards (language-agnostic): security, git workflow, testing discipline, orchestration discipline. Always enabled."
     },
     {
       "name": "avani-typescript",
@@ -17,7 +17,7 @@
     {
       "name": "avani-nextjs",
       "source": "./plugins/avani-nextjs",
-      "description": "Tier 2 stack plugin: App Router, RHF + Zod forms, service design, Prisma db-migrations procedure. Selected when runtime is ts-nextjs."
+      "description": "Tier 2 stack plugin: App Router, RHF + Zod forms, service design, client-state tiering, Prisma db-migrations procedure. Selected when runtime is ts-nextjs."
     },
     {
       "name": "avani-python",

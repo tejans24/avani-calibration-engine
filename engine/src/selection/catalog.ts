@@ -60,7 +60,7 @@ export const PROVISIONS: readonly Provision[] = [
   // Plugins
   {
     id: 'plugin:avani-core', kind: 'plugin', tier: 1,
-    description: 'Universal, language-agnostic standards: security, git workflow, testing discipline, stage detection.',
+    description: 'Universal, language-agnostic standards: security, git workflow, testing discipline, orchestration discipline, stage detection.',
     purpose: 'The always-on floor every project stands on before any calibration. Everything else layers on top of it.',
   },
   {
@@ -77,7 +77,7 @@ export const PROVISIONS: readonly Provision[] = [
   },
   {
     id: 'plugin:avani-nextjs', kind: 'plugin', tier: 2,
-    description: 'App Router, RHF + Zod forms, Prisma + db-migrations procedure.',
+    description: 'App Router, RHF + Zod forms, client-state tiering, Prisma + db-migrations procedure.',
     purpose: 'Teaches the Next.js conventions and the Prisma migration procedure (never db push in prod, migrations append-only). Pairs with the blueprint that stamps the actual commands.',
     worksWith: ['blueprint:ts-nextjs-prisma', 'pattern:nextjs-app-router', 'pattern:react-hook-form-zod'],
   },
