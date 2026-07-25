@@ -51,3 +51,10 @@ If a route handler grows an `if` beyond input parsing and status mapping, the lo
 ## Prisma stays server-side
 
 Client code never imports from `@prisma/client` — Prisma's generated types and enums don't survive the client bundle. The shared shapes the client consumes live in `src/schemas/` (`z.infer` types); enums the client needs are plain const objects there, kept in sync with the schema. Repositories are the only Prisma-aware layer.
+
+## Multi-tenant scoping
+
+When the app is multi-tenant (rows belong to an org/workspace/account):
+
+- The tenant is resolved **server-side from the session** by one shared helper — never from a client-sent id, header, or form field.
+- **Every** query carries the tenant filter — including the `where` of `update` and `delete` (`where: { id, organizationId }`), not only reads. A bare row id from the client is an insecure direct object reference; the compound `where` makes cross-tenant writes structurally impossible rather than policed by review.

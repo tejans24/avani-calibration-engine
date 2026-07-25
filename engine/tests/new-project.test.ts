@@ -18,6 +18,8 @@ describe('blueprint stamping (ts-nextjs-prisma)', () => {
       'prisma/schema.prisma',
       'prisma/migrations/000000000000_init/migration.sql',
       'src/app/page.tsx',
+      'src/app/error.tsx',
+      'src/app/not-found.tsx',
       'src/components/note-form.tsx',
       'src/lib/auth.ts',
       'src/middleware.ts',
