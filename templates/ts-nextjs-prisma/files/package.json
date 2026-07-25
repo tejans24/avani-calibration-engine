@@ -17,7 +17,7 @@
     "db:ready": "tsx db/ensure-env.ts && docker compose up -d db --wait && prisma migrate deploy && tsx db/init.ts && tsx db/seed.ts",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
-    "db:reset": "tsx db/assert-dev.ts && prisma migrate reset --force",
+    "db:reset": "tsx db/assert-dev.ts && prisma migrate reset --force && npm run db:seed",
     "db:seed": "tsx db/seed.ts",
     "db:seed:demo": "tsx db/seed-demo.ts",
     "db:init": "tsx db/init.ts",
@@ -25,6 +25,10 @@
   },
   "prisma": {
     "seed": "tsx db/seed.ts"
+  },
+  "//overrides": "@hookform/resolvers >=5.4.1 declares peerOptional valibot@^1 while its own @typeschema/valibot dep pins valibot@^0.39 — npm install fails ERESOLVE. We only use the Zod resolver, so forcing valibot to v1 (what resolvers itself wants) resolves it. Remove once upstream fixes its peer tree; the caret range keeps us on latest meanwhile.",
+  "overrides": {
+    "valibot": "^1.0.0"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.0",

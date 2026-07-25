@@ -79,7 +79,7 @@
     {
       "id": "plugin:avani-core",
       "kind": "plugin",
-      "description": "Universal, language-agnostic standards: security, git workflow, testing discipline, orchestration discipline, stage detection.",
+      "description": "Universal, language-agnostic standards: accessibility, security, git workflow, testing discipline, code review, orchestration discipline, stage detection.",
       "purpose": "The always-on floor every project stands on before any calibration. Everything else layers on top of it.",
       "worksWith": [
         "blueprint:monorepo-root",

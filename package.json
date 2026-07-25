@@ -4,6 +4,9 @@
   "private": true,
   "description": "Transforms application specs into calibrated Claude Code configurations: plugin selection + project-specific artifacts",
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

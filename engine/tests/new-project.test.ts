@@ -102,7 +102,32 @@ describe('avani new (self mode)', () => {
     expect(buildNewProject('my-app').files).toEqual(buildNewProject('my-app').files);
   });
 
-  test('rejects invalid names', () => {
-    expect(() => buildNewProject('My App')).toThrow(/invalid project name/);
+  test('rejects invalid names, including trailing or doubled dashes', () => {
+    for (const bad of ['My App', 'app-', 'a--b', '-app', '9app']) {
+      expect(() => buildNewProject(bad), bad).toThrow(/invalid project name/);
+    }
+  });
+});
+
+describe('per-app db port', () => {
+  const portIn = (content: string): string => {
+    const m = content.match(/localhost:(\d+)\//);
+    if (!m?.[1]) throw new Error('no port in env file');
+    return m[1];
+  };
+
+  test('compose mapping and env file agree, and the port is deterministic', () => {
+    const a = stampBlueprint('ts-nextjs-prisma', { APP_NAME: 'demo-app' });
+    const b = stampBlueprint('ts-nextjs-prisma', { APP_NAME: 'demo-app' });
+    const port = portIn(a['.env.example'] as string);
+    expect(a['docker-compose.yml']).toContain(`'${port}:5432'`);
+    expect(portIn(b['.env.example'] as string)).toBe(port);
+    expect(Number(port)).toBeGreaterThanOrEqual(5433);
+  });
+
+  test('different apps get different ports', () => {
+    const a = stampBlueprint('ts-nextjs-prisma', { APP_NAME: 'demo-app' });
+    const b = stampBlueprint('ts-nextjs-prisma', { APP_NAME: 'other-app' });
+    expect(portIn(a['.env.example'] as string)).not.toBe(portIn(b['.env.example'] as string));
   });
 });

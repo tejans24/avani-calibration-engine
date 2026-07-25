@@ -1,4 +1,5 @@
-import { globSync, readFileSync } from 'node:fs';
+import { globSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { run } from '../bin/calibrate.js';
@@ -23,6 +24,21 @@ describe('CLI stub', () => {
   test('calibrate and generate without a path are usage errors', () => {
     expect(run(['calibrate'])).toBe(1);
     expect(run(['generate'])).toBe(1);
+  });
+
+  test('new without a name or with a bad name is a usage error', () => {
+    expect(run(['new'])).toBe(1);
+    expect(run(['new', 'Bad Name'])).toBe(1);
+  });
+
+  test('new refuses a non-empty output directory', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'avani-new-'));
+    try {
+      writeFileSync(join(dir, 'existing.txt'), 'x');
+      expect(run(['new', 'demo-app', '--out', dir])).toBe(1);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   test('unknown subcommand exits 1', () => {
