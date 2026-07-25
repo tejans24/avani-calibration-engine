@@ -52,7 +52,7 @@ The engine's job is calibration → selection, plus generating the small project
 
 ### Tier 1 — Universal (always enabled)
 
-`avani-core`: **language-agnostic** standards — security scanning, git workflow, testing discipline, secrets-blocking hooks, **stage detection** (§3). Enabled in every generated project, and installable in any existing project.
+`avani-core`: **language-agnostic** standards — security scanning, git workflow, testing discipline, multi-agent orchestration discipline, secrets-blocking hooks, **stage detection** (§3). Enabled in every generated project, and installable in any existing project.
 
 ### Tier 2 — Conditional (selected by application spec context)
 
@@ -67,7 +67,7 @@ The engine's job is calibration → selection, plus generating the small project
 
 | Plugin | Contents | Selected when |
 |---|---|---|
-| `avani-nextjs` | App Router, RHF + Zod forms, **Prisma + db-migrations procedure** | `runtime = ts-nextjs` |
+| `avani-nextjs` | App Router, RHF + Zod forms, client-state tiering, **Prisma + db-migrations procedure** | `runtime = ts-nextjs` |
 | `avani-postgis` | PostGIS setup, geo queries | geo data in profile |
 | `avani-clerk` | Roles, middleware, invite flows | `auth_model = clerk-*` |
 | `avani-stripe` | Payment invariants, webhook handlers | money transactions |

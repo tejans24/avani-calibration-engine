@@ -1,7 +1,7 @@
 {
   "name": "avani-core",
   "version": "0.1.0",
-  "description": "Universal, language-agnostic engineering standards applied to every Avani project: accessibility, engineering discipline (testing tiers, mock policy, git workflow), security, stage detection.",
+  "description": "Universal, language-agnostic engineering standards applied to every Avani project: accessibility, engineering discipline (testing tiers, mock policy, git workflow, configuration/degradation), multi-agent orchestration discipline, security, stage detection.",
   "author": {
     "name": "Avani"
   },

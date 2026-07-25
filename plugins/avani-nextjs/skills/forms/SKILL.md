@@ -38,6 +38,18 @@ Every form control component accepts:
 
 Register RHF fields via `<Controller>` against this contract when the component isn't a native input. A new component library is adopted by making its inputs satisfy the contract — forms don't change.
 
+## Shared bound field components
+
+Wrap the component library's inputs **once** in shared RHF-bound field components (`src/components/form/` — `FormTextInput`, `FormSelect`, `FormDateInput`, …) that encapsulate the `Controller` wiring and error display. Feature code composes these and never hand-rolls a `Controller` or repeats that boilerplate.
+
+- Need a field type that has no shared component yet? Add it to `src/components/form/` following the existing ones — don't inline a `Controller` in feature code.
+- This is also the library swap point: adopt a new component library by re-implementing the shared field components against the Field contract; forms don't change.
+
+## Edit forms & reactive values
+
+- Seed edit forms with `useForm`'s `values` option (or `reset(data)` when the data arrives) — never setState-in-effect copying server data into fields.
+- Derive reactive UI from field values with `useWatch` — a plain `watch()` call in the render path trips the React Compiler lint.
+
 ## Rules
 
 - No uncontrolled ad-hoc `useState` forms once a form has more than one field — use RHF.
