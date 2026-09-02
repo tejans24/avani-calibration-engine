@@ -1,12 +1,12 @@
 ---
 name: accessibility
 description: Write and review UI code to the Avani accessibility standard — semantics-first markup, keyboard operability, the Field contract, contrast. Applies to all UI regardless of framework or component library.
-when_to_use: Any time UI code is written or reviewed — components, forms, pages, dialogs, menus, interactive widgets. Also when a jsx-a11y lint error or axe violation needs fixing, or when choosing between native elements and custom widgets.
+when_to_use: Any time UI code is written or reviewed — components, forms, pages, dialogs, menus, interactive widgets. Also when an accessibility lint error or axe violation needs fixing, or when choosing between native elements and custom widgets.
 ---
 
 # Accessibility Standard
 
-Accessibility is semantics-based and identical across projects and component libraries. It is enforced automatically (eslint jsx-a11y + an axe-clean invariant test), so the cheapest path is to write it right the first time.
+Accessibility is semantics-based: it is the same standard in React, Svelte, Vue, or server-rendered templates, and the same across component libraries. It is enforced automatically (a markup accessibility linter + an axe-clean invariant test), so the cheapest path is to write it right the first time.
 
 ## Semantics first
 
@@ -19,11 +19,11 @@ Accessibility is semantics-based and identical across projects and component lib
 
 - Everything clickable is keyboard-operable: reachable by Tab, activated by Enter/Space, dismissible by Escape where a dismiss exists.
 - Focus is visible (never `outline: none` without a replacement) and managed: on open, a dialog moves focus in; on close, it returns focus to the trigger.
-- For composite widgets (menus, dialogs, tabs, comboboxes) use a headless a11y primitive (Radix / React Aria / Ark) rather than hand-rolling ARIA. Hand-written ARIA is a last resort and must follow the WAI-ARIA Authoring Practices pattern exactly.
+- For composite widgets (menus, dialogs, tabs, comboboxes) use the framework's headless accessibility primitive rather than hand-rolling ARIA — in React that means Radix, React Aria, or Ark; every ecosystem has an equivalent. Hand-written ARIA is a last resort and must follow the WAI-ARIA Authoring Practices pattern exactly.
 
 ## Forms — the Field contract
 
-Every form control satisfies this contract (the component library merely implements it):
+Every form control satisfies this contract (the component library merely implements it) — a set of *capabilities*, whatever the framework names them: current value, change and blur notification, a name and id, invalid state, a pointer to its error message, and a disabled state. In React/JSX that is:
 
 `value / onChange / onBlur / name / id / aria-invalid / aria-describedby / disabled`
 
@@ -38,6 +38,6 @@ Every form control satisfies this contract (the component library merely impleme
 
 ## Enforcement
 
-- `eslint-plugin-jsx-a11y` runs in lint — do not disable its rules to make a component pass; fix the markup.
-- The `a11y_axe_clean` invariant runs axe against key pages in e2e. A violation is a failing build, not a warning.
-- E2E selectors double as an accessibility check: select by role and label (`getByRole`, `getByLabel`). A control that can only be found by CSS class or `input[name=...]` is missing its accessible name — fix the markup, not the selector.
+- The project's markup accessibility linter runs in lint (`eslint-plugin-jsx-a11y` in JSX projects; the equivalent template linter elsewhere) — do not disable its rules to make a component pass; fix the markup.
+- The `a11y_axe_clean` invariant runs axe against key pages in e2e. A violation is a failing build, not a warning. axe is engine-agnostic: it scans rendered DOM, so it applies to any stack.
+- E2E selectors double as an accessibility check: select by role and accessible name (`getByRole` / `getByLabel`, or the runner's equivalent). A control that can only be found by CSS class or `input[name=...]` is missing its accessible name — fix the markup, not the selector.

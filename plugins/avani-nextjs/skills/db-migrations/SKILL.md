@@ -8,6 +8,8 @@ when_to_use: Whenever changing prisma/schema.prisma, creating or applying migrat
 
 The blueprint stamps identical commands into every project; this procedure is how they are used. **Check the stage first**: resolve `AVANI_STAGE` (`dev` | `staging` | `production`, default `dev`; fallback: branch mapping — `feature/*` → dev, `main` → staging, release → production).
 
+**The commands below are the stable surface — use them, not the underlying tool's CLI.** Each script absorbs the current tool's flags and quirks, so an ORM upgrade (or a swap) changes the scripts while this procedure stays true.
+
 ## Commands
 
 | Command | Does | Allowed stage |
@@ -22,12 +24,12 @@ The blueprint stamps identical commands into every project; this procedure is ho
 
 ## Hard rules
 
-- **Never `prisma db push` against any non-dev database.** Schema changes reach staging/production only as committed migrations applied by `db:migrate:deploy`.
+- **Never push a schema directly to any non-dev database** (`prisma db push` and its equivalents). Schema changes reach staging/production only as committed migrations applied by `db:migrate:deploy`.
 - **Migrations are append-only.** Never edit or delete a migration that has been committed; a wrong migration is corrected by a new one.
 - **Forward-only.** No down-migrations; roll forward with a correcting migration.
 - **Migrations run before app deploy** — the expand phase must be compatible with the old code (zero-downtime ordering). Wire `db:migrate:deploy` as the deploy platform's *pre-deploy command* so code and schema ship atomically: a failed migration aborts the deploy and the old build keeps serving. Never rely on a human remembering to run migrations around a deploy.
 - `db:reset` and `db:seed` are guarded scripts that refuse when `AVANI_STAGE != dev`. Never bypass the guard.
-- **Prisma 7 gotcha:** `prisma migrate reset` no longer runs the configured seed — a `db:reset` script must chain the seed explicitly (`... reset --force && npm run db:seed`). Verify reset still seeds after a Prisma major upgrade.
+- **Migration tooling changes destructive-command behavior across majors** — whether reset re-runs the seed, which flags are required, what is prompted for. The scripts encapsulate that, which is why the procedure names commands rather than CLI invocations. After any major upgrade of the ORM or migration tool, re-verify that each `db:` command still does exactly what its row above claims, and fix the script — not this procedure.
 
 ## Procedure: schema change (pre-launch / dev)
 

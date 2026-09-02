@@ -94,3 +94,34 @@ describe('skill frontmatter (verified against Claude Code docs)', () => {
     expect(fm).not.toMatch(/^trigger:/m);
   });
 });
+
+/**
+ * Durability gate (SPEC §2.1): plugins propagate centrally to projects on
+ * different stack versions, so a release-specific claim in a plugin is not
+ * merely stale — it is wrong for every project on a different version.
+ * Naming a tool is fine (the choice is dial-selected and stable); asserting
+ * what release N of it does is not. Dated facts belong in a script, a gate, or
+ * the quarantined "Stack notes (current pins)" section.
+ */
+const TOOL_RELEASE = /\b(Next\.js|Next|React|Prisma|Clerk|ESLint|Vitest|Playwright|Tailwind|Zod|TypeScript|Node|Postgres|PostgreSQL|Python|Django|Vue|Svelte)\s+v?\d+/gi;
+
+/** Content minus any "## Stack notes …" section — where dated facts are legal. */
+function withoutStackNotes(body: string): string {
+  return body
+    .split(/^## /m)
+    .filter((section) => !/^stack notes/i.test(section))
+    .join('\n');
+}
+
+describe('skill durability (no release-specific claims)', () => {
+  const skillFiles = globSync(join(ROOT, 'plugins', '*', 'skills', '*', 'SKILL.md'));
+
+  test.each(skillFiles.map((f) => [f.split('/').slice(-4).join('/'), f]))('%s', (_label, file) => {
+    const body = withoutStackNotes(readFileSync(file, 'utf8'));
+    const hits = [...body.matchAll(TOOL_RELEASE)].map((m) => m[0]);
+    expect(
+      hits,
+      `release-specific claim(s) in a plugin skill: ${hits.join(', ')}. Encode the mechanism in a script or gate, state the durable principle here, or move the dated fact under "## Stack notes (current pins)".`,
+    ).toEqual([]);
+  });
+});

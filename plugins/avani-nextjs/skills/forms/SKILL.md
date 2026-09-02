@@ -48,7 +48,7 @@ Wrap the component library's inputs **once** in shared RHF-bound field component
 ## Edit forms & reactive values
 
 - Seed edit forms with `useForm`'s `values` option (or `reset(data)` when the data arrives) — never setState-in-effect copying server data into fields.
-- Derive reactive UI from field values with `useWatch` — a plain `watch()` call in the render path trips the React Compiler lint.
+- Read field values through the form library's subscription API (`useWatch`), never by calling the form object during render. A render-path read re-runs on every render instead of subscribing to the field, which is both a correctness and a performance problem — and compiler/lint rules flag it.
 
 ## Server actions & revalidation
 
