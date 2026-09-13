@@ -49,7 +49,7 @@ export function buildRoutingPolicy(): Record<string, unknown> {
     note: 'Shape tags -> capability tier -> currently-best model. Model names churn; update THIS file only — the roadmap never names models.',
     map: { mechanical: 'fast', standard: 'standard', judgment: 'frontier' },
     tiers: {
-      frontier: { model: 'claude-opus-4-8', use: 'judgment tasks: architecture, cross-cutting changes, ambiguous requirements' },
+      frontier: { model: 'claude-opus-5', use: 'judgment tasks: architecture, cross-cutting changes, ambiguous requirements' },
       standard: { model: 'claude-sonnet-5', use: 'standard feature work: a service, a form, a migration' },
       fast: { model: 'claude-haiku-4-5', use: 'mechanical tasks: renames, rote fixes, fleet patch application' },
     },

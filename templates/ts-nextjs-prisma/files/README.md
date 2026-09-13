@@ -13,9 +13,9 @@ That's it — `db:ready` bootstraps `.env`, the database container, migrations, 
 
 ## Auth (Clerk, pre-wired)
 
-Auth is **disabled until you add Clerk keys** to `.env` (see `.env.example`) — a fresh clone runs, and CI passes, without a Clerk account. With keys present, the middleware activates, the header shows sign-in/user controls, and `getCurrentUserId()` returns the real user.
+Auth is **disabled until you add Clerk keys** to `.env` (see `.env.example`) — a fresh clone runs, and CI passes, without a Clerk account. With keys present, the request proxy activates, the header shows sign-in/user controls, and `getCurrentUserId()` returns the real user.
 
-All auth flows through the adapter in `src/lib/auth.ts` — actions and services never import Clerk directly. Swapping providers later (including a custom auth with its own management dashboard) touches only `src/lib/auth.ts` and `src/middleware.ts`.
+All auth flows through the adapter in `src/lib/auth.ts` — actions and services never import Clerk directly. Swapping providers later (including a custom auth with its own management dashboard) touches only `src/lib/auth.ts` and `src/proxy.ts`.
 
 ## Commands
 
@@ -37,10 +37,10 @@ All auth flows through the adapter in `src/lib/auth.ts` — actions and services
 ```
 src/schemas/       Zod schemas — shared by forms and server boundaries
 src/services/      business logic: typed interfaces, injected collaborators, no framework imports
-src/lib/           composition root (prisma client, service wiring)
+src/lib/           composition root (prisma client + driver adapter, service wiring)
 src/app/           App Router pages, server actions (thin adapters over services)
 db/                factories (seeded RNG) -> scenarios -> env seeds; stage guards
-prisma/            schema + append-only migrations
+prisma/            schema + append-only migrations (CLI config in prisma.config.ts)
 tests/             integration (real DB), e2e (Playwright + axe), invariants
 ```
 

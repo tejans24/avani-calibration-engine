@@ -1,18 +1,19 @@
-import { FlatCompat } from '@eslint/eslintrc';
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
+import nextTypescript from 'eslint-config-next/typescript';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
-
-const compat = new FlatCompat({ baseDirectory: import.meta.dirname });
 
 const config = [
   // next-env.d.ts is build-generated (its triple-slash reference trips
-  // @typescript-eslint/triple-slash-reference) and gitignored — but ESLint 9
+  // @typescript-eslint/triple-slash-reference) and gitignored — but ESLint
   // flat config does not read .gitignore, so it must be ignored here too.
   { ignores: ['.next/**', 'node_modules/**', 'playwright-report/**', 'test-results/**', 'next-env.d.ts'] },
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
-  // The a11y invariant starts at lint time: full jsx-a11y recommended set, as errors.
+  ...nextCoreWebVitals,
+  ...nextTypescript,
+  // The a11y invariant starts at lint time: full jsx-a11y recommended set, as
+  // errors. The Next config already registers the jsx-a11y plugin (with a
+  // handful of rules); redefining it is a config error, so only the rules go here.
   {
     files: ['**/*.tsx'],
-    plugins: { 'jsx-a11y': jsxA11y },
     rules: jsxA11y.configs.recommended.rules,
   },
 ];

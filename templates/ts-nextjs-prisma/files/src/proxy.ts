@@ -1,10 +1,11 @@
 import { clerkMiddleware } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
-// Clerk middleware runs only when Clerk is configured (keys in .env); with no
-// keys every route passes through, so the skeleton runs without an account.
-// To protect routes, switch to clerkMiddleware((auth, req) => ...) with a
-// route matcher — see the Clerk docs.
+// Next.js proxy (the request-boundary file; `middleware.ts` is the deprecated
+// name for the same thing). Clerk runs only when it is configured (keys in
+// .env); with no keys every route passes through, so the skeleton runs
+// without an account. To protect routes, switch to
+// clerkMiddleware((auth, req) => ...) with a route matcher — see the Clerk docs.
 const passThrough = () => NextResponse.next();
 
 export default process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? clerkMiddleware() : passThrough;

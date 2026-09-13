@@ -4,7 +4,7 @@ import { auth } from '@clerk/nextjs/server';
  * Auth adapter — third parties live behind adapters (avani-core discipline).
  * Actions and services depend on THIS interface, never on Clerk directly, so
  * swapping to a different provider (or a custom auth with its own management
- * dashboard) later means changing this file + middleware.ts, nothing else.
+ * dashboard) later means changing this file + proxy.ts, nothing else.
  *
  * Clerk activates when its keys are present (.env); until then auth is
  * disabled and a stable dev identity is returned, so a fresh clone runs — and

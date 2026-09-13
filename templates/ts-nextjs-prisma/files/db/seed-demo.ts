@@ -1,12 +1,12 @@
 import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/lib/prisma-client';
 import { demoWorkspace } from './scenarios/workspace';
 import { assertNotProduction } from './stage';
 
 // Demo seed: curated, presentable. For staging/demo environments — never prod.
 assertNotProduction('db:seed:demo');
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function main(): Promise<void> {
   await demoWorkspace(prisma);

@@ -9,8 +9,8 @@ export default defineConfig({
     include: ['tests/integration/**/*.test.ts'],
     testTimeout: 120_000,
     hookTimeout: 120_000,
-    // One container, sequential tests — keeps the tier simple and deterministic.
+    // One container, one file at a time — keeps the tier simple and deterministic.
     pool: 'forks',
-    poolOptions: { forks: { singleFork: true } },
+    fileParallelism: false,
   },
 });
