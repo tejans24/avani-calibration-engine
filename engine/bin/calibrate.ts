@@ -51,6 +51,17 @@ function printInfraDecision(config: CalibratedConfig): void {
   console.log('\nDeploy target (SPEC §4.1 — the engine proposes, the owner decides):');
   console.log(`  proposed:  ${d.proposed}  (rule ${d.rule}: ${d.rationale})`);
   console.log(`  runner-up: ${d.runner_up ?? 'none'}`);
+  console.log('  options (the whole menu — decide among these):');
+  for (const o of d.options) {
+    const mark = o.fit === 'recommended' ? '▸' : '▹';
+    const fit = o.fit === 'recommended' ? 'RECOMMENDED' : o.fit;
+    console.log(`    ${mark} ${o.target.padEnd(12)} ${fit}${o.evidence === 'shipped' ? ' · shipped' : ''} · ops ${o.ops_burden}`);
+    console.log(`        what:        ${o.what}`);
+    console.log(`        for you:     ${o.why}`);
+    console.log(`        trade-offs:  ${o.tradeoffs}`);
+    console.log(`        cost shape:  ${o.cost_shape}`);
+    if (o.becomes_the_answer_if) console.log(`        becomes the answer if: ${o.becomes_the_answer_if}`);
+  }
   console.log('  not yet considered (no intake field yet):');
   for (const u of d.unanswered) console.log(`    - ${u}`);
   if (d.status === 'decided') {

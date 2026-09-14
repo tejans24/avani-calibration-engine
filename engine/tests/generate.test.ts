@@ -18,6 +18,7 @@ const GEN = 'examples/invasive-species/generated';
 describe('generated project', () => {
   test('emits the expected file set', () => {
     expect(Object.keys(project()).sort()).toEqual([
+      '.avani/decisions/infra.md',
       '.avani/manifest.json',
       '.claude/settings.json',
       '.mcp.json',
@@ -72,5 +73,19 @@ describe('invariant tests', () => {
     const appendOnly = files['tests/invariants/observations_append_only_never_delete.test.ts'] as string;
     expect(appendOnly).toContain("describe('observations_append_only_never_delete'");
     expect(appendOnly).toContain('never deleted');
+  });
+});
+
+describe('deploy-target decision brief (.avani/decisions/infra.md)', () => {
+  test('explains every option and how to decide', () => {
+    const brief = project()['.avani/decisions/infra.md'] as string;
+    for (const t of ['vercel', 'railway', 'aws', 'gcp', 'self-hosted']) expect(brief).toContain(`### \`${t}\``);
+    expect(brief).toMatch(/RECOMMENDED/);
+    expect(brief).toMatch(/Becomes the answer if/);
+    expect(brief).toMatch(/Trade-offs/);
+    expect(brief).toMatch(/Not yet considered/);
+    // Undecided fixture: says so, and says how to decide.
+    expect(brief).toMatch(/not yet decided/);
+    expect(brief).toMatch(/--infra/);
   });
 });

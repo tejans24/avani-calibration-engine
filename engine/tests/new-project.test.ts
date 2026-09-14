@@ -196,3 +196,12 @@ describe('self mode records the deploy target as an owner decision', () => {
     expect(files['CLAUDE.md']).toMatch(/never a per-session choice/);
   });
 });
+
+describe('self mode stamps a decided decision brief', () => {
+  test('the brief records the house-preset decision with the menu still in view', () => {
+    const brief = buildNewProject('fresh-app').files['.avani/decisions/infra.md'] as string;
+    expect(brief).toMatch(/\*\*Decided: `vercel`\*\* by owner/);
+    expect(brief).toContain('### `railway`');
+    expect(brief).toContain('### `self-hosted`');
+  });
+});

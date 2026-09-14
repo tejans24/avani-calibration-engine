@@ -102,6 +102,7 @@ project artifacts:
 - `.mcp.json` — MCP servers matching the stack (postgres for geo, playwright for Next.js)
 - `tests/invariants/*.test.ts` — a `test.todo` stub per selected invariant
 - `.avani/manifest.json` — engine/schema/selection versions + selection, for reproducibility
+- `.avani/decisions/infra.md` — the deploy-target decision brief (SPEC §4.1): the engine's proposal and why, every option explained for this project (fit, trade-offs, cost shape, ops burden, what would make it the answer), what could not be considered, and how the owner records the decision
 - `.claude/agents/*.md` — subagent definitions carrying the task bounds from SPEC §4.4 (feature-worker, infra-worker, verifier): what each owns, never touches, verifies with, and escalates on
 
 Blueprint stamping is live for `ts-nextjs-prisma` (`templates/ts-nextjs-prisma/files/`):

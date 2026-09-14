@@ -197,6 +197,95 @@
               },
               "description": "§4.1 inputs the intake profile could not answer; the owner weighs them before deciding."
             },
+            "options": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "target": {
+                    "type": "string",
+                    "enum": [
+                      "vercel",
+                      "railway",
+                      "aws",
+                      "gcp",
+                      "self-hosted"
+                    ],
+                    "description": "Deployment target for the app. Proposed by the engine from the decision rules in SPEC §4.1, decided by the owner (recorded in decisions.infra), and realized by the matching deploy profile (SPEC §4.2). vercel: request/response Next.js apps, lowest ops. railway: apps that need a long-lived process (workers, websockets, cron) or flat predictable cost. aws / gcp: an existing client cloud, a compliance or residency regime, private networking, or a large scale horizon — always with infrastructure as code. self-hosted: data that may not leave client premises; needs high ops capacity."
+                  },
+                  "fit": {
+                    "type": "string",
+                    "enum": [
+                      "recommended",
+                      "viable",
+                      "not-recommended"
+                    ],
+                    "description": "How this option stands for THIS intake on what the engine could evaluate."
+                  },
+                  "what": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "What it is, in a line (SPEC §4.2 runtime shape + database)."
+                  },
+                  "why": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Why it fits — or does not — for this intake, naming the inputs read."
+                  },
+                  "tradeoffs": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "What you give up by choosing it."
+                  },
+                  "cost_shape": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Shape of the bill: flat, usage cliffs, architecture-dependent."
+                  },
+                  "ops_burden": {
+                    "type": "string",
+                    "enum": [
+                      "lowest",
+                      "low",
+                      "medium",
+                      "high",
+                      "highest"
+                    ],
+                    "description": "Who runs it, and how much of them."
+                  },
+                  "becomes_the_answer_if": {
+                    "description": "The condition under which this option becomes the answer (SPEC §4.1 rule); null for the recommended one.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "evidence": {
+                    "type": "string",
+                    "enum": [
+                      "shipped",
+                      "house-position"
+                    ],
+                    "description": "Whether a running system backs this profile row (SPEC §4.2)."
+                  }
+                },
+                "required": [
+                  "target",
+                  "fit",
+                  "what",
+                  "why",
+                  "tradeoffs",
+                  "cost_shape",
+                  "ops_burden",
+                  "becomes_the_answer_if",
+                  "evidence"
+                ],
+                "additionalProperties": false,
+                "description": "One option on the menu the owner decides from — every target is always listed and explained."
+              },
+              "description": "The whole menu, recommended first: every target with its fit, trade-offs, cost shape, ops burden, and the condition that would make it the answer."
+            },
             "status": {
               "type": "string",
               "enum": [
@@ -252,6 +341,7 @@
             "rationale",
             "runner_up",
             "unanswered",
+            "options",
             "status",
             "decided",
             "decided_by",

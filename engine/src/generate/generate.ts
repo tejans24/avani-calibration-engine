@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import type { CalibratedConfig } from '../schema/calibrated-config.js';
 import type { Selection } from '../selection/select.js';
 import { buildClaudeMd } from './claudemd.js';
+import { buildInfraDecisionBrief } from './decision-brief.js';
 import type { FileMap } from './helpers.js';
 import { buildInvariantTests } from './invariant-tests.js';
 import { buildManifest } from './manifest.js';
@@ -24,6 +25,8 @@ export function generateProject(config: CalibratedConfig, selection: Selection):
     '.avani/manifest.json': json(buildManifest(config, selection)),
   };
   Object.assign(files, buildInvariantTests(config));
+  const brief = buildInfraDecisionBrief(config);
+  if (brief) files['.avani/decisions/infra.md'] = brief;
   return files;
 }
 

@@ -111,3 +111,42 @@ describe('deploy target: the engine proposes, the owner decides (SPEC §4.1)', (
     expect(() => parseCalibratedConfig({ ...config, decisions: { infra: { ...config.decisions!.infra, decided_by: 'engine' } } })).toThrow();
   });
 });
+
+describe('the proposal is a full menu: every option given and explained', () => {
+  test('lists every target exactly once, recommended first, each explained for this intake', () => {
+    const p = proposeInfra(intake(), 'ts-nextjs');
+    expect(p.options.map((o) => o.target).sort()).toEqual(['aws', 'gcp', 'railway', 'self-hosted', 'vercel']);
+    expect(p.options[0]?.target).toBe(p.proposed);
+    expect(p.options.filter((o) => o.fit === 'recommended').map((o) => o.target)).toEqual([p.proposed]);
+    for (const o of p.options) {
+      expect(o.what.length, o.target).toBeGreaterThan(20);
+      expect(o.why.length, o.target).toBeGreaterThan(20);
+      expect(o.tradeoffs.length, o.target).toBeGreaterThan(20);
+      expect(o.cost_shape.length, o.target).toBeGreaterThan(10);
+      // Every non-recommended option says what would make it the answer.
+      if (o.fit !== 'recommended') expect(o.becomes_the_answer_if, o.target).toBeTruthy();
+      else expect(o.becomes_the_answer_if).toBeNull();
+    }
+  });
+
+  test('fit is computed from the intake, not fixed per target', () => {
+    const base = intake();
+    expect(proposeInfra({ ...base, ops_capacity: 'low' }, 'ts-nextjs').options.find((o) => o.target === 'self-hosted')?.fit).toBe('not-recommended');
+    expect(proposeInfra({ ...base, ops_capacity: 'high' }, 'ts-nextjs').options.find((o) => o.target === 'self-hosted')?.fit).toBe('viable');
+    const py = proposeInfra(base, 'python');
+    expect(py.options.find((o) => o.target === 'railway')?.fit).toBe('recommended');
+    expect(py.options.find((o) => o.target === 'vercel')?.fit).toBe('not-recommended');
+  });
+
+  test('the shipped profile row is marked as evidence', () => {
+    const p = proposeInfra(intake(), 'ts-nextjs');
+    expect(p.options.find((o) => o.target === 'railway')?.evidence).toBe('shipped');
+  });
+
+  test('the menu is recorded in the config and survives an owner override', () => {
+    const { config } = runPipeline(intake(), { decisions: { infra: { target: 'aws', by: 'owner', note: 'client runs AWS' } } });
+    expect(config.decisions?.infra.options.length).toBe(5);
+    expect(config.decisions?.infra.options[0]?.target).toBe('vercel'); // the menu stays as proposed; the decision sits beside it
+    expect(config.decisions?.infra.decided).toBe('aws');
+  });
+});
