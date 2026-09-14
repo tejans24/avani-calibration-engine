@@ -37,6 +37,11 @@ export function buildClaudeMd(config: CalibratedConfig, selection: Selection): s
     lines.push('```', '');
   }
 
+  lines.push('## Deploy', '');
+  lines.push(`- **Target:** \`${config.dials.infra}\` — a calibration decision, not a per-session choice. It selects the deploy profile that fixes where migrations run, how secrets reach the platform, what is backed up, and the production gate.`);
+  lines.push('- Production is deployed only by CI under the production gate. Sessions and subagents prepare changes (workflow, config, infrastructure code with its plan or diff) and never deploy, apply, or touch a live environment themselves.');
+  lines.push('- Procedure: the `avani-core` `deployment` skill — three environments, migrate before deploy, forward-only releases, backup before data-shape changes. Role bounds: `.claude/agents/`.', '');
+
   lines.push('## Invariants (enforced)', '');
   for (const inv of invariants) {
     const desc = PROVISION_BY_ID.get(`invariant:${inv}`)?.description ?? '';

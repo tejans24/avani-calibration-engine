@@ -23,6 +23,12 @@ npm run db:reset            # reset the dev database (DEV ONLY)
 npm run db:seed             # seed local data
 ```
 
+## Deploy
+
+- **Target:** `vercel` — a calibration decision, not a per-session choice. It selects the deploy profile that fixes where migrations run, how secrets reach the platform, what is backed up, and the production gate.
+- Production is deployed only by CI under the production gate. Sessions and subagents prepare changes (workflow, config, infrastructure code with its plan or diff) and never deploy, apply, or touch a live environment themselves.
+- Procedure: the `avani-core` `deployment` skill — three environments, migrate before deploy, forward-only releases, backup before data-shape changes. Role bounds: `.claude/agents/`.
+
 ## Invariants (enforced)
 
 - `observations_append_only_never_delete` — Records are never deleted, only superseded with a correction flag.

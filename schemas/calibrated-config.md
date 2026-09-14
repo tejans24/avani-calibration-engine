@@ -21,7 +21,7 @@ The resolved calibration dials for the app.
 |---|---|---|---|---|
 | `correctness_bar` | enum | yes | `basic` · `standard` · `strict` · `append-only` | How rigorous correctness guarantees must be. Rises with money transactions or critical data provenance. |
 | `sensitivity` | enum | yes | `low` · `medium` · `high` · `protected` | How careful to be with the data. Intrinsic to the domain; scales hook severity at generation time. |
-| `infra` | enum | yes | `vercel` · `aws` · `self-hosted` | Deployment target for the app. |
+| `infra` | enum | yes | `vercel` · `railway` · `aws` · `gcp` · `self-hosted` | Deployment target for the app, chosen by the decision rules in SPEC §4.1 and realized by the matching deploy profile (SPEC §4.2). vercel: request/response Next.js apps, lowest ops. railway: apps that need a long-lived process (workers, websockets, cron) or flat predictable cost. aws / gcp: an existing client cloud, a compliance or residency regime, private networking, or a large scale horizon — always with infrastructure as code. self-hosted: data that may not leave client premises; needs high ops capacity. |
 | `runtime` | enum | yes | `ts-nextjs` · `python` | Per-app runtime. ts-nextjs is the default for product/UI apps; python for small backend APIs, ML workflows, and data pipelines. |
 | `topology` | enum | yes | `single-app` · `monorepo` | Repo shape. monorepo when the project spans multiple apps (one monorepo per client project). |
 

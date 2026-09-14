@@ -42,10 +42,12 @@
           "type": "string",
           "enum": [
             "vercel",
+            "railway",
             "aws",
+            "gcp",
             "self-hosted"
           ],
-          "description": "Deployment target for the app."
+          "description": "Deployment target for the app, chosen by the decision rules in SPEC §4.1 and realized by the matching deploy profile (SPEC §4.2). vercel: request/response Next.js apps, lowest ops. railway: apps that need a long-lived process (workers, websockets, cron) or flat predictable cost. aws / gcp: an existing client cloud, a compliance or residency regime, private networking, or a large scale horizon — always with infrastructure as code. self-hosted: data that may not leave client premises; needs high ops capacity."
         },
         "runtime": {
           "type": "string",

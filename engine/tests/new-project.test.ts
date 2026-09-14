@@ -135,3 +135,39 @@ describe('per-app db port', () => {
     expect(portIn(a['.env.example'] as string)).not.toBe(portIn(b['.env.example'] as string));
   });
 });
+
+describe('stamped subagent definitions (SPEC §4.4 task bounds)', () => {
+  const files = buildNewProject('fresh-app').files;
+  const agents = ['feature-worker', 'infra-worker', 'verifier'] as const;
+
+  test.each(agents)('%s is stamped with frontmatter and bounds', (name) => {
+    const body = files[`.claude/agents/${name}.md`];
+    expect(body, name).toBeDefined();
+    const fm = /^---\n([\s\S]*?)\n---\n/.exec(body as string);
+    expect(fm, 'frontmatter').not.toBeNull();
+    expect(fm![1]).toContain(`name: ${name}`);
+    expect(fm![1]).toMatch(/^model: (sonnet|opus|haiku|inherit)$/m);
+    // Bounds, not vibes: every role names what it escalates on and reports.
+    expect(body).toContain('## Escalate when');
+    expect(body).toContain('## Report');
+  });
+
+  test('no agent definition names a model release — only the routing policy does', () => {
+    for (const name of agents) {
+      expect(files[`.claude/agents/${name}.md`]).not.toMatch(/claude-[a-z]+-\d/);
+    }
+  });
+
+  test('the verifier is read-and-run only', () => {
+    const body = files['.claude/agents/verifier.md'] as string;
+    const tools = /^tools: (.*)$/m.exec(body)?.[1] ?? '';
+    expect(tools.split(',').map((t) => t.trim())).not.toContain('Edit');
+    expect(tools.split(',').map((t) => t.trim())).not.toContain('Write');
+  });
+
+  test('workers never deploy: every definition carries the handcuff', () => {
+    for (const name of agents) {
+      expect(files[`.claude/agents/${name}.md`]).toMatch(/never (run a deploy|commit, push, install)/i);
+    }
+  });
+});

@@ -1,6 +1,7 @@
 import type { IntakeProfile } from '../schema/intake-profile.js';
 import { SCHEMA_VERSION } from '../schema/version.js';
 import { runPipeline, type PipelineResult } from '../pipeline.js';
+import { buildAgents } from './agents.js';
 import { stampBlueprints } from './blueprints.js';
 import { generateProject } from './generate.js';
 import type { FileMap } from './helpers.js';
@@ -40,7 +41,8 @@ export function selfPresetIntake(): IntakeProfile {
 /**
  * Build the complete new-project FileMap: stamped blueprint skeleton, then the
  * engine residue (CLAUDE.md, settings, invariant stubs — residue wins on any
- * path collision), then the execution layer (roadmap + routing policy).
+ * path collision), then the execution layer (roadmap + routing policy + the
+ * subagent definitions that carry the task bounds).
  */
 export function buildNewProject(name: string): { files: FileMap; result: PipelineResult } {
   if (!APP_NAME_RE.test(name)) {
@@ -53,6 +55,7 @@ export function buildNewProject(name: string): { files: FileMap; result: Pipelin
     ...generateProject(result.config, result.selection),
     'ROADMAP.md': buildRoadmapMd(name),
     '.avani/routing-policy.json': `${JSON.stringify(buildRoutingPolicy(), null, 2)}\n`,
+    ...buildAgents(),
   };
   return { files, result };
 }

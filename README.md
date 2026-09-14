@@ -101,6 +101,7 @@ project artifacts:
 - `.mcp.json` — MCP servers matching the stack (postgres for geo, playwright for Next.js)
 - `tests/invariants/*.test.ts` — a `test.todo` stub per selected invariant
 - `.avani/manifest.json` — engine/schema/selection versions + selection, for reproducibility
+- `.claude/agents/*.md` — subagent definitions carrying the task bounds from SPEC §4.4 (feature-worker, infra-worker, verifier): what each owns, never touches, verifies with, and escalates on
 
 Blueprint stamping is live for `ts-nextjs-prisma` (`templates/ts-nextjs-prisma/files/`):
 `engine/src/generate/blueprints.ts` copies the template tree deterministically, renaming
@@ -118,6 +119,6 @@ blueprint file stamping is Phase-1 work — selected blueprints are recorded in 
 ## Roadmap
 
 The MVP (VISION §20 phases A → B2 → B3) is built: baseline skills (`avani-core` accessibility +
-engineering-discipline, `avani-nextjs` forms/db-migrations/service-design, the `a11y_axe_clean`
+engineering-discipline + deployment, `avani-nextjs` forms/db-migrations/service-design, the `a11y_axe_clean`
 invariant), the runnable `ts-nextjs-prisma` blueprint, and `avani new`. Next: the decision core
 (C → D → E → F — dial expansion, constraint graph, decision tiers, structured interview). See VISION.md §20.
