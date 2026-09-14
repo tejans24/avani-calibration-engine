@@ -19,7 +19,7 @@ export const Sensitivity = z
 export const Infra = z
   .enum(['vercel', 'railway', 'aws', 'gcp', 'self-hosted'])
   .describe(
-    'Deployment target for the app, chosen by the decision rules in SPEC §4.1 and realized by the matching deploy profile (SPEC §4.2). vercel: request/response Next.js apps, lowest ops. railway: apps that need a long-lived process (workers, websockets, cron) or flat predictable cost. aws / gcp: an existing client cloud, a compliance or residency regime, private networking, or a large scale horizon — always with infrastructure as code. self-hosted: data that may not leave client premises; needs high ops capacity.',
+    'Deployment target for the app. Proposed by the engine from the decision rules in SPEC §4.1, decided by the owner (recorded in decisions.infra), and realized by the matching deploy profile (SPEC §4.2). vercel: request/response Next.js apps, lowest ops. railway: apps that need a long-lived process (workers, websockets, cron) or flat predictable cost. aws / gcp: an existing client cloud, a compliance or residency regime, private networking, or a large scale horizon — always with infrastructure as code. self-hosted: data that may not leave client premises; needs high ops capacity.',
   );
 
 export const Runtime = z

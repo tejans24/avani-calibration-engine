@@ -30,6 +30,24 @@ export const RiskAssessmentSchema = z
   })
   .describe('Feasibility, cost, and timeline assessment for the calibrated app.');
 
+export const InfraDecisionSchema = z
+  .object({
+    proposed: Infra.describe('The target the engine proposed.'),
+    rule: z.number().int().min(1).describe('The SPEC §4.1 rule that fired.'),
+    rationale: z.string().min(1).describe('Why that rule fired, in a sentence, with the inputs it read.'),
+    runner_up: Infra.nullable().describe('The next-best admissible target — the alternative the owner is declining.'),
+    unanswered: z.array(z.string().min(1)).describe('§4.1 inputs the intake profile could not answer; the owner weighs them before deciding.'),
+    status: z.enum(['proposed', 'decided']).describe('proposed = awaiting the owner; decided = the owner has accepted or overridden.'),
+    decided: Infra.nullable().describe('The owner’s decision, once made. Equals `dials.infra` when decided.'),
+    decided_by: z.enum(['owner']).nullable().describe('Only a human decides the deploy target. The engine proposes.'),
+    note: z.string().nullable().describe('The owner’s reason, recorded for the decision log.'),
+  })
+  .describe('Deploy-target decision record: what the engine proposed, and what the owner decided (SPEC §4.1).');
+
+export const DecisionsSchema = z
+  .object({ infra: InfraDecisionSchema })
+  .describe('Decisions the engine proposes but a human makes. Each carries the proposal and the decision side by side.');
+
 export const CalibratedConfigSchema = z
   .object({
     schemaVersion: z.string().regex(SEMVER).describe('Schema version this document conforms to (semver).'),
@@ -38,10 +56,12 @@ export const CalibratedConfigSchema = z
     invariants: z.array(z.string().min(1)).describe('Named invariants to enforce (exact-match keys, e.g. observations_append_only_never_delete).'),
     patterns: z.array(z.string().min(1)).describe('Named stack patterns to inject, e.g. nextjs-app-router.'),
     risk_assessment: RiskAssessmentSchema,
+    decisions: DecisionsSchema.optional(),
   })
-  .describe('The calibrated configuration produced from an intake profile: dials, invariants, patterns, and risk.');
+  .describe('The calibrated configuration produced from an intake profile: dials, invariants, patterns, risk, and the propose/decide records.');
 
 export type Dials = z.infer<typeof DialsSchema>;
+export type InfraDecisionRecord = z.infer<typeof InfraDecisionSchema>;
 export type RiskAssessment = z.infer<typeof RiskAssessmentSchema>;
 export type CalibratedConfig = z.infer<typeof CalibratedConfigSchema>;
 

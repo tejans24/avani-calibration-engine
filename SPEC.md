@@ -159,7 +159,11 @@ npm workspaces on the TS side, uv per Python app (Turborepo only if build times 
 
 ### 4.1 Deploy target — the decision rules
 
-The `infra` dial is a **decision, not a preference**. It is resolved once at calibration by the rules below (first match wins), recorded in the manifest, and changed only through the decision log. Inputs marked *(intake: add)* are not in the intake profile yet — they arrive with the dial expansion (VISION §20 phase C); until then the orchestrator answers them by hand at calibration.
+The `infra` dial is a **decision a human makes, suggested by the system** (the Propose tier, VISION §6). At calibration the engine applies the rules below (first match wins) and emits a *proposal*: the rule that fired and the inputs it read, the runner-up it is declining, and every input it could not consider. The owner then **accepts or overrides** — `calibrate --infra <target> --why "<reason>"` — and the config records both sides (`decisions.infra`: proposed / rule / rationale / runner-up / unanswered, and decided / decided-by / note). Only `owner` is admissible as the decider; the schema rejects anything else. The record travels into `.avani/manifest.json` and seeds the roadmap's decision log, so any later session can read who decided and why without re-running calibration.
+
+A config whose target is still `proposed` is complete for everything except deployment: nothing deploys on a proposal. In self mode (`avani new`) the owner running the command *is* the decision, and the house preset is their standing answer — recorded as decided, with the proposal and the unanswered inputs alongside so it can be re-decided the moment one applies. Re-deciding later is a decision-log entry, never a per-session choice.
+
+Inputs marked *(intake: add)* are not in the intake profile yet — they arrive with the dial expansion (VISION §20 phase C). Until then the rules that need them cannot fire, the proposal says so explicitly, and the owner weighs them by hand before accepting.
 
 | # | If | Then | Why |
 |---|---|---|---|
@@ -174,7 +178,7 @@ The `infra` dial is a **decision, not a preference**. It is resolved once at cal
 - Among admissible targets the cheapest to *operate* wins: vercel / railway before aws / gcp before self-hosted. Hosting cost is a TCO input (VISION §8), ops burden is the larger term.
 - Do not buy scale you don't have. A 10× horizon penalizes Vercel's pricing cliffs but does **not** justify AWS on its own — AWS costs a human sooner (VISION §7). Railway is the middle step.
 - One provider for app and database, except the Vercel + managed-Postgres split above. Two vendors for one app is two incident channels.
-- Re-decide only at a stage promotion (§3) or a decision-log entry. A session never changes the target on its own — the target picks the deploy profile, and the profile picks the stamped machinery.
+- Re-decide only at a stage promotion (§3) or a decision-log entry, and always by the owner. A session never changes the target on its own — the target picks the deploy profile, and the profile picks the stamped machinery.
 
 ### 4.2 Deploy profiles — what a target commits you to
 

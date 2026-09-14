@@ -6,6 +6,9 @@ import { runPipeline } from '../src/pipeline.js';
 import { stampBlueprints } from '../src/generate/blueprints.js';
 import { generateProject, writeProject } from '../src/generate/generate.js';
 import { APP_NAME_RE, buildNewProject } from '../src/generate/new-project.js';
+import { Infra } from '../src/schema/dials.js';
+import type { PipelineOptions } from '../src/pipeline.js';
+import type { CalibratedConfig } from '../src/schema/calibrated-config.js';
 
 const SUBCOMMANDS = ['new', 'init', 'calibrate', 'generate', 'stage', 'sync', 'handoff', 'retro'] as const;
 type Subcommand = (typeof SUBCOMMANDS)[number];
@@ -19,6 +22,9 @@ Usage: calibrate <subcommand>
   init                       Start intake for a new project
   calibrate <intake.json>    Run intake -> dials + selection -> calibrated-config
   generate <intake.json>     Emit project artifacts (default: ./.staging), --out <dir> --name <app>
+                             --infra <target>  the OWNER's deploy-target decision (accept or override the
+                                               engine's proposal; SPEC §4.1). Without it the config carries
+                                               the proposal as status "proposed" and nothing may deploy.
   stage                      Show / promote project stage (dev -> staging -> production)
   sync                       Re-stamp blueprints from current templates (diff + approve)
   handoff                    Produce a deliverable variant (--strip for code-only)
@@ -29,9 +35,40 @@ Exit codes: 0 success, 1 validation failure, 2 review rejected
 
 const KIND_LABEL: Record<string, string> = { plugin: 'Plugins', blueprint: 'Blueprints', invariant: 'Invariants', pattern: 'Patterns' };
 
-function runCalibrate(intakePath: string | undefined, asJson: boolean): number {
+/** `--infra <target>`: the owner's decision, validated against the dial vocabulary. */
+function infraDecision(argv: string[]): { options: PipelineOptions; error?: string } {
+  const raw = argValue(argv, '--infra');
+  if (raw === undefined) return { options: {} };
+  const parsed = Infra.safeParse(raw);
+  if (!parsed.success) return { options: {}, error: `--infra must be one of ${Infra.options.join(' | ')}, got '${raw}'` };
+  const why = argValue(argv, '--why');
+  return { options: { decisions: { infra: { target: parsed.data, by: 'owner', ...(why ? { note: why } : {}) } } } };
+}
+
+function printInfraDecision(config: CalibratedConfig): void {
+  const d = config.decisions?.infra;
+  if (!d) return;
+  console.log('\nDeploy target (SPEC §4.1 — the engine proposes, the owner decides):');
+  console.log(`  proposed:  ${d.proposed}  (rule ${d.rule}: ${d.rationale})`);
+  console.log(`  runner-up: ${d.runner_up ?? 'none'}`);
+  console.log('  not yet considered (no intake field yet):');
+  for (const u of d.unanswered) console.log(`    - ${u}`);
+  if (d.status === 'decided') {
+    const overrode = config.dials.infra !== d.proposed ? ` — OVERRIDES the engine's ${d.proposed}` : ' — accepts the proposal';
+    console.log(`  decided:   ${config.dials.infra} by ${d.decided_by}${overrode}${d.note ? ` (${d.note})` : ''}`);
+  } else {
+    console.log('  status:    PROPOSED — no decision recorded. Decide with --infra <target> [--why "<reason>"]; nothing deploys on a proposal.');
+  }
+}
+
+function runCalibrate(intakePath: string | undefined, asJson: boolean, argv: string[]): number {
   if (!intakePath) {
-    console.error('usage: calibrate calibrate <intake-profile.json> [--json]');
+    console.error('usage: calibrate calibrate <intake-profile.json> [--json] [--infra <target> --why "<reason>"]');
+    return 1;
+  }
+  const decision = infraDecision(argv);
+  if (decision.error) {
+    console.error(decision.error);
     return 1;
   }
   let intake;
@@ -42,7 +79,7 @@ function runCalibrate(intakePath: string | undefined, asJson: boolean): number {
     return 1;
   }
 
-  const { context, selection, config } = runPipeline(intake);
+  const { context, selection, config } = runPipeline(intake, decision.options);
 
   if (asJson) {
     console.log(JSON.stringify(config, null, 2));
@@ -69,6 +106,7 @@ function runCalibrate(intakePath: string | undefined, asJson: boolean): number {
   const risk = config.risk_assessment;
   console.log(`\nRisk:     feasibility=${risk.feasibility}, budget=$${risk.estimated_budget_usd}, infra=$${risk.estimated_infra_monthly_usd}/mo, timeline_risk=${risk.timeline_risk}`);
   if (risk.mitigations.length) console.log(`          mitigations: ${risk.mitigations.join(', ')}`);
+  printInfraDecision(config);
   console.log('');
   return 0;
 }
@@ -85,6 +123,11 @@ function runGenerate(argv: string[]): number {
     return 1;
   }
   const outDir = argValue(argv, '--out') ?? '.staging';
+  const decision = infraDecision(argv);
+  if (decision.error) {
+    console.error(decision.error);
+    return 1;
+  }
   let intake;
   try {
     intake = parseIntakeProfile(JSON.parse(readFileSync(intakePath, 'utf8')));
@@ -93,7 +136,7 @@ function runGenerate(argv: string[]): number {
     return 1;
   }
 
-  const { config, selection } = runPipeline(intake);
+  const { config, selection } = runPipeline(intake, decision.options);
   const files = generateProject(config, selection);
   if (argv.includes('--stamp')) {
     const name = argValue(argv, '--name') ?? 'app';
@@ -102,6 +145,7 @@ function runGenerate(argv: string[]): number {
   const written = writeProject(files, outDir);
   console.log(`\nGenerated ${written.length} files into ${outDir}/:`);
   for (const path of written) console.log(`  ${path}`);
+  printInfraDecision(config);
   console.log('');
   return 0;
 }
@@ -122,6 +166,8 @@ function runNew(argv: string[]): number {
   const written = writeProject(files, outDir);
 
   console.log(`\n${name} — generated from the house preset (self mode, ${result.context.dials.runtime}).`);
+  const infra = result.config.decisions?.infra;
+  if (infra) console.log(`Deploy target: ${result.config.dials.infra} — engine proposed (§4.1 rule ${infra.rule}), accepted as the house preset. Re-decide in ROADMAP.md → Decisions if any unanswered input applies.`);
   console.log(`${written.length} files in ${outDir}/\n`);
   console.log('Next steps:');
   console.log(`  cd ${basename(outDir) === name ? name : outDir}`);
@@ -142,7 +188,7 @@ export function run(argv: string[]): number {
     return 1;
   }
   if (cmd === 'new') return runNew(argv);
-  if (cmd === 'calibrate') return runCalibrate(argv[1], argv.includes('--json'));
+  if (cmd === 'calibrate') return runCalibrate(argv[1], argv.includes('--json'), argv);
   if (cmd === 'generate') return runGenerate(argv);
   console.log(`'${cmd}' is not implemented yet — see SPEC.md §12 for the roadmap.`);
   return 0;

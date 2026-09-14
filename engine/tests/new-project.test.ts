@@ -171,3 +171,28 @@ describe('stamped subagent definitions (SPEC §4.4 task bounds)', () => {
     }
   });
 });
+
+describe('self mode records the deploy target as an owner decision', () => {
+  const { files, result } = buildNewProject('fresh-app');
+
+  test('the manifest carries proposal and decision side by side', () => {
+    const manifest = JSON.parse(files['.avani/manifest.json'] as string) as { decisions: { infra: Record<string, unknown> } };
+    expect(manifest.decisions.infra).toMatchObject({ proposed: 'vercel', status: 'decided', decided: 'vercel', decided_by: 'owner' });
+    expect(result.config.dials.infra).toBe('vercel');
+  });
+
+  test('the roadmap decision log is seeded with the why, the runner-up, and the unanswered inputs', () => {
+    const roadmap = files['ROADMAP.md'] as string;
+    const decisions = roadmap.split('## Decisions')[1]?.split('## Handoff notes')[0] ?? '';
+    expect(decisions).toMatch(/infra = `vercel`/);
+    expect(decisions).toMatch(/engine proposed/);
+    expect(decisions).toMatch(/accepted by the owner/);
+    expect(decisions).toMatch(/Runner-up: railway/);
+    expect(decisions).toMatch(/existing_cloud/);
+  });
+
+  test('CLAUDE.md states the target was decided by the owner, not chosen by a session', () => {
+    expect(files['CLAUDE.md']).toMatch(/decided by the owner/);
+    expect(files['CLAUDE.md']).toMatch(/never a per-session choice/);
+  });
+});

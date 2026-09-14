@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { calibrate } from '../src/calibration/calibrate.js';
 import { deriveDials } from '../src/calibration/derive.js';
+import { proposeInfra } from '../src/calibration/infra.js';
 import { runPipeline } from '../src/pipeline.js';
 import { parseCalibratedConfig } from '../src/schema/calibrated-config.js';
 import { parseIntakeProfile, type IntakeProfile } from '../src/schema/intake-profile.js';
@@ -71,5 +72,42 @@ describe('runPipeline (end-to-end)', () => {
     expect(ids.has('plugin:avani-field-data')).toBe(false);
     expect(ids.has('plugin:avani-offline')).toBe(false);
     expect(ids.has('plugin:avani-clerk')).toBe(false); // single role -> no clerk
+  });
+});
+
+describe('deploy target: the engine proposes, the owner decides (SPEC §4.1)', () => {
+  test('proposes vercel for a request/response Next.js app and names what it could not consider', () => {
+    const p = proposeInfra(intake(), 'ts-nextjs');
+    expect(p.proposed).toBe('vercel');
+    expect(p.rule).toBe(4);
+    expect(p.runner_up).toBe('railway');
+    expect(p.unanswered.length).toBeGreaterThan(0);
+    expect(p.unanswered.join(' ')).toMatch(/existing_cloud/);
+  });
+
+  test('proposes railway for a python runtime (rule 3)', () => {
+    const p = proposeInfra(intake(), 'python');
+    expect(p.proposed).toBe('railway');
+    expect(p.rule).toBe(3);
+  });
+
+  test('without a decision the config carries the proposal as PROPOSED', () => {
+    const { config } = runPipeline(intake());
+    expect(config.dials.infra).toBe('vercel');
+    expect(config.decisions?.infra).toMatchObject({ proposed: 'vercel', status: 'proposed', decided: null, decided_by: null });
+  });
+
+  test('the owner’s decision overrides the proposed dial and is recorded with its provenance', () => {
+    const { config, context } = runPipeline(intake(), { decisions: { infra: { target: 'aws', by: 'owner', note: 'client runs AWS' } } });
+    expect(context.dials.infra).toBe('aws');
+    expect(config.dials.infra).toBe('aws');
+    expect(config.decisions?.infra).toMatchObject({ proposed: 'vercel', status: 'decided', decided: 'aws', decided_by: 'owner', note: 'client runs AWS' });
+  });
+
+  test('only a human can be the decider', () => {
+    const { config } = runPipeline(intake(), { decisions: { infra: { target: 'vercel', by: 'owner' } } });
+    expect(config.decisions?.infra.decided_by).toBe('owner');
+    // The schema admits no other decider.
+    expect(() => parseCalibratedConfig({ ...config, decisions: { infra: { ...config.decisions!.infra, decided_by: 'engine' } } })).toThrow();
   });
 });

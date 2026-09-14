@@ -38,7 +38,13 @@ export function buildClaudeMd(config: CalibratedConfig, selection: Selection): s
   }
 
   lines.push('## Deploy', '');
-  lines.push(`- **Target:** \`${config.dials.infra}\` — a calibration decision, not a per-session choice. It selects the deploy profile that fixes where migrations run, how secrets reach the platform, what is backed up, and the production gate.`);
+  const d = config.decisions?.infra;
+  const provenance = d
+    ? d.status === 'decided'
+      ? `proposed by the engine (§4.1 rule ${d.rule}), decided by the owner${d.note ? ` — ${d.note}` : ''}`
+      : `PROPOSED by the engine (§4.1 rule ${d.rule}) and not yet decided — the owner accepts or overrides it (\`calibrate --infra <target>\`) before anything deploys`
+    : 'set at calibration';
+  lines.push(`- **Target:** \`${config.dials.infra}\` — ${provenance}. A human decision recorded in \`.avani/manifest.json\` and the roadmap decision log, never a per-session choice. It selects the deploy profile that fixes where migrations run, how secrets reach the platform, what is backed up, and the production gate.`);
   lines.push('- Production is deployed only by CI under the production gate. Sessions and subagents prepare changes (workflow, config, infrastructure code with its plan or diff) and never deploy, apply, or touch a live environment themselves.');
   lines.push('- Procedure: the `avani-core` `deployment` skill — three environments, migrate before deploy, forward-only releases, backup before data-shape changes. Role bounds: `.claude/agents/`.', '');
 

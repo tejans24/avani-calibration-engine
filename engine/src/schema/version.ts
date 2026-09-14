@@ -9,7 +9,7 @@
  * Documents carry their own `schemaVersion`; the engine refuses to parse a
  * document whose MAJOR version differs from this one (see `isSupportedVersion`).
  */
-export const SCHEMA_VERSION = '1.0.0';
+export const SCHEMA_VERSION = '1.1.0';
 
 /** Semver string shape used by every document's `schemaVersion` field. */
 export const SEMVER = /^\d+\.\d+\.\d+$/;

@@ -7,7 +7,13 @@
  *   -> currently-best model. Model names churn; updating them is one line here.
  */
 
-export function buildRoadmapMd(appName: string): string {
+export interface RoadmapSeed {
+  /** Decision-log lines to seed (one per real decision, WHY included). */
+  decisions?: string[];
+}
+
+export function buildRoadmapMd(appName: string, seed: RoadmapSeed = {}): string {
+  const decisionLines = (seed.decisions ?? []).map((d) => `- ${d}`).join('\n');
   return `# ${appName} — Roadmap
 
 > Durable execution state. Each task is sized for **one session**: read this file, pick the next
@@ -36,6 +42,7 @@ name models here.
 ## Decisions
 
 <!-- append-only; one line per real product/architecture decision: date · decision · why (the constraint or trade-off). This log is harvested by the engine's learning loop — record the WHY, the diff already shows the what. -->
+${decisionLines}
 
 ## Handoff notes
 

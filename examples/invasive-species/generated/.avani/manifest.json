@@ -1,6 +1,6 @@
 {
   "engine_version": "0.5.0",
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "selection_version": "1.2.0",
   "profile": "field-app",
   "dials": {
@@ -9,6 +9,25 @@
     "infra": "vercel",
     "runtime": "ts-nextjs",
     "topology": "single-app"
+  },
+  "decisions": {
+    "infra": {
+      "proposed": "vercel",
+      "rule": 4,
+      "rationale": "request/response Next.js app with low ops capacity — lowest-ops target; app on Vercel with managed Postgres is the sanctioned split.",
+      "runner_up": "railway",
+      "unanswered": [
+        "existing_cloud (rule 1: a client cloud with procurement and IAM in place)",
+        "compliance_regime / data_residency / private_networking (rule 2)",
+        "scale_horizon (rule 2 at 100x; tie-breaker at 10x)",
+        "needs_realtime / needs_background_jobs (rule 3: long-lived process)",
+        "on_premises_required (rule 5)"
+      ],
+      "status": "proposed",
+      "decided": null,
+      "decided_by": null,
+      "note": null
+    }
   },
   "plugins": [
     "avani-core",

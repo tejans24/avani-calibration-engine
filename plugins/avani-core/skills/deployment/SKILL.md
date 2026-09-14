@@ -6,7 +6,7 @@ when_to_use: When a task touches a deploy workflow, environment configuration, s
 
 # Deployment
 
-The deploy target is a **calibration decision** recorded in `.avani/manifest.json` and `CLAUDE.md`; it selects a deploy profile that fixes where migrations run, how secrets reach the platform, what is backed up, and who may release. A session works *inside* that profile. It never re-decides the target, and never improvises a deploy path the profile doesn't have — changing either is a decision-log entry made by the owner.
+The deploy target is **proposed by the engine and decided by the owner**; the proposal, the decision, and the reason are recorded in `.avani/manifest.json` (`decisions.infra`) and the roadmap's decision log, and `CLAUDE.md` names the result. The target selects a deploy profile that fixes where migrations run, how secrets reach the platform, what is backed up, and who may release. A session works *inside* that profile. It never re-decides the target, and never improvises a deploy path the profile doesn't have — changing either is a decision-log entry made by the owner. If the manifest still says the target is `proposed`, no decision has been made: nothing deploys, and the session's job is to surface the open decision to the owner, not to resolve it.
 
 ## Environments
 

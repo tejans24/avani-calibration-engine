@@ -54,7 +54,7 @@ model: opus
 
 # infra-worker
 
-You work **inside the project's deploy profile** (the \`infra\` target in \`CLAUDE.md\`; procedure in the \`deployment\` skill). You do not re-decide the target and you do not add a deploy path the profile doesn't have.
+You work **inside the project's deploy profile** (the \`infra\` target in \`CLAUDE.md\`; procedure in the \`deployment\` skill). The target was proposed by the engine and decided by the owner; you do not re-decide it and you do not add a deploy path the profile doesn't have. If \`.avani/manifest.json\` shows the target as \`proposed\`, stop: the owner has not decided yet, and that is your first escalation.
 
 ## Own
 

@@ -1,4 +1,5 @@
 import { calibrate } from './calibration/calibrate.js';
+import { proposeInfra, type InfraDecision } from './calibration/infra.js';
 import { deriveRisk } from './calibration/risk.js';
 import { CalibratedConfigSchema, type CalibratedConfig } from './schema/calibrated-config.js';
 import type { IntakeProfile } from './schema/intake-profile.js';
@@ -15,6 +16,15 @@ export interface PipelineResult {
 }
 
 /**
+ * Decisions the engine proposes but only a human makes (SPEC §4.1). Absent, the
+ * config carries the proposal with status `proposed`; present, the owner's
+ * target overrides the proposed dial and the record says who decided and why.
+ */
+export interface PipelineOptions {
+  decisions?: { infra?: InfraDecision };
+}
+
+/**
  * The end-to-end pipeline: intake profile -> calibrated context -> selected
  * provisions -> assembled, schema-valid calibrated-config.
  *
@@ -23,8 +33,14 @@ export interface PipelineResult {
  * plus a risk assessment — which is what finally makes something produce the
  * invariants list (first-review finding #8).
  */
-export function runPipeline(intake: IntakeProfile): PipelineResult {
-  const context = calibrate(intake);
+export function runPipeline(intake: IntakeProfile, options: PipelineOptions = {}): PipelineResult {
+  const proposed = calibrate(intake);
+  const proposal = proposeInfra(intake, proposed.dials.runtime);
+  const decision = options.decisions?.infra;
+
+  const context: SelectionContext = decision
+    ? { ...proposed, dials: { ...proposed.dials, infra: decision.target } }
+    : proposed;
   const selection = select(context);
 
   const config = CalibratedConfigSchema.parse({
@@ -34,6 +50,15 @@ export function runPipeline(intake: IntakeProfile): PipelineResult {
     invariants: selection.provisions.filter((p) => p.kind === 'invariant').map((p) => shortName(p.id)),
     patterns: selection.provisions.filter((p) => p.kind === 'pattern').map((p) => shortName(p.id)),
     risk_assessment: deriveRisk(intake),
+    decisions: {
+      infra: {
+        ...proposal,
+        status: decision ? 'decided' : 'proposed',
+        decided: decision?.target ?? null,
+        decided_by: decision ? decision.by : null,
+        note: decision?.note ?? null,
+      },
+    },
   });
 
   return { context, selection, config };

@@ -1,5 +1,6 @@
 import type { IntakeProfile } from '../schema/intake-profile.js';
 import { SCHEMA_VERSION } from '../schema/version.js';
+import { proposeInfra } from '../calibration/infra.js';
 import { runPipeline, type PipelineResult } from '../pipeline.js';
 import { buildAgents } from './agents.js';
 import { stampBlueprints } from './blueprints.js';
@@ -49,11 +50,23 @@ export function buildNewProject(name: string): { files: FileMap; result: Pipelin
     throw new Error(`invalid project name '${name}' — use lowercase letters, digits, and dashes (start with a letter)`);
   }
 
-  const result = runPipeline(selfPresetIntake());
+  // Self mode has no interview: the owner running `avani new` IS the human
+  // decision, and the house preset is their standing answer. Record it as a
+  // decision (not a proposal) so the project never carries an open question
+  // it cannot answer — but still say what the engine proposed and why.
+  const intake = selfPresetIntake();
+  const proposal = proposeInfra(intake, 'ts-nextjs');
+  const result = runPipeline(intake, {
+    decisions: { infra: { target: proposal.proposed, by: 'owner', note: 'house preset (self mode): the owner accepts the engine proposal by running `avani new`' } },
+  });
+  const decisionLine =
+    `stamp · infra = \`${proposal.proposed}\` · engine proposed (§4.1 rule ${proposal.rule}: ${proposal.rationale}) · ` +
+    `accepted by the owner as the house preset. Runner-up: ${proposal.runner_up ?? 'none'}. ` +
+    `Not yet considered — re-decide if any applies: ${proposal.unanswered.map((u) => u.split(' (')[0]).join(', ')}.`;
   const files: FileMap = {
     ...stampBlueprints(result.selection, { APP_NAME: name }),
     ...generateProject(result.config, result.selection),
-    'ROADMAP.md': buildRoadmapMd(name),
+    'ROADMAP.md': buildRoadmapMd(name, { decisions: [decisionLine] }),
     '.avani/routing-policy.json': `${JSON.stringify(buildRoutingPolicy(), null, 2)}\n`,
     ...buildAgents(),
   };
