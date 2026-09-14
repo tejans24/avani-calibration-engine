@@ -39,6 +39,7 @@
     "react-hook-form": "^7.54.0",
     "zod": "^4.0.0"
   },
+  "//typescript": "TypeScript 6, not 7: the 7.x package is the native compiler and ships no JS compiler API, which typescript-eslint (inside eslint-config-next) needs — it refuses to load under 7.0 and tracks support for >=7.1. tsc and next build both work on 7; only lint does not. Bump when typescript-eslint supports 7.",
   "devDependencies": {
     "@axe-core/playwright": "^4.10.0",
     "@playwright/test": "^1.50.0",
@@ -56,7 +57,7 @@
     "prisma": "^7.0.0",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.0",
+    "typescript": "^6.0.0",
     "vitest": "^5.0.0"
   }
 }
