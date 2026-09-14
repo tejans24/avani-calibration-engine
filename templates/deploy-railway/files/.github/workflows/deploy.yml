@@ -1,0 +1,134 @@
+# Deploy pipeline for the `railway` deploy profile (engine SPEC §4.2).
+#
+# GitHub Secrets are the single source of truth for runtime configuration.
+# Every deploy (1) syncs config into the target Railway environment, then
+# (2) triggers the release — so code and config ship together. Build/deploy
+# settings themselves are config-as-code in railway.toml, including the
+# pre-deploy migration step.
+#
+# The production gate (SPEC §4.3): this job runs under the GitHub Environment
+# named after its target. Give the `production` environment a required
+# reviewer (repo → Settings → Environments) and every production deploy
+# pauses for a human. Staging has no reviewer and flows through.
+#
+# One-time setup is in DEPLOYMENT.md. Until RAILWAY_TOKEN exists the
+# workflow no-ops green, so merging it before setup breaks nothing.
+#
+# Sync semantics: only secrets that are SET in GitHub are pushed — an unset
+# secret never blanks an existing Railway variable. AVANI_STAGE is the one
+# value always set, because it is what arms the stage guards (§3).
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target Railway environment"
+        type: choice
+        options: [production, staging]
+        default: production
+
+# Railway project tokens are ENVIRONMENT-scoped: RAILWAY_TOKEN (production),
+# RAILWAY_STAGING_TOKEN (staging). Dispatching from a feature branch with
+# environment=staging deploys that branch to staging — the pre-merge loop.
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Resolve target environment + token
+        id: gate
+        env:
+          PROD_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          STAGING_TOKEN: ${{ secrets.RAILWAY_STAGING_TOKEN }}
+        run: |
+          TARGET="${{ github.event.inputs.environment || 'production' }}"
+          echo "environment=$TARGET" >> "$GITHUB_OUTPUT"
+          if [ "$TARGET" = "staging" ]; then TOKEN="$STAGING_TOKEN"; else TOKEN="$PROD_TOKEN"; fi
+          if [ -z "$TOKEN" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No Railway token for '$TARGET' — the deploy pipeline is dormant for this target (see DEPLOYMENT.md)."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "RAILWAY_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+          fi
+
+      - name: Checkout
+        if: steps.gate.outputs.configured == 'true'
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        if: steps.gate.outputs.configured == 'true'
+        run: npm install -g @railway/cli
+
+      - name: Sync configuration to Railway variables
+        if: steps.gate.outputs.configured == 'true'
+        env:
+          RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE }}
+          TARGET: ${{ steps.gate.outputs.environment }}
+          # Auth (optional: the app runs with auth disabled until both are set)
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "$RAILWAY_SERVICE" ]; then
+            echo "::error::RAILWAY_SERVICE secret is not set (the Railway service name)."
+            exit 1
+          fi
+          args=()
+          sync() {
+            local name="$1" value="${2-}"
+            if [ -n "$value" ]; then
+              args+=(--set "$name=$value")
+              echo "will sync: $name"
+            fi
+          }
+          # The stage is always set: it arms the escalating guards for this environment.
+          sync AVANI_STAGE "$TARGET"
+          sync NODE_ENV "production"
+          # Clerk: both or neither. Half-configured auth rejects every request.
+          if [ -n "$CLERK_SECRET_KEY" ] && [ -z "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" ] || [ -z "$CLERK_SECRET_KEY" ] && [ -n "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" ]; then
+            echo "::error::Set both NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY, or neither."
+            exit 1
+          fi
+          sync NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
+          sync CLERK_SECRET_KEY "$CLERK_SECRET_KEY"
+          # --skip-deploys: the deploy step below is the one and only release.
+          railway variables --service "$RAILWAY_SERVICE" --skip-deploys "${args[@]}"
+
+      - name: Deploy
+        if: steps.gate.outputs.configured == 'true'
+        env:
+          RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE }}
+        run: railway up --ci --service "$RAILWAY_SERVICE"
+
+      - name: Verify health
+        if: steps.gate.outputs.configured == 'true'
+        env:
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+          STAGING_URL: ${{ secrets.STAGING_URL }}
+          TARGET: ${{ steps.gate.outputs.environment }}
+        run: |
+          if [ "$TARGET" = "staging" ]; then URL="$STAGING_URL"; else URL="$PRODUCTION_URL"; fi
+          if [ -z "$URL" ]; then
+            echo "::notice::No ${TARGET} URL secret set — skipping the post-deploy health check (Railway's own healthcheck still gates traffic)."
+            exit 0
+          fi
+          # "Deployed" means healthy (deployment skill): poll the health route
+          # until it answers, up to two minutes.
+          for i in $(seq 1 24); do
+            if curl -fsS --max-time 10 "${URL%/}/api/health" >/dev/null; then
+              echo "✅ ${TARGET} is healthy at ${URL}"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::${TARGET} never answered /api/health at ${URL} — treat this release as failed and roll forward."
+          exit 1

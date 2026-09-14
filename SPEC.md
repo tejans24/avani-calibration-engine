@@ -138,6 +138,7 @@ Plugins cannot add files to a project (no `package.json` scripts, no `.github/wo
 | `ts-nextjs-prisma` | `runtime = ts-nextjs` | npm scripts (`db:migrate:dev`, `db:migrate:deploy`, `db:reset`, `db:seed`, `db:studio`); thin `ci.yml` / `deploy.yml` that **call reusable workflows** (§5) with `prisma migrate deploy` as the prod release step |
 | `python-fastapi` | `runtime = python` | `pyproject.toml` (uv), ruff + pytest config, service skeleton, CI caller |
 | `monorepo-root` | `topology = monorepo` | npm-workspaces root, `apps/` + `packages/shared` layout, root CLAUDE.md skeleton |
+| `deploy-railway` | `infra = railway` (the owner's decision, §4.1) | The railway deploy profile (§4.2): `railway.toml` (build/start, migrate-before-deploy, health), `deploy.yml` (GitHub Secrets → Railway, `AVANI_STAGE` per environment, gated by the `production` GitHub Environment, post-deploy health), nightly restore-verified encrypted backup, `DEPLOYMENT.md` runbook |
 
 **Blueprint/skill pairing.** Every blueprint with a procedure has a paired plugin skill (e.g. `ts-nextjs-prisma` ↔ `avani-nextjs:db-migrations`): the blueprint gives every project identical commands; the skill makes Claude follow identical procedure — never `db push` in prod, migrations append-only, reset is dev-only.
 
@@ -196,7 +197,7 @@ Each target has one profile. The profile is the contract the blueprint stamps ag
 | **Infrastructure as code** | Provider config as code where it exists; nothing to apply | `railway.toml` (config-as-code) | **CDK, always** (VISION §7). `cdk diff` posted on the PR; `cdk deploy` per environment from CI | Terraform. `plan` on the PR; `apply` per environment from CI | Compose files + a provisioning script |
 | **Production gate** | GitHub Environment `production` with a required reviewer + migration classification (VISION §14) | Same | Same, plus the `cdk diff` in the review | Same, plus the `plan` in the review | Runbook + human |
 
-The profile answers, per target, the questions a project otherwise answers by hand on launch day: where migrations run, how a secret reaches the platform, what "deployed" means, and who may press the button. `deploy.yml`, the health route, the env manifest and the backup job are the blueprint files a profile stamps (phase 3 in §12); the procedure around them is the `deployment` skill.
+The profile answers, per target, the questions a project otherwise answers by hand on launch day: where migrations run, how a secret reaches the platform, what "deployed" means, and who may press the button. The health route ships in every base blueprint; the rest is stamped per profile. **Stamped today: `railway`** (`blueprint:deploy-railway`, selected when the owner decides `infra = railway` — `avani new --infra railway`). The other rows are house positions with no blueprint yet: deploying to them is hand work, and the stamped `CLAUDE.md` says so. The procedure around the files is the `deployment` skill.
 
 ### 4.3 The pipeline ladder, by stage
 

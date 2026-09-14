@@ -1,0 +1,169 @@
+# Off-platform backup of the PRODUCTION database (`railway` deploy profile).
+#
+# Railway's own volume backups are the first layer (Postgres service ->
+# Backups -> Daily; turn them on, see DEPLOYMENT.md). They live inside the
+# project they protect: a deleted project or a mis-fired reset takes them
+# too. This workflow keeps an encrypted copy elsewhere.
+#
+# A backup is only real once a restore has succeeded: every run restores its
+# own dump into a throwaway Postgres and asserts the schema came back, so a
+# corrupt or empty dump fails here instead of in an incident.
+#
+# Encryption is mandatory: the workflow refuses to run without
+# BACKUP_ENCRYPTION_PASSPHRASE rather than ever upload a plaintext dump.
+
+name: Backup Production DB
+
+on:
+  schedule:
+    # Daily, early morning UTC, offset from :00 (GitHub drops scheduled runs at peak-of-hour).
+    - cron: "10 8 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: backup-production
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    # Forks inherit the schedule but not the secrets — don't let them fail nightly.
+    if: github.event.repository.fork == false
+    steps:
+      - name: Validate secrets and target
+        env:
+          PROD_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+        run: |
+          if [ -z "$PROD_DATABASE_URL" ]; then
+            echo "::error::PRODUCTION_DATABASE_URL secret is not set."
+            exit 1
+          fi
+          if [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::BACKUP_ENCRYPTION_PASSPHRASE is not set. Refusing to produce an unencrypted dump. Generate one with: openssl rand -base64 32"
+            exit 1
+          fi
+          # A staging backup labelled "production" would restore cleanly and replace real data with test data.
+          if [ -n "$STAGING_DATABASE_URL" ] && [ "$PROD_DATABASE_URL" = "$STAGING_DATABASE_URL" ]; then
+            echo "::error::PRODUCTION_DATABASE_URL equals STAGING_DATABASE_URL — secrets look misconfigured, refusing."
+            exit 1
+          fi
+          echo "✅ Secrets present, target looks like production"
+
+      - name: Detect server major version
+        id: pg
+        env:
+          PGURL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          # pg_dump refuses to dump a server newer than itself: detect the
+          # server's major rather than pin a number that rots after an upgrade.
+          VERSION_NUM=$(docker run --rm --network host -e PGURL \
+            postgres:18-alpine \
+            sh -c 'psql "$PGURL" -tAc "SHOW server_version_num"' | tr -d '[:space:]')
+          if ! [ "$VERSION_NUM" -gt 0 ] 2>/dev/null; then
+            echo "::error::Could not read server_version_num from the production database."
+            exit 1
+          fi
+          MAJOR=$(( VERSION_NUM / 10000 ))
+          echo "major=$MAJOR" >> "$GITHUB_OUTPUT"
+          echo "✅ Production Postgres major version: $MAJOR"
+
+      - name: Dump database
+        id: dump
+        env:
+          PGURL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          PG_MAJOR: ${{ steps.pg.outputs.major }}
+        run: |
+          mkdir -p backup
+          STAMP=$(date -u +%Y-%m-%dT%H-%M-%SZ)
+          echo "stamp=$STAMP" >> "$GITHUB_OUTPUT"
+          # Custom format: compressed, and pg_restore can pull single tables out of it.
+          docker run --rm --network host -e PGURL \
+            -v "$PWD/backup:/backup" \
+            "postgres:${PG_MAJOR}-alpine" \
+            sh -c 'pg_dump "$PGURL" --format=custom --no-owner --no-acl --file=/backup/dump.pgc'
+          sudo chown "$(id -u):$(id -g)" backup/dump.pgc
+          SIZE=$(stat -c%s backup/dump.pgc)
+          echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+          echo "✅ Dump written: $SIZE bytes"
+          if [ "$SIZE" -lt 2000 ]; then
+            echo "::error::Dump is only $SIZE bytes — implausibly small. Treating as a failed backup."
+            exit 1
+          fi
+
+      - name: Verify the dump restores
+        env:
+          PG_MAJOR: ${{ steps.pg.outputs.major }}
+        run: |
+          docker run -d --name verify-pg -e POSTGRES_PASSWORD=verify -e POSTGRES_DB=verify -p 55432:5432 "postgres:${PG_MAJOR}-alpine"
+          for i in $(seq 1 30); do
+            if docker exec verify-pg pg_isready -U postgres -d verify >/dev/null 2>&1; then break; fi
+            sleep 2
+            if [ "$i" -eq 30 ]; then echo "::error::Verification database never became ready."; docker logs verify-pg; exit 1; fi
+          done
+          VERIFY_URL="postgresql://postgres:verify@localhost:55432/verify"
+          docker run --rm --network host -v "$PWD/backup:/backup" -e VERIFY_URL="$VERIFY_URL" \
+            "postgres:${PG_MAJOR}-alpine" \
+            sh -c 'pg_restore --dbname="$VERIFY_URL" --no-owner --no-acl /backup/dump.pgc'
+          run_sql() {
+            docker run --rm --network host -e VERIFY_URL="$VERIFY_URL" "postgres:${PG_MAJOR}-alpine" \
+              sh -c "psql \"\$VERIFY_URL\" -tAc \"$1\"" | tr -d '[:space:]'
+          }
+          TABLES=$(run_sql "SELECT count(*) FROM information_schema.tables WHERE table_schema='public'")
+          echo "Restored tables in public schema: $TABLES"
+          if [ "$TABLES" -lt 2 ]; then
+            echo "::error::Only $TABLES tables restored — the backup is not trustworthy."
+            docker rm -f verify-pg >/dev/null 2>&1 || true
+            exit 1
+          fi
+          # _prisma_migrations exists and is populated in any real deployment and never drifts with the domain schema.
+          MIGRATIONS=$(run_sql "SELECT count(*) FROM _prisma_migrations WHERE finished_at IS NOT NULL")
+          echo "Applied migrations found in restore: $MIGRATIONS"
+          if [ "$MIGRATIONS" -lt 1 ]; then
+            echo "::error::No applied migrations in the restored database — the dump did not capture a migrated schema."
+            docker rm -f verify-pg >/dev/null 2>&1 || true
+            exit 1
+          fi
+          docker rm -f verify-pg >/dev/null 2>&1 || true
+          echo "✅ Restore verified: $TABLES tables, $MIGRATIONS applied migrations"
+
+      - name: Encrypt
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+          STAMP: ${{ steps.dump.outputs.stamp }}
+        run: |
+          # Symmetric AES256. Decrypt with:
+          #   gpg --batch --decrypt --passphrase "<passphrase>" --output dump.pgc {{APP_NAME}}-prod-<stamp>.pgc.gpg
+          gpg --batch --yes --symmetric --cipher-algo AES256 --passphrase "$BACKUP_PASSPHRASE" \
+            --output "backup/{{APP_NAME}}-prod-${STAMP}.pgc.gpg" backup/dump.pgc
+          shred -u backup/dump.pgc 2>/dev/null || rm -f backup/dump.pgc
+          echo "✅ Encrypted; plaintext dump removed"
+
+      - name: Upload encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: {{APP_NAME}}-prod-backup-${{ steps.dump.outputs.stamp }}
+          path: backup/*.pgc.gpg
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Summary
+        env:
+          STAMP: ${{ steps.dump.outputs.stamp }}
+          SIZE: ${{ steps.dump.outputs.size }}
+          PG_MAJOR: ${{ steps.pg.outputs.major }}
+        run: |
+          {
+            echo "### Production backup complete"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Timestamp | \`$STAMP\` |"
+            echo "| Postgres | \`$PG_MAJOR\` |"
+            echo "| Dump size | $SIZE bytes (pre-encryption) |"
+            echo "| Restore verified | ✅ |"
+            echo "| Retention | 30 days |"
+            echo ""
+            echo "Restore instructions: DEPLOYMENT.md → Restoring from a backup."
+          } >> "$GITHUB_STEP_SUMMARY"

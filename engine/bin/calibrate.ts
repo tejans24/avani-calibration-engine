@@ -19,6 +19,9 @@ Usage: calibrate <subcommand>
 
   new <name>                 One-command project from the house preset (self mode, no interview);
                              --out <dir> (default: ./<name>)
+                             --infra <target> --why "<reason>"  the owner's deploy-target decision at
+                             stamp time (default: accept the engine's proposal; railway stamps the
+                             shipped deploy pipeline)
   init                       Start intake for a new project
   calibrate <intake.json>    Run intake -> dials + selection -> calibrated-config
   generate <intake.json>     Emit project artifacts (default: ./.staging), --out <dir> --name <app>
@@ -173,12 +176,26 @@ function runNew(argv: string[]): number {
     return 1;
   }
 
-  const { files, result } = buildNewProject(name);
+  const decision = infraDecision(argv);
+  if (decision.error) {
+    console.error(decision.error);
+    return 1;
+  }
+  const chosen = decision.options.decisions?.infra;
+  const { files, result } = buildNewProject(name, chosen ? { infra: chosen.target, ...(chosen.note ? { why: chosen.note } : {}) } : {});
   const written = writeProject(files, outDir);
 
   console.log(`\n${name} — generated from the house preset (self mode, ${result.context.dials.runtime}).`);
   const infra = result.config.decisions?.infra;
-  if (infra) console.log(`Deploy target: ${result.config.dials.infra} — engine proposed (§4.1 rule ${infra.rule}), accepted as the house preset. Re-decide in ROADMAP.md → Decisions if any unanswered input applies.`);
+  if (infra) {
+    const how = result.config.dials.infra === infra.proposed ? (chosen ? 'accepted by you' : 'accepted as the house preset') : `you overrode the engine's ${infra.proposed}`;
+    console.log(`Deploy target: ${result.config.dials.infra} — engine proposed ${infra.proposed} (§4.1 rule ${infra.rule}), ${how}. Menu + reasoning: .avani/decisions/infra.md`);
+    if (result.selection.provisions.some((p) => p.id === 'blueprint:deploy-railway')) {
+      console.log('Deploy pipeline: stamped (railway profile) — one-time setup in DEPLOYMENT.md; production deploys wait on the `production` GitHub Environment.');
+    } else {
+      console.log(`Deploy pipeline: none stamped for ${result.config.dials.infra} yet (SPEC §4.2 house position). Re-run with --infra railway for the shipped pipeline.`);
+    }
+  }
   console.log(`${written.length} files in ${outDir}/\n`);
   console.log('Next steps:');
   console.log(`  cd ${basename(outDir) === name ? name : outDir}`);

@@ -205,3 +205,41 @@ describe('self mode stamps a decided decision brief', () => {
     expect(brief).toContain('### `self-hosted`');
   });
 });
+
+describe('stamp-time deploy decision and the railway profile', () => {
+  test('the house preset stamps the health route but no deploy pipeline (vercel is a house position)', () => {
+    const { files } = buildNewProject('fresh-app');
+    expect(files['src/app/api/health/route.ts']).toContain("status: 'ok'");
+    expect(files['railway.toml']).toBeUndefined();
+    expect(files['.github/workflows/deploy.yml']).toBeUndefined();
+    expect(files['CLAUDE.md']).toMatch(/Stamped profile:\*\* none yet for `vercel`/);
+  });
+
+  test('--infra railway stamps the shipped pipeline with the app name substituted', () => {
+    const { files, result } = buildNewProject('fresh-app', { infra: 'railway', why: 'needs a worker' });
+    for (const f of ['railway.toml', '.github/workflows/deploy.yml', '.github/workflows/backup-production-db.yml', 'DEPLOYMENT.md']) {
+      expect(files[f], f).toBeDefined();
+      expect(files[f], `${f} has an unsubstituted placeholder`).not.toContain('{{APP_NAME}}');
+    }
+    expect(files['.github/workflows/backup-production-db.yml']).toContain('fresh-app-prod-backup-');
+    expect(files['.github/workflows/ci.yml'], 'the base CI ladder is still stamped').toBeDefined();
+    expect(result.config.dials.infra).toBe('railway');
+    expect(result.config.decisions?.infra).toMatchObject({ proposed: 'vercel', decided: 'railway', decided_by: 'owner', note: 'needs a worker' });
+    expect(files['ROADMAP.md']).toMatch(/owner OVERRODE it: needs a worker/);
+    expect(files['CLAUDE.md']).toMatch(/Stamped profile:\*\* `deploy-railway`/);
+  });
+
+  test('the railway profile carries the contract it promises', () => {
+    const { files } = buildNewProject('fresh-app', { infra: 'railway' });
+    const toml = files['railway.toml'] as string;
+    expect(toml).toMatch(/preDeployCommand = "npm run db:migrate:deploy/); // migrate before deploy, atomically
+    expect(toml).toMatch(/healthcheckPath = "\/api\/health"/);
+    const deploy = files['.github/workflows/deploy.yml'] as string;
+    expect(deploy).toMatch(/environment: \$\{\{ github\.event\.inputs\.environment \|\| 'production' \}\}/); // the human gate
+    expect(deploy).toMatch(/sync AVANI_STAGE "\$TARGET"/); // the stage convention is set per environment
+    expect(deploy).toMatch(/api\/health/); // deployed means healthy
+    const backup = files['.github/workflows/backup-production-db.yml'] as string;
+    expect(backup).toMatch(/BACKUP_ENCRYPTION_PASSPHRASE/);
+    expect(backup).toMatch(/Verify the dump restores/);
+  });
+});

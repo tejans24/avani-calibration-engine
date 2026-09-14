@@ -1,0 +1,25 @@
+# Railway config-as-code for the `railway` deploy profile (engine SPEC §4.2).
+# Build/deploy settings are versioned here and override the dashboard.
+# Secrets are NOT part of this file: they live in GitHub Secrets and are
+# synced into Railway's environment by .github/workflows/deploy.yml.
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "npx prisma generate && npm run build"
+
+[deploy]
+startCommand = "npm run start"
+# Migrate before deploy, atomically with the release: pending migrations and
+# reference data apply before the new container takes traffic. A failed
+# migration aborts the deploy and the old container keeps serving.
+preDeployCommand = "npm run db:migrate:deploy && npm run db:init"
+# "Deployed" means healthy: Railway routes traffic only once this answers.
+healthcheckPath = "/api/health"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+# Staging sleeps when idle (compute cost near zero between test sessions).
+# Production must never sleep.
+[environments.staging.deploy]
+sleepApplication = true

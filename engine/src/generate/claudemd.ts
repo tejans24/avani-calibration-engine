@@ -45,6 +45,11 @@ export function buildClaudeMd(config: CalibratedConfig, selection: Selection): s
       : `PROPOSED by the engine (§4.1 rule ${d.rule}) and not yet decided — the owner accepts or overrides it (\`calibrate --infra <target>\`) before anything deploys`
     : 'set at calibration';
   lines.push(`- **Target:** \`${config.dials.infra}\` — ${provenance}. A human decision recorded in \`.avani/manifest.json\` and the roadmap decision log, never a per-session choice. It selects the deploy profile that fixes where migrations run, how secrets reach the platform, what is backed up, and the production gate.`);
+  if (byKind(selection, 'blueprint').includes('deploy-railway')) {
+    lines.push('- **Stamped profile:** `deploy-railway` — `railway.toml` (build/start, migrate-before-deploy, health), `.github/workflows/deploy.yml` (GitHub Secrets → Railway, gated by the `production` GitHub Environment), `.github/workflows/backup-production-db.yml` (nightly encrypted dump, restore-verified). Setup and runbooks: `DEPLOYMENT.md`.');
+  } else {
+    lines.push(`- **Stamped profile:** none yet for \`${config.dials.infra}\` — that profile is a SPEC §4.2 house position; deploying is hand work until it is stamped. The \`railway\` profile is stamped and backed by a shipped project.`);
+  }
   lines.push('- Production is deployed only by CI under the production gate. Sessions and subagents prepare changes (workflow, config, infrastructure code with its plan or diff) and never deploy, apply, or touch a live environment themselves.');
   lines.push('- Procedure: the `avani-core` `deployment` skill — three environments, migrate before deploy, forward-only releases, backup before data-shape changes. Role bounds: `.claude/agents/`.', '');
 

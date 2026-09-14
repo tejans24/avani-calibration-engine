@@ -9,7 +9,7 @@ import type { SelectionContext } from './context.js';
  * `sensitivity:protected`) — that fan-in is what "shared across branches" means.
  * Predicates are code, not a JSON DSL: type-checked, testable, and debuggable.
  */
-export const SELECTION_VERSION = '1.2.0';
+export const SELECTION_VERSION = '1.3.0';
 
 export type ProvisionKind = 'plugin' | 'blueprint' | 'invariant' | 'pattern';
 
@@ -128,6 +128,12 @@ export const PROVISIONS: readonly Provision[] = [
     worksWith: ['plugin:avani-python'],
   },
   {
+    id: 'blueprint:deploy-railway', kind: 'blueprint',
+    description: 'The railway deploy profile (SPEC §4.2): railway.toml (build/start, migrate-before-deploy, health), deploy.yml (GitHub Secrets -> Railway, gated by the production GitHub Environment), a nightly restore-verified encrypted backup, DEPLOYMENT.md.',
+    purpose: 'Stamps the release machinery the deployment skill operates: one named place where migrations run before traffic, one source of truth for config, a human gate in front of production, and a backup that is proven restorable. Harvested from a shipped project.',
+    worksWith: ['plugin:avani-core', 'blueprint:ts-nextjs-prisma'],
+  },
+  {
     id: 'blueprint:monorepo-root', kind: 'blueprint',
     description: 'npm-workspaces root, apps/ + packages/shared layout, root CLAUDE.md.',
     purpose: 'Stamps the workspace root and apps/packages layout that lets multiple apps in one project share code and contracts.',
@@ -214,6 +220,7 @@ export const CONDITIONS: readonly Condition[] = [
   { id: 'signal:auth-clerk', label: 'auth = clerk', description: 'App uses Clerk authentication.', rationale: 'Adds Clerk role-based access, middleware, and invite flows.', test: (c) => c.signals.auth_clerk },
   { id: 'correctness:append-only', label: 'correctness = append-only', description: 'Data provenance requires append-only records.', rationale: 'Turns on the append-only provenance guarantee — history becomes immutable.', test: (c) => c.dials.correctness_bar === 'append-only' },
   { id: 'sensitivity:protected', label: 'sensitivity = protected', description: 'Highest data-sensitivity tier.', rationale: 'The top tier adds the coordinate-fuzzing guarantee on top of whatever geo handling is present — which is why that invariant is shared.', test: (c) => c.dials.sensitivity === 'protected' },
+  { id: 'infra:railway', label: 'infra = railway', description: 'The owner decided the railway deploy target (SPEC §4.1).', rationale: 'The target picks the profile and the profile picks the stamped machinery: deploy pipeline, config-as-code, backup, and the production gate arrive together, so "deployed" has one meaning in every railway project.', test: (c) => c.dials.infra === 'railway' },
   { id: 'topology:monorepo', label: 'topology = monorepo', description: 'Project spans multiple apps.', rationale: 'Stamps the workspace root so multiple apps share code and a generated cross-language client.', test: (c) => c.dials.topology === 'monorepo' },
   { id: 'domain:field-data', label: 'field-data domain', description: 'A field-app profile at high+ sensitivity.', rationale: 'The moat bundle: the field-data plugin and its session guarantee — reserved for field apps at high or protected sensitivity.', test: (c) => c.profile === 'field-app' && sensitivityHighPlus(c) },
 ];
@@ -243,6 +250,7 @@ export const RULES: readonly Rule[] = [
   { condition: 'correctness:append-only', provides: ['invariant:observations_append_only_never_delete'] },
   { condition: 'sensitivity:protected', provides: ['invariant:geo_coordinate_fuzzing_public_views'] },
   { condition: 'topology:monorepo', provides: ['blueprint:monorepo-root'] },
+  { condition: 'infra:railway', provides: ['blueprint:deploy-railway'] },
   { condition: 'domain:field-data', provides: ['plugin:avani-field-data', 'invariant:session_expires_event_plus_24hrs'] },
 ];
 

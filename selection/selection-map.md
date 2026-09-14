@@ -1,6 +1,6 @@
 # selection-map
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 
 A calibrated project composes four layers in tandem: plugins teach Claude the conventions and procedures; blueprints stamp the operational machinery those procedures drive; invariants pin the guarantees that must hold; patterns are the stack idioms the plugins apply. Each branch selects a coherent slice across all four, so the agent knows the conventions, the repo has the machinery, and the guarantees are enforced together.
 
@@ -97,6 +97,14 @@ _The top tier adds the coordinate-fuzzing guarantee on top of whatever geo handl
 
 - `invariant:geo_coordinate_fuzzing_public_views` — Protects sensitive locations. Selected by two branches — any geo data, and the protected sensitivity tier — the shared guarantee. **(shared ×2)**
 
+### `infra:railway`
+
+The owner decided the railway deploy target (SPEC §4.1).
+
+_The target picks the profile and the profile picks the stamped machinery: deploy pipeline, config-as-code, backup, and the production gate arrive together, so "deployed" has one meaning in every railway project._
+
+- `blueprint:deploy-railway` — Stamps the release machinery the deployment skill operates: one named place where migrations run before traffic, one source of truth for config, a human gate in front of production, and a backup that is proven restorable. Harvested from a shipped project.
+
 ### `topology:monorepo`
 
 Project spans multiple apps.
@@ -118,7 +126,7 @@ _The moat bundle: the field-data plugin and its session guarantee — reserved f
 
 ### plugins
 
-- `plugin:avani-core` — The always-on floor every project stands on before any calibration. Everything else layers on top of it. _Works with: `monorepo-root`, `a11y_axe_clean`._
+- `plugin:avani-core` — The always-on floor every project stands on before any calibration. Everything else layers on top of it. _Works with: `deploy-railway`, `monorepo-root`, `a11y_axe_clean`._
 - `plugin:avani-typescript` — Makes Claude write idiomatic, strict TypeScript with validation at the boundary — applied to every file in a ts-nextjs app. _Works with: `react-hook-form-zod`, `avani-nextjs`._
 - `plugin:avani-python` — Makes Claude write idiomatic Python with FastAPI + Pydantic conventions; the FastAPI OpenAPI spec is the cross-language contract. _Works with: `python-fastapi`._
 - `plugin:avani-nextjs` — Teaches the Next.js conventions and the Prisma migration procedure (never db push in prod, migrations append-only). Pairs with the blueprint that stamps the actual commands. _Works with: `ts-nextjs-prisma`, `a11y_axe_clean`, `nextjs-app-router`, `react-hook-form-zod`, `avani-typescript`._
@@ -130,8 +138,9 @@ _The moat bundle: the field-data plugin and its session guarantee — reserved f
 
 ### blueprints
 
-- `blueprint:ts-nextjs-prisma` — Stamps the db commands and CI/deploy machinery that the avani-nextjs migration procedure operates on. The blueprint gives every project identical commands; the plugin makes Claude use them the same way. _Works with: `avani-nextjs`._
+- `blueprint:ts-nextjs-prisma` — Stamps the db commands and CI/deploy machinery that the avani-nextjs migration procedure operates on. The blueprint gives every project identical commands; the plugin makes Claude use them the same way. _Works with: `deploy-railway`, `avani-nextjs`._
 - `blueprint:python-fastapi` — Stamps the uv/ruff/pytest config and FastAPI service skeleton the avani-python conventions assume. _Works with: `avani-python`._
+- `blueprint:deploy-railway` — Stamps the release machinery the deployment skill operates: one named place where migrations run before traffic, one source of truth for config, a human gate in front of production, and a backup that is proven restorable. Harvested from a shipped project. _Works with: `ts-nextjs-prisma`, `avani-core`._
 - `blueprint:monorepo-root` — Stamps the workspace root and apps/packages layout that lets multiple apps in one project share code and contracts. _Works with: `avani-core`._
 
 ### invariants

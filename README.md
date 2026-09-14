@@ -2,12 +2,13 @@
 
 Transforms an **application spec** into a calibrated Claude Code setup: universal and context-selected plugins, plus a runnable blueprint skeleton and a thin layer of project-specific artifacts (`CLAUDE.md`, settings/hooks, invariant tests, `.mcp.json`).
 
-**Status:** MVP live (`avani new`, VISION §19). Engine mechanics are specified in [SPEC.md](./SPEC.md) (v0.5); the broader decision-architecture, standards model, LLM strategy, business model, and build roadmap are in [VISION.md](./VISION.md).
+**Status:** MVP live (`avani new`, VISION §19). What is next on the idea → product path is in [NEXT.md](./NEXT.md). Engine mechanics are specified in [SPEC.md](./SPEC.md) (v0.5); the broader decision-architecture, standards model, LLM strategy, business model, and build roadmap are in [VISION.md](./VISION.md).
 
 ## The MVP — `avani new`
 
 ```bash
 npm run new -- my-app          # one command -> a runnable, calibrated project
+npm run new -- my-app --infra railway --why "needs a worker"   # + the shipped deploy pipeline (owner's decision)
 cd my-app && npm install && npm run dev
 ```
 
@@ -21,6 +22,7 @@ plugins/avani-core/               Tier 1 — universal, language-agnostic, alway
 plugins/avani-typescript/         Tier 2 language plugin (TS strict, Zod-at-the-boundary)
 plugins/avani-python/             Tier 2 language plugin (uv, ruff, pytest, FastAPI)
 templates/                        blueprints — operational files stamped into projects
+                                  (ts-nextjs-prisma runnable skeleton; deploy-railway — the stamped deploy profile)
 engine/                           calibration pipeline (intake → calibrate → select → generate)
 schemas/                          JSON Schema contracts between pipeline layers
 examples/                         golden fixtures harvested from shipped apps
