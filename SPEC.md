@@ -44,7 +44,7 @@ The engine's job is calibration → selection, plus generating the small project
 |---|---|---|
 | `correctness_bar` | basic · standard · strict · append-only | |
 | `sensitivity` | low · medium · high · protected | how careful to be with the **data** — intrinsic to the domain, roughly fixed |
-| `infra` | vercel · aws · self-hosted | |
+| `infra` | vercel · railway · aws · gcp · self-hosted | Chosen by the decision rules in §4.1; realized by a deploy profile (§4.2) |
 | `runtime` | ts-nextjs · python | **per-app.** `ts-nextjs` is the default for product/UI apps (easiest build/deploy); `python` for small backend APIs, ML workflows, data pipelines |
 | `topology` | single-app · monorepo | monorepo when the project spans multiple apps (§4) |
 
@@ -138,6 +138,7 @@ Plugins cannot add files to a project (no `package.json` scripts, no `.github/wo
 | `ts-nextjs-prisma` | `runtime = ts-nextjs` | npm scripts (`db:migrate:dev`, `db:migrate:deploy`, `db:reset`, `db:seed`, `db:studio`); thin `ci.yml` / `deploy.yml` that **call reusable workflows** (§5) with `prisma migrate deploy` as the prod release step |
 | `python-fastapi` | `runtime = python` | `pyproject.toml` (uv), ruff + pytest config, service skeleton, CI caller |
 | `monorepo-root` | `topology = monorepo` | npm-workspaces root, `apps/` + `packages/shared` layout, root CLAUDE.md skeleton |
+| `deploy-railway` | `infra = railway` (the owner's decision, §4.1) | The railway deploy profile (§4.2): `railway.toml` (build/start, migrate-before-deploy, health), `deploy.yml` (GitHub Secrets → Railway, `AVANI_STAGE` per environment, gated by the `production` GitHub Environment, post-deploy health), nightly restore-verified encrypted backup, `DEPLOYMENT.md` runbook |
 
 **Blueprint/skill pairing.** Every blueprint with a procedure has a paired plugin skill (e.g. `ts-nextjs-prisma` ↔ `avani-nextjs:db-migrations`): the blueprint gives every project identical commands; the skill makes Claude follow identical procedure — never `db push` in prod, migrations append-only, reset is dev-only.
 
@@ -156,6 +157,72 @@ client-project/
 ```
 
 npm workspaces on the TS side, uv per Python app (Turborepo only if build times later demand it). Cross-language contract: FastAPI's OpenAPI spec → generated TS client in `packages/shared`. The engine handles this by composition: calibrate once per project, a `runtime` dial per app, plugin selection is the union, blueprints stamp per-app.
+
+### 4.1 Deploy target — the decision rules
+
+The `infra` dial is a **decision a human makes, suggested by the system, with every option given and explained** (the Propose tier, VISION §6). At calibration the engine applies the rules below (first match wins) and emits a *proposal*: the rule that fired and the inputs it read, the runner-up it is declining, every input it could not consider, and **the whole menu** — all five targets, each with what it is, how it fits *this* intake, its trade-offs, cost shape, ops burden, whether a shipped project backs it, and the condition under which it would become the answer. The owner decides with the menu in view, not just the pick; the menu is stamped as `.avani/decisions/infra.md` and printed by `calibrate`. The owner then **accepts or overrides** — `calibrate --infra <target> --why "<reason>"` — and the config records both sides (`decisions.infra`: proposed / rule / rationale / runner-up / unanswered, and decided / decided-by / note). Only `owner` is admissible as the decider; the schema rejects anything else. The record travels into `.avani/manifest.json` and seeds the roadmap's decision log, so any later session can read who decided and why without re-running calibration.
+
+A config whose target is still `proposed` is complete for everything except deployment: nothing deploys on a proposal. In self mode (`avani new`) the owner running the command *is* the decision, and the house preset is their standing answer — recorded as decided, with the proposal and the unanswered inputs alongside so it can be re-decided the moment one applies. Re-deciding later is a decision-log entry, never a per-session choice.
+
+Inputs marked *(intake: add)* are not in the intake profile yet — they arrive with the dial expansion (VISION §20 phase C). Until then the rules that need them cannot fire, the proposal says so explicitly, and the owner weighs them by hand before accepting.
+
+| # | If | Then | Why |
+|---|---|---|---|
+| 1 | The client already runs a cloud with procurement, IAM and networking in place *(intake: `existing_cloud`)* | **That cloud** — `aws` (CDK) or `gcp` (Terraform) | Never fight procurement; the client's ops team must be able to inherit it. |
+| 2 | A compliance regime, data-residency requirement, private networking, or a 100× scale horizon *(intake: `compliance_regime`, `data_residency`, `private_networking`, `scale_horizon`)* | **`aws`** with CDK. `gcp` only under rule 1 or for a GCP-native workload (BigQuery, Vertex, Document AI). | Hyperscaler controls exist for these; PaaS targets don't. AWS is the house default because CDK is the codify-everything path (VISION §7). |
+| 3 | The app needs a **long-lived process**: websockets/realtime, background workers, cron, in-process queues, a persistent server runtime (Express/tRPC) *(intake: `needs_realtime`, `needs_background_jobs`)* — **or** `runtime = python` — **or** a tight budget that needs flat, predictable cost | **`railway`** | A container with an attached Postgres, flat pricing, near-zero ops. This is the shipped mi-casa shape. |
+| 4 | `runtime = ts-nextjs`, request/response only, `ops_capacity` low or medium, scale horizon flat-to-10× | **`vercel`** — the default | Lowest ops for a Next.js product app; the sanctioned split is app on Vercel + managed Postgres with branching. |
+| 5 | Data may not leave client premises, or a contractual hosting requirement *(intake: `on_premises_required`)* | **`self-hosted`** — requires `ops_capacity = high` | Only ever a requirement, never a cost play; someone has to run it. |
+
+**Tie-breakers and anti-rules.**
+
+- Among admissible targets the cheapest to *operate* wins: vercel / railway before aws / gcp before self-hosted. Hosting cost is a TCO input (VISION §8), ops burden is the larger term.
+- Do not buy scale you don't have. A 10× horizon penalizes Vercel's pricing cliffs but does **not** justify AWS on its own — AWS costs a human sooner (VISION §7). Railway is the middle step.
+- One provider for app and database, except the Vercel + managed-Postgres split above. Two vendors for one app is two incident channels.
+- Re-decide only at a stage promotion (§3) or a decision-log entry, and always by the owner. A session never changes the target on its own — the target picks the deploy profile, and the profile picks the stamped machinery.
+
+### 4.2 Deploy profiles — what a target commits you to
+
+Each target has one profile. The profile is the contract the blueprint stamps against and the `deployment` skill (avani-core) teaches from; every row is a decision the project must not re-make per session. Rows marked **shipped** are harvested from a running system; the others are the house position until a project verifies them.
+
+| | `vercel` | `railway` **(shipped: mi-casa)** | `aws` | `gcp` | `self-hosted` |
+|---|---|---|---|---|---|
+| **Runtime shape** | Serverless functions; the request proxy on the edge | One long-lived container per service, built from the repo | ECS Fargate service behind an ALB (Lambda only for API-only python) | Cloud Run service | Compose on a VM (Kubernetes only if the client already runs it) |
+| **Database** | Managed Postgres with branch-per-preview | Platform Postgres on a persistent volume | RDS Postgres, private subnet | Cloud SQL Postgres, private IP | Postgres on the host, own volume |
+| **Migrations run** | CI job before the deploy; git auto-deploy **off** for production, deploy via CLI from CI | `preDeployCommand` = `db:migrate:deploy` — atomic with the release: a failed migration aborts the deploy and the old container keeps serving | One-off task from the same image, run by the pipeline before the service update | Cloud Run job before the service revision | Deploy script step, before the app restarts |
+| **Health** | `/api/health` route, checked post-deploy | `healthcheckPath = /api/health`, restart on failure | ALB target-group check on `/api/health` | Startup probe on `/api/health` | Reverse-proxy check on `/api/health` |
+| **Secrets** | GitHub Secrets are the source of truth; synced to the platform by the deploy workflow | Same: `deploy.yml` syncs GitHub Secrets → platform variables, then deploys | Secrets Manager + SSM; CI assumes a role via GitHub OIDC — no long-lived keys | Secret Manager; CI via Workload Identity Federation | Env file provisioned from the client's secret store; never in the repo |
+| **Backups** | Provider point-in-time recovery + nightly off-platform dump | Volume backups + nightly encrypted off-platform dump **with a restore verification step** | Automated RDS backups + a snapshot before every data-shape migration | Automated Cloud SQL backups + on-demand before data-shape migrations | Nightly `pg_dump` offsite + a scheduled restore drill |
+| **Preview / staging** | Per-PR preview with a DB branch | A `staging` environment, deployed on demand (`workflow_dispatch` with an environment input); per-PR environments optional | A staging stack in its own account or environment; no per-PR previews by default | A staging project; no per-PR previews by default | Staging VM if the client funds it |
+| **Infrastructure as code** | Provider config as code where it exists; nothing to apply | `railway.toml` (config-as-code) | **CDK, always** (VISION §7). `cdk diff` posted on the PR; `cdk deploy` per environment from CI | Terraform. `plan` on the PR; `apply` per environment from CI | Compose files + a provisioning script |
+| **Production gate** | GitHub Environment `production` with a required reviewer + migration classification (VISION §14) | Same | Same, plus the `cdk diff` in the review | Same, plus the `plan` in the review | Runbook + human |
+
+The profile answers, per target, the questions a project otherwise answers by hand on launch day: where migrations run, how a secret reaches the platform, what "deployed" means, and who may press the button. The health route ships in every base blueprint; the rest is stamped per profile. **Stamped today: `railway`** (`blueprint:deploy-railway`, selected when the owner decides `infra = railway` — `avani new --infra railway`). The other rows are house positions with no blueprint yet: deploying to them is hand work, and the stamped `CLAUDE.md` says so. The procedure around the files is the `deployment` skill.
+
+### 4.3 The pipeline ladder, by stage
+
+The same stamped pipeline, armed progressively by stage (§3). Fail cheap first.
+
+| Stage | Trigger | Runs | Deploys |
+|---|---|---|---|
+| **dev** | every PR | checks (typecheck, lint, unit) → integration (real Postgres, migrated from empty) | preview environment if the profile has one; otherwise nothing |
+| **staging** | merge to `main` | + e2e (built app, axe invariants) | migrate → deploy to staging → health → smoke |
+| **production** | release tag or manual dispatch | + migration classification (additive auto-applies; data-shape needs the expand/contract procedure; destructive only as the contract tail), backup before any data-shape change, **human gate** | migrate → deploy → health → e2e smoke against production |
+
+Rollback is **forward-only**: redeploy the previous application artifact; never run a down-migration (VISION §14). Until `avani-actions` exists (§5, §13) the workflows are inline in the blueprint — the layering claim in §5 is aspirational for CI/CD today, and this table is the honest current state.
+
+### 4.4 Task bounds — who does what
+
+When a project comes in, the work is already divided. Every role has files it owns, files it never touches, a verification bar, and an escalation rule; the dispatch prompt (avani-core `orchestration`) restates them per task. Roles map to routing tiers through the shape tags in `.avani/routing-policy.json`, never to model names, and the stamped `.claude/agents/` definitions carry the same bounds into every project.
+
+| Role | Tier | Owns | Never touches | Verifies with | Escalates when |
+|---|---|---|---|---|---|
+| **Orchestrator** (the owner's session) | judgment | The `infra` decision, the schema and migrations, dependencies and the lockfile, git, secrets *configuration*, stage promotion, wave planning | — | Re-runs every worker's verification on the quiet tree before committing | Anything that changes cost, removes visible functionality, or touches the production gate goes to the human |
+| **feature-worker** | standard | The service, page, or test files named in its dispatch | Schema, migrations, `package.json` / lockfile, workflows, `infra/`, `.env*`, deploy config; never commits, pushes, installs, or deploys | typecheck, lint, unit for touched files; integration when a service changed | It needs a schema change, a new dependency, or a shared file |
+| **infra-worker** | judgment for target design and IaC; standard for wiring | `deploy*.yml`, `infra/`, the deploy config file, `.env.example` keys, the backup job | Application code, secret *values*; **never runs a deploy or applies IaC to any environment** — CI does that under the gate | Workflow lint, `cdk diff` / `terraform plan` attached to the report, the stamped ladder green | A new resource that holds data, a cost change, anything touching the production gate |
+| **verifier** | standard | Nothing — read and run only | Any edit | Re-runs the verification bar, drives the built app, reads the screenshots, reports pass/fail with counts | A pass it cannot reproduce |
+
+Two rules hold across every role: **production is never agent-executed** — agents prepare changes, CI deploys them under the human gate; and **an agent's green is not green** until the orchestrator has re-run it (§ orchestration).
 
 ---
 
@@ -292,7 +359,7 @@ Tooling: TypeScript strict + `tsx` + `vitest`. Single root `package.json`, npm.
 | **0 — Harvest** | Mine shipped apps → `avani-core` + language plugins + `marketplace.json` | avani-core useful in ≥2 existing apps |
 | **1 — Tier 2 + blueprints** | Stack/domain plugins; `ts-nextjs-prisma` + `python-fastapi` blueprints; `avani-actions` reusable workflows; 2 golden fixtures | Plugins + blueprints used by hand in a real project |
 | **2 — Engine** | Schemas, intake, profile modules, selection map, generators, golden tests | Engine reproduces a shipped app's config with ≤ a handful of edits |
-| **3 — Stage + CI/CD** | Stage convention + escalating hooks; multi-env deploy pipeline via reusable workflows | Promoting a project escalates enforcement without regeneration |
+| **3 — Stage + CI/CD** | Stage convention + escalating hooks; deploy profiles (§4.2) stamped per target — `deploy.yml`, health route, env manifest, backup job — starting with the shipped `railway` row; multi-env pipeline via reusable workflows | Promoting a project escalates enforcement without regeneration; one project deployed end to end from a stamped profile |
 | **4 — Learning loop** | `decisions.jsonl`, `retro` | First retro produces a real profile update |
 | **v2 (deferred)** | Headless exec, budget enforcement, subagents, operator/licensing packaging | — |
 
@@ -302,6 +369,7 @@ Tooling: TypeScript strict + `tsx` + `vitest`. Single root `package.json`, npm.
 
 - **Marketplace tiering (deferred, §6):** separate repos (public / client-safe / moat) vs. one access-controlled marketplace vs. two tiers. Decision needed before the first client licensing handoff.
 - **`avani-actions` versioning:** moving `@v1` tag vs. pinned SHAs for reusable workflows — trade reproducibility against fix-propagation speed.
+- **GCP infrastructure as code:** Terraform is the house position (§4.2) by analogy with "AWS ⇒ always CDK"; confirm against the first GCP project — CDK for Terraform would keep one IaC language across clouds.
 - **Stage promotion authority:** who/what may flip a project to `production` (human-only gate vs. CI-driven), and how the audit trail records it.
 
 ---

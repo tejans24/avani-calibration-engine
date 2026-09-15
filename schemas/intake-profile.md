@@ -1,6 +1,6 @@
 # intake-profile
 
-**Schema version:** 1.0.0
+**Schema version:** 1.1.0
 
 Structured, pre-calibration facts about an application, produced by the Intake layer.
 

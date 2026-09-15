@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://avani.dev/schemas/calibrated-config/v1.0.0",
+  "$id": "https://avani.dev/schemas/calibrated-config/v1.1.0",
   "title": "calibrated-config",
-  "x-schemaVersion": "1.0.0",
+  "x-schemaVersion": "1.1.0",
   "type": "object",
   "properties": {
     "schemaVersion": {
@@ -42,10 +42,12 @@
           "type": "string",
           "enum": [
             "vercel",
+            "railway",
             "aws",
+            "gcp",
             "self-hosted"
           ],
-          "description": "Deployment target for the app."
+          "description": "Deployment target for the app. Proposed by the engine from the decision rules in SPEC §4.1, decided by the owner (recorded in decisions.infra), and realized by the matching deploy profile (SPEC §4.2). vercel: request/response Next.js apps, lowest ops. railway: apps that need a long-lived process (workers, websockets, cron) or flat predictable cost. aws / gcp: an existing client cloud, a compliance or residency regime, private networking, or a large scale horizon — always with infrastructure as code. self-hosted: data that may not leave client premises; needs high ops capacity."
         },
         "runtime": {
           "type": "string",
@@ -139,6 +141,221 @@
       ],
       "additionalProperties": false,
       "description": "Feasibility, cost, and timeline assessment for the calibrated app."
+    },
+    "decisions": {
+      "type": "object",
+      "properties": {
+        "infra": {
+          "type": "object",
+          "properties": {
+            "proposed": {
+              "type": "string",
+              "enum": [
+                "vercel",
+                "railway",
+                "aws",
+                "gcp",
+                "self-hosted"
+              ],
+              "description": "The target the engine proposed."
+            },
+            "rule": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "description": "The SPEC §4.1 rule that fired."
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Why that rule fired, in a sentence, with the inputs it read."
+            },
+            "runner_up": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "vercel",
+                    "railway",
+                    "aws",
+                    "gcp",
+                    "self-hosted"
+                  ],
+                  "description": "Deployment target for the app. Proposed by the engine from the decision rules in SPEC §4.1, decided by the owner (recorded in decisions.infra), and realized by the matching deploy profile (SPEC §4.2). vercel: request/response Next.js apps, lowest ops. railway: apps that need a long-lived process (workers, websockets, cron) or flat predictable cost. aws / gcp: an existing client cloud, a compliance or residency regime, private networking, or a large scale horizon — always with infrastructure as code. self-hosted: data that may not leave client premises; needs high ops capacity."
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The next-best admissible target — the alternative the owner is declining."
+            },
+            "unanswered": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "§4.1 inputs the intake profile could not answer; the owner weighs them before deciding."
+            },
+            "options": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "target": {
+                    "type": "string",
+                    "enum": [
+                      "vercel",
+                      "railway",
+                      "aws",
+                      "gcp",
+                      "self-hosted"
+                    ],
+                    "description": "Deployment target for the app. Proposed by the engine from the decision rules in SPEC §4.1, decided by the owner (recorded in decisions.infra), and realized by the matching deploy profile (SPEC §4.2). vercel: request/response Next.js apps, lowest ops. railway: apps that need a long-lived process (workers, websockets, cron) or flat predictable cost. aws / gcp: an existing client cloud, a compliance or residency regime, private networking, or a large scale horizon — always with infrastructure as code. self-hosted: data that may not leave client premises; needs high ops capacity."
+                  },
+                  "fit": {
+                    "type": "string",
+                    "enum": [
+                      "recommended",
+                      "viable",
+                      "not-recommended"
+                    ],
+                    "description": "How this option stands for THIS intake on what the engine could evaluate."
+                  },
+                  "what": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "What it is, in a line (SPEC §4.2 runtime shape + database)."
+                  },
+                  "why": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Why it fits — or does not — for this intake, naming the inputs read."
+                  },
+                  "tradeoffs": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "What you give up by choosing it."
+                  },
+                  "cost_shape": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Shape of the bill: flat, usage cliffs, architecture-dependent."
+                  },
+                  "ops_burden": {
+                    "type": "string",
+                    "enum": [
+                      "lowest",
+                      "low",
+                      "medium",
+                      "high",
+                      "highest"
+                    ],
+                    "description": "Who runs it, and how much of them."
+                  },
+                  "becomes_the_answer_if": {
+                    "description": "The condition under which this option becomes the answer (SPEC §4.1 rule); null for the recommended one.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "evidence": {
+                    "type": "string",
+                    "enum": [
+                      "shipped",
+                      "house-position"
+                    ],
+                    "description": "Whether a running system backs this profile row (SPEC §4.2)."
+                  }
+                },
+                "required": [
+                  "target",
+                  "fit",
+                  "what",
+                  "why",
+                  "tradeoffs",
+                  "cost_shape",
+                  "ops_burden",
+                  "becomes_the_answer_if",
+                  "evidence"
+                ],
+                "additionalProperties": false,
+                "description": "One option on the menu the owner decides from — every target is always listed and explained."
+              },
+              "description": "The whole menu, recommended first: every target with its fit, trade-offs, cost shape, ops burden, and the condition that would make it the answer."
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "proposed",
+                "decided"
+              ],
+              "description": "proposed = awaiting the owner; decided = the owner has accepted or overridden."
+            },
+            "decided": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "vercel",
+                    "railway",
+                    "aws",
+                    "gcp",
+                    "self-hosted"
+                  ],
+                  "description": "Deployment target for the app. Proposed by the engine from the decision rules in SPEC §4.1, decided by the owner (recorded in decisions.infra), and realized by the matching deploy profile (SPEC §4.2). vercel: request/response Next.js apps, lowest ops. railway: apps that need a long-lived process (workers, websockets, cron) or flat predictable cost. aws / gcp: an existing client cloud, a compliance or residency regime, private networking, or a large scale horizon — always with infrastructure as code. self-hosted: data that may not leave client premises; needs high ops capacity."
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The owner’s decision, once made. Equals `dials.infra` when decided."
+            },
+            "decided_by": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "owner"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only a human decides the deploy target. The engine proposes."
+            },
+            "note": {
+              "description": "The owner’s reason, recorded for the decision log.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "proposed",
+            "rule",
+            "rationale",
+            "runner_up",
+            "unanswered",
+            "options",
+            "status",
+            "decided",
+            "decided_by",
+            "note"
+          ],
+          "additionalProperties": false,
+          "description": "Deploy-target decision record: what the engine proposed, and what the owner decided (SPEC §4.1)."
+        }
+      },
+      "required": [
+        "infra"
+      ],
+      "additionalProperties": false,
+      "description": "Decisions the engine proposes but a human makes. Each carries the proposal and the decision side by side."
     }
   },
   "required": [
@@ -150,5 +367,5 @@
     "risk_assessment"
   ],
   "additionalProperties": false,
-  "description": "The calibrated configuration produced from an intake profile: dials, invariants, patterns, and risk."
+  "description": "The calibrated configuration produced from an intake profile: dials, invariants, patterns, risk, and the propose/decide records."
 }

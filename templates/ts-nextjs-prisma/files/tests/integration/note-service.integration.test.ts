@@ -1,8 +1,9 @@
 import { execSync } from 'node:child_process';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { busyWorkspace } from '../../db/scenarios/workspace';
+import { createPrismaClient } from '@/lib/prisma-client';
 import { prismaNoteRepository } from '@/services/notes/note-repository';
 import { createNoteService } from '@/services/notes/note-service';
 
@@ -20,11 +21,11 @@ let prisma: PrismaClient;
 beforeAll(async () => {
   let url = process.env['TEST_DATABASE_URL'];
   if (!url) {
-    container = await new PostgreSqlContainer('postgres:17').start();
+    container = await new PostgreSqlContainer('postgres:18').start();
     url = container.getConnectionUri();
   }
   execSync('npx prisma migrate deploy', { env: { ...process.env, DATABASE_URL: url }, stdio: 'inherit' });
-  prisma = new PrismaClient({ datasources: { db: { url } } });
+  prisma = createPrismaClient(url);
 });
 
 afterAll(async () => {

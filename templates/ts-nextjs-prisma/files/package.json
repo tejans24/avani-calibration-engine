@@ -23,41 +23,41 @@
     "db:init": "tsx db/init.ts",
     "db:studio": "prisma studio"
   },
-  "prisma": {
-    "seed": "tsx db/seed.ts"
-  },
   "//overrides": "@hookform/resolvers >=5.4.1 declares peerOptional valibot@^1 while its own @typeschema/valibot dep pins valibot@^0.39 — npm install fails ERESOLVE. We only use the Zod resolver, so forcing valibot to v1 (what resolvers itself wants) resolves it. Remove once upstream fixes its peer tree; the caret range keeps us on latest meanwhile.",
   "overrides": {
     "valibot": "^1.0.0"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.12.0",
+    "@clerk/nextjs": "^7.0.0",
     "@hookform/resolvers": "^5.0.0",
-    "@prisma/client": "^6.5.0",
-    "next": "^15.3.0",
+    "@prisma/adapter-pg": "^7.0.0",
+    "@prisma/client": "^7.0.0",
+    "next": "^16.0.0",
+    "pg": "^8.16.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.0",
     "zod": "^4.0.0"
   },
+  "//typescript": "TypeScript 6, not 7: the 7.x package is the native compiler and ships no JS compiler API, which typescript-eslint (inside eslint-config-next) needs — it refuses to load under 7.0 and tracks support for >=7.1. tsc and next build both work on 7; only lint does not. Bump when typescript-eslint supports 7.",
   "devDependencies": {
     "@axe-core/playwright": "^4.10.0",
-    "@eslint/eslintrc": "^3.2.0",
-    "@tailwindcss/postcss": "^4.0.0",
     "@playwright/test": "^1.50.0",
-    "@testcontainers/postgresql": "^10.18.0",
-    "@types/node": "^22.10.0",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@testcontainers/postgresql": "^12.0.0",
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.15.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "dotenv": "^16.4.0",
+    "dotenv": "^17.0.0",
     "eslint": "^9.20.0",
-    "eslint-config-next": "^15.3.0",
+    "eslint-config-next": "^16.0.0",
     "eslint-plugin-jsx-a11y": "^6.10.0",
     "postcss": "^8.4.0",
-    "prisma": "^6.5.0",
+    "prisma": "^7.0.0",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.7.0",
-    "vitest": "^3.0.0"
+    "typescript": "^6.0.0",
+    "vitest": "^5.0.0"
   }
 }

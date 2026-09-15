@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../src/lib/prisma-client';
 import { busyWorkspace } from './scenarios/workspace';
 import { assertDevStage } from './stage';
 
@@ -7,7 +7,7 @@ import { assertDevStage } from './stage';
 // a career-limiting incident. Idempotent: skips when data already exists.
 assertDevStage('db:seed');
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function main(): Promise<void> {
   const existing = await prisma.note.count();

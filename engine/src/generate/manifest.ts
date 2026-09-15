@@ -16,6 +16,9 @@ export function buildManifest(config: CalibratedConfig, selection: Selection): R
     selection_version: SELECTION_VERSION,
     profile: config.profile,
     dials: config.dials,
+    // Propose/decide records travel with the project: a session can read who
+    // decided the deploy target and why without re-running calibration.
+    decisions: config.decisions ?? null,
     plugins: byKind(selection, 'plugin'),
     blueprints: byKind(selection, 'blueprint'),
   };

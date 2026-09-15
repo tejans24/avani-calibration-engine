@@ -7,7 +7,13 @@
  *   -> currently-best model. Model names churn; updating them is one line here.
  */
 
-export function buildRoadmapMd(appName: string): string {
+export interface RoadmapSeed {
+  /** Decision-log lines to seed (one per real decision, WHY included). */
+  decisions?: string[];
+}
+
+export function buildRoadmapMd(appName: string, seed: RoadmapSeed = {}): string {
+  const decisionLines = (seed.decisions ?? []).map((d) => `- ${d}`).join('\n');
   return `# ${appName} — Roadmap
 
 > Durable execution state. Each task is sized for **one session**: read this file, pick the next
@@ -36,6 +42,7 @@ name models here.
 ## Decisions
 
 <!-- append-only; one line per real product/architecture decision: date · decision · why (the constraint or trade-off). This log is harvested by the engine's learning loop — record the WHY, the diff already shows the what. -->
+${decisionLines}
 
 ## Handoff notes
 
@@ -49,7 +56,7 @@ export function buildRoutingPolicy(): Record<string, unknown> {
     note: 'Shape tags -> capability tier -> currently-best model. Model names churn; update THIS file only — the roadmap never names models.',
     map: { mechanical: 'fast', standard: 'standard', judgment: 'frontier' },
     tiers: {
-      frontier: { model: 'claude-opus-4-8', use: 'judgment tasks: architecture, cross-cutting changes, ambiguous requirements' },
+      frontier: { model: 'claude-opus-5', use: 'judgment tasks: architecture, cross-cutting changes, ambiguous requirements' },
       standard: { model: 'claude-sonnet-5', use: 'standard feature work: a service, a form, a migration' },
       fast: { model: 'claude-haiku-4-5', use: 'mechanical tasks: renames, rote fixes, fleet patch application' },
     },

@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:17
+    image: postgres:18
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
@@ -11,7 +11,10 @@ services:
       # generated apps can run side by side without colliding on 5432.
       - '{{DB_PORT}}:5432'
     volumes:
-      - db-data:/var/lib/postgresql/data
+      # Postgres 18+ images keep data under /var/lib/postgresql/<major>/docker
+      # and declare the volume at /var/lib/postgresql. Mounting the pre-18 path
+      # (/var/lib/postgresql/data) still starts, but nothing persists.
+      - db-data:/var/lib/postgresql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d app_dev']
       interval: 2s

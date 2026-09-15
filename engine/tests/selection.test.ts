@@ -96,3 +96,20 @@ describe('emitted selection map', () => {
     expect(byId['plugin:avani-nextjs']?.worksWith).toContain('blueprint:ts-nextjs-prisma');
   });
 });
+
+describe('deploy profile selection (SPEC §4.2)', () => {
+  const ctx = (infra: 'vercel' | 'railway') =>
+    parseSelectionContext({
+      profile: 'self-product',
+      dials: { correctness_bar: 'standard', sensitivity: 'medium', infra, runtime: 'ts-nextjs', topology: 'single-app' },
+      signals: {},
+    });
+
+  test('infra = railway stamps the railway deploy profile', () => {
+    expect(select(ctx('railway')).provisions.map((p) => p.id)).toContain('blueprint:deploy-railway');
+  });
+
+  test('other targets stamp no deploy profile yet (house positions)', () => {
+    expect(select(ctx('vercel')).provisions.map((p) => p.id)).not.toContain('blueprint:deploy-railway');
+  });
+});

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://avani.dev/schemas/intake-profile/v1.0.0",
+  "$id": "https://avani.dev/schemas/intake-profile/v1.1.0",
   "title": "intake-profile",
-  "x-schemaVersion": "1.0.0",
+  "x-schemaVersion": "1.1.0",
   "type": "object",
   "properties": {
     "schemaVersion": {

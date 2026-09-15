@@ -39,3 +39,10 @@ test('a11y invariant: 404 page is axe-clean', async ({ page }) => {
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
 });
+
+// The deploy profiles route traffic only once this answers (SPEC §4.2).
+test('health endpoint answers', async ({ request }) => {
+  const response = await request.get('/api/health');
+  expect(response.status()).toBe(200);
+  expect(await response.json()).toEqual({ status: 'ok' });
+});

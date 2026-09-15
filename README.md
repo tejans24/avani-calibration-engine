@@ -2,12 +2,13 @@
 
 Transforms an **application spec** into a calibrated Claude Code setup: universal and context-selected plugins, plus a runnable blueprint skeleton and a thin layer of project-specific artifacts (`CLAUDE.md`, settings/hooks, invariant tests, `.mcp.json`).
 
-**Status:** MVP live (`avani new`, VISION §19). Engine mechanics are specified in [SPEC.md](./SPEC.md) (v0.5); the broader decision-architecture, standards model, LLM strategy, business model, and build roadmap are in [VISION.md](./VISION.md).
+**Status:** MVP live (`avani new`, VISION §19). What is next on the idea → product path is in [NEXT.md](./NEXT.md). Engine mechanics are specified in [SPEC.md](./SPEC.md) (v0.5); the broader decision-architecture, standards model, LLM strategy, business model, and build roadmap are in [VISION.md](./VISION.md).
 
 ## The MVP — `avani new`
 
 ```bash
 npm run new -- my-app          # one command -> a runnable, calibrated project
+npm run new -- my-app --infra railway --why "needs a worker"   # + the shipped deploy pipeline (owner's decision)
 cd my-app && npm install && npm run dev
 ```
 
@@ -21,6 +22,7 @@ plugins/avani-core/               Tier 1 — universal, language-agnostic, alway
 plugins/avani-typescript/         Tier 2 language plugin (TS strict, Zod-at-the-boundary)
 plugins/avani-python/             Tier 2 language plugin (uv, ruff, pytest, FastAPI)
 templates/                        blueprints — operational files stamped into projects
+                                  (ts-nextjs-prisma runnable skeleton; deploy-railway — the stamped deploy profile)
 engine/                           calibration pipeline (intake → calibrate → select → generate)
 schemas/                          JSON Schema contracts between pipeline layers
 examples/                         golden fixtures harvested from shipped apps
@@ -76,7 +78,7 @@ invasive-species fixture's full selection and its shared nodes.
 
 `engine/src/pipeline.ts` wires it together: `intake-profile → calibrate → SelectionContext → select → provisions`, assembled into a schema-valid `calibrated-config`.
 
-- `engine/src/calibration/` — `calibrate(intake)` maps intake facts to dials + signals (per-profile modules); `deriveRisk(intake)` produces the risk assessment.
+- `engine/src/calibration/` — `calibrate(intake)` maps intake facts to dials + signals (per-profile modules); `deriveRisk(intake)` produces the risk assessment; `proposeInfra(intake, runtime)` is the engine's deploy-target **proposal** (SPEC §4.1) — the owner decides (`--infra`), and the config records both sides in `decisions.infra`.
 - `runPipeline(intake)` returns `{ context, selection, config }`. Calibration yields the dials/signals, selection yields the invariants/patterns, and the config is *assembled* from both.
 
 Run it:
@@ -84,6 +86,7 @@ Run it:
 ```bash
 npm run calibrate -- calibrate examples/invasive-species/intake-profile.json
 npm run calibrate -- calibrate examples/invasive-species/intake-profile.json --json  # just the config
+npm run calibrate -- calibrate examples/invasive-species/intake-profile.json --infra railway --why "needs workers"  # the owner decides the deploy target
 ```
 
 The `examples/invasive-species/` fixtures are golden: `intake-profile.json` in →
@@ -101,6 +104,8 @@ project artifacts:
 - `.mcp.json` — MCP servers matching the stack (postgres for geo, playwright for Next.js)
 - `tests/invariants/*.test.ts` — a `test.todo` stub per selected invariant
 - `.avani/manifest.json` — engine/schema/selection versions + selection, for reproducibility
+- `.avani/decisions/infra.md` — the deploy-target decision brief (SPEC §4.1): the engine's proposal and why, every option explained for this project (fit, trade-offs, cost shape, ops burden, what would make it the answer), what could not be considered, and how the owner records the decision
+- `.claude/agents/*.md` — subagent definitions carrying the task bounds from SPEC §4.4 (feature-worker, infra-worker, verifier): what each owns, never touches, verifies with, and escalates on
 
 Blueprint stamping is live for `ts-nextjs-prisma` (`templates/ts-nextjs-prisma/files/`):
 `engine/src/generate/blueprints.ts` copies the template tree deterministically, renaming
@@ -118,6 +123,6 @@ blueprint file stamping is Phase-1 work — selected blueprints are recorded in 
 ## Roadmap
 
 The MVP (VISION §20 phases A → B2 → B3) is built: baseline skills (`avani-core` accessibility +
-engineering-discipline, `avani-nextjs` forms/db-migrations/service-design, the `a11y_axe_clean`
+engineering-discipline + deployment, `avani-nextjs` forms/db-migrations/service-design, the `a11y_axe_clean`
 invariant), the runnable `ts-nextjs-prisma` blueprint, and `avani new`. Next: the decision core
 (C → D → E → F — dial expansion, constraint graph, decision tiers, structured interview). See VISION.md §20.

@@ -1,6 +1,7 @@
 import type { Dials } from '../schema/calibrated-config.js';
 import type { IntakeProfile } from '../schema/intake-profile.js';
 import type { SelectionSignals } from '../selection/context.js';
+import { proposeInfra } from './infra.js';
 
 /**
  * The dial-derivation rules: intake facts -> calibration dials.
@@ -21,13 +22,16 @@ export function deriveDials(intake: IntakeProfile): Dials {
       ? 'high'
       : 'medium';
 
+  // Product/UI default; a python-primary profile would override.
+  const runtime: Dials['runtime'] = 'ts-nextjs';
+
   return {
     correctness_bar,
     sensitivity,
-    // Cost-sensitive default; enterprise/self-hosted branches come later.
-    infra: 'vercel',
-    // Product/UI default; a python-primary profile would override.
-    runtime: 'ts-nextjs',
+    // The engine's PROPOSAL (SPEC §4.1). The owner decides; the pipeline
+    // applies that decision over this value and records both.
+    infra: proposeInfra(intake, runtime).proposed,
+    runtime,
     // No multi-app signal in the intake profile yet.
     topology: 'single-app',
   };

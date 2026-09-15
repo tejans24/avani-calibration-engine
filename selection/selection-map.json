@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "compositionSummary": "A calibrated project composes four layers in tandem: plugins teach Claude the conventions and procedures; blueprints stamp the operational machinery those procedures drive; invariants pin the guarantees that must hold; patterns are the stack idioms the plugins apply. Each branch selects a coherent slice across all four, so the agent knows the conventions, the repo has the machinery, and the guarantees are enforced together.",
   "kindRoles": {
     "plugin": "How Claude behaves — skills, hooks, and procedures loaded into the agent. Centrally versioned, referenced not copied.",
@@ -63,6 +63,12 @@
       "rationale": "The top tier adds the coordinate-fuzzing guarantee on top of whatever geo handling is present — which is why that invariant is shared."
     },
     {
+      "id": "infra:railway",
+      "label": "infra = railway",
+      "description": "The owner decided the railway deploy target (SPEC §4.1).",
+      "rationale": "The target picks the profile and the profile picks the stamped machinery: deploy pipeline, config-as-code, backup, and the production gate arrive together, so \"deployed\" has one meaning in every railway project."
+    },
+    {
       "id": "topology:monorepo",
       "label": "topology = monorepo",
       "description": "Project spans multiple apps.",
@@ -82,6 +88,7 @@
       "description": "Universal, language-agnostic standards: accessibility, security, git workflow, testing discipline, code review, orchestration discipline, stage detection.",
       "purpose": "The always-on floor every project stands on before any calibration. Everything else layers on top of it.",
       "worksWith": [
+        "blueprint:deploy-railway",
         "blueprint:monorepo-root",
         "invariant:a11y_axe_clean"
       ],
@@ -181,6 +188,7 @@
       "description": "npm db scripts + CI/deploy workflows with prisma migrate deploy as a release step.",
       "purpose": "Stamps the db commands and CI/deploy machinery that the avani-nextjs migration procedure operates on. The blueprint gives every project identical commands; the plugin makes Claude use them the same way.",
       "worksWith": [
+        "blueprint:deploy-railway",
         "plugin:avani-nextjs"
       ]
     },
@@ -191,6 +199,16 @@
       "purpose": "Stamps the uv/ruff/pytest config and FastAPI service skeleton the avani-python conventions assume.",
       "worksWith": [
         "plugin:avani-python"
+      ]
+    },
+    {
+      "id": "blueprint:deploy-railway",
+      "kind": "blueprint",
+      "description": "The railway deploy profile (SPEC §4.2): railway.toml (build/start, migrate-before-deploy, health), deploy.yml (GitHub Secrets -> Railway, gated by the production GitHub Environment), a nightly restore-verified encrypted backup, DEPLOYMENT.md.",
+      "purpose": "Stamps the release machinery the deployment skill operates: one named place where migrations run before traffic, one source of truth for config, a human gate in front of production, and a backup that is proven restorable. Harvested from a shipped project.",
+      "worksWith": [
+        "blueprint:ts-nextjs-prisma",
+        "plugin:avani-core"
       ]
     },
     {
@@ -395,6 +413,10 @@
       "provision": "blueprint:monorepo-root"
     },
     {
+      "condition": "infra:railway",
+      "provision": "blueprint:deploy-railway"
+    },
+    {
       "condition": "domain:field-data",
       "provision": "plugin:avani-field-data"
     },
@@ -467,6 +489,9 @@
     ],
     "blueprint:monorepo-root": [
       "topology:monorepo"
+    ],
+    "blueprint:deploy-railway": [
+      "infra:railway"
     ],
     "plugin:avani-field-data": [
       "domain:field-data"

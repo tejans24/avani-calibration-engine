@@ -1,6 +1,8 @@
 import type { IntakeProfile } from '../schema/intake-profile.js';
 import { SCHEMA_VERSION } from '../schema/version.js';
+import { proposeInfra, type InfraTarget } from '../calibration/infra.js';
 import { runPipeline, type PipelineResult } from '../pipeline.js';
+import { buildAgents } from './agents.js';
 import { stampBlueprints } from './blueprints.js';
 import { generateProject } from './generate.js';
 import type { FileMap } from './helpers.js';
@@ -40,19 +42,46 @@ export function selfPresetIntake(): IntakeProfile {
 /**
  * Build the complete new-project FileMap: stamped blueprint skeleton, then the
  * engine residue (CLAUDE.md, settings, invariant stubs — residue wins on any
- * path collision), then the execution layer (roadmap + routing policy).
+ * path collision), then the execution layer (roadmap + routing policy + the
+ * subagent definitions that carry the task bounds).
  */
-export function buildNewProject(name: string): { files: FileMap; result: PipelineResult } {
+export interface NewProjectOptions {
+  /** The owner's deploy-target decision at stamp time (`--infra`). Absent: the house preset is accepted. */
+  infra?: InfraTarget;
+  /** The owner's reason (`--why`), recorded in the decision log. */
+  why?: string;
+}
+
+export function buildNewProject(name: string, options: NewProjectOptions = {}): { files: FileMap; result: PipelineResult } {
   if (!APP_NAME_RE.test(name)) {
     throw new Error(`invalid project name '${name}' — use lowercase letters, digits, and dashes (start with a letter)`);
   }
 
-  const result = runPipeline(selfPresetIntake());
+  // Self mode has no interview: the owner running `avani new` IS the human
+  // decision, and the house preset is their standing answer. Record it as a
+  // decision (not a proposal) so the project never carries an open question
+  // it cannot answer — but still say what the engine proposed and why.
+  const intake = selfPresetIntake();
+  const proposal = proposeInfra(intake, 'ts-nextjs');
+  const target = options.infra ?? proposal.proposed;
+  const overrides = target !== proposal.proposed;
+  const note = options.why
+    ? options.why
+    : options.infra
+      ? `owner's choice at stamp time (--infra ${target})`
+      : 'house preset (self mode): the owner accepts the engine proposal by running `avani new`';
+  const result = runPipeline(intake, { decisions: { infra: { target, by: 'owner', note } } });
+  const decisionLine =
+    `stamp · infra = \`${target}\` · engine proposed \`${proposal.proposed}\` (§4.1 rule ${proposal.rule}: ${proposal.rationale}) · ` +
+    (overrides ? `owner OVERRODE it: ${note}. ` : options.infra ? `owner accepted it: ${note}. ` : `accepted by the owner as the house preset. `) +
+    `Runner-up: ${proposal.runner_up ?? 'none'}. ` +
+    `Not yet considered — re-decide if any applies: ${proposal.unanswered.map((u) => u.split(' (')[0]).join(', ')}.`;
   const files: FileMap = {
     ...stampBlueprints(result.selection, { APP_NAME: name }),
     ...generateProject(result.config, result.selection),
-    'ROADMAP.md': buildRoadmapMd(name),
+    'ROADMAP.md': buildRoadmapMd(name, { decisions: [decisionLine] }),
     '.avani/routing-policy.json': `${JSON.stringify(buildRoutingPolicy(), null, 2)}\n`,
+    ...buildAgents(),
   };
   return { files, result };
 }
