@@ -1,10 +1,12 @@
+import { REVIEWED_ON, TIERS, TIER_NAMES, WORK_ROUTES } from '../routing/model-map.js';
+
 /**
  * The execution layer's two stamped files (VISION §13):
  *
  * - ROADMAP.md — durable state: tasks with status, acceptance criteria, and
  *   shape tags. True about the task forever; NO model names.
- * - routing-policy.json — one small file mapping shape tags -> capability tier
- *   -> currently-best model. Model names churn; updating them is one line here.
+ * - routing-policy.json — kind of work -> capability tier -> model family alias,
+ *   built from the engine's model map (engine/src/routing/model-map.ts).
  */
 
 export function buildRoadmapMd(appName: string): string {
@@ -45,14 +47,14 @@ name models here.
 
 export function buildRoutingPolicy(): Record<string, unknown> {
   return {
-    version: 1,
-    note: 'Shape tags -> capability tier -> currently-best model. Model names churn; update THIS file only — the roadmap never names models.',
-    map: { mechanical: 'fast', standard: 'standard', judgment: 'frontier' },
-    tiers: {
-      frontier: { model: 'claude-opus-4-8', use: 'judgment tasks: architecture, cross-cutting changes, ambiguous requirements' },
-      standard: { model: 'claude-sonnet-5', use: 'standard feature work: a service, a form, a migration' },
-      fast: { model: 'claude-haiku-4-5', use: 'mechanical tasks: renames, rote fixes, fleet patch application' },
-    },
+    version: 2,
+    note:
+      'Kind of work -> capability tier -> model family alias. Claude Code resolves an alias (opus | sonnet | haiku) to the newest model in that family, so new releases need no edit here. `resolvedTo` is what each alias meant on `reviewedOn` — informational, never routed on.',
+    reviewedOn: REVIEWED_ON,
+    routes: WORK_ROUTES,
+    tiers: Object.fromEntries(
+      TIER_NAMES.map((tier) => [tier, { model: TIERS[tier].alias, resolvedTo: TIERS[tier].current, use: TIERS[tier].use }]),
+    ),
     workers: {
       default: 'single worker per task; orchestration must justify itself',
       fanOutWhen: 'structural parallelism (independent files/services) or independent-perspective verification',

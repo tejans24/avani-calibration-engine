@@ -168,7 +168,7 @@ The engine also generates the *plan for building* and the *compute policy for ex
 
 **Separate the roadmap from the routing:**
 - **Roadmap = durable state.** Tasks with status, acceptance criteria, and *shape tags*: complexity (`mechanical | standard | judgment`), risk, parallelizable. True about the task forever. **No model names in the roadmap.**
-- **Routing policy = one small file.** Shape tags → capability tier (`frontier | standard | fast`) → *currently best* model + worker shape. Model names churn; the policy is one line to update. (Provider-agnostic principle applied to compute.)
+- **Routing policy = one small file.** Kind of work (shape tags + agent roles) → capability tier (`frontier | standard | fast`) → model **family alias** (`opus | sonnet | haiku`) + worker shape. Aliases resolve to the newest model in the family, so routing never names a version; the model each alias meant is recorded with a review date, and a weekly `models:check` against the live Models API flags new releases and stale reviews. (Provider-agnostic principle applied to compute.)
 
 **Worker discipline:** single worker is the **default**; orchestration must justify itself (coordination overhead is real). Fan out only for structural parallelism (N independent files/services) or independent-perspective verification. **Configure Claude Code's native orchestration** (`.claude/agents/` with model frontmatter, subagents, background tasks) — never build a bespoke orchestrator.
 

@@ -115,6 +115,21 @@ npm run calibrate -- generate examples/invasive-species/intake-profile.json --ou
 against the generator in tests. (Settings shapes verified against the Claude Code docs;
 blueprint file stamping is Phase-1 work — selected blueprints are recorded in the manifest.)
 
+## Model map (which model for which work)
+
+`engine/src/routing/model-map.ts` maps each kind of work (roadmap complexity tags and agent
+roles such as `architecture-review`, `ux-flow-review`, `launch-readiness`) to a capability tier,
+and each tier to a Claude Code **family alias** (`opus` / `sonnet` / `haiku`) — never a version.
+The alias resolves to the newest model in its family, so a release needs no regeneration.
+Generated projects get it as `.avani/routing-policy.json`.
+
+```bash
+npm run models:check     # compares the map with the live Models API (needs ANTHROPIC_API_KEY)
+```
+
+CI runs it weekly. It fails when a routed family has a newer model than the map records, or the map
+hasn't been reviewed in 90 days — the prompt to re-check whether the routes still hold.
+
 ## Roadmap
 
 The MVP (VISION §20 phases A → B2 → B3) is built: baseline skills (`avani-core` accessibility +

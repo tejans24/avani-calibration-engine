@@ -96,8 +96,14 @@ describe('avani new (self mode)', () => {
     // execution layer
     expect(files['ROADMAP.md']).toContain('my-app — Roadmap');
     expect(files['ROADMAP.md']).not.toMatch(/claude-|gpt-|gemini/i);
-    const routing = JSON.parse(files['.avani/routing-policy.json'] as string) as { map: Record<string, string> };
-    expect(routing.map).toEqual({ mechanical: 'fast', standard: 'standard', judgment: 'frontier' });
+    const routing = JSON.parse(files['.avani/routing-policy.json'] as string) as {
+      routes: Record<string, { tier: string }>;
+      tiers: Record<string, { model: string }>;
+    };
+    expect(routing.routes.mechanical?.tier).toBe('fast');
+    expect(routing.routes.standard?.tier).toBe('standard');
+    expect(routing.routes.judgment?.tier).toBe('frontier');
+    expect(routing.tiers.frontier?.model).toBe('opus');
   });
 
   test('is deterministic — two runs produce identical output', () => {
