@@ -1,12 +1,16 @@
 /**
  * Every flow a person can take through the app, in the words we would use to
- * walk them through it. One registry, three readers:
+ * walk them through it. One registry, four readers:
  *
+ * - the live walkthrough (`npm run walkthrough`): the real app on realistic dev
+ *   data, with a guide panel that walks a person through each flow, highlights
+ *   what to press, asks them to try to break it, and saves their review to
+ *   walkthrough/review.md (src/components/walkthrough-panel.tsx);
  * - tests/e2e/walkthrough.spec.ts drives each flow in a real browser and takes
- *   a screenshot after every step (`npm run walkthrough`);
+ *   a screenshot after every step;
  * - scripts/walkthrough.ts turns those screenshots into walkthrough/index.html,
- *   a page a human clicks through step by step, marking each one "Works" or
- *   "Something's off" with a note;
+ *   a page anyone can click through without running the app
+ *   (`npm run walkthrough:shots`, and a CI artifact on every run);
  * - flows.test.ts fails when a page exists that no flow visits.
  *
  * Building a flow means adding it here in the same change. Write `tell` and
@@ -42,6 +46,11 @@ export interface Flow {
   /** Why it matters, one line. */
   why: string;
   steps: FlowStep[];
+  /**
+   * Edge cases to try once the flow works: what a careless, hurried or curious
+   * person might do. The live walkthrough asks the reviewer to try each one.
+   */
+  tryThis: string[];
 }
 
 export const FLOWS: Flow[] = [
@@ -61,6 +70,12 @@ export const FLOWS: Flow[] = [
         check: 'Walkthrough note',
       },
     ],
+    tryThis: [
+      'Paste a very long title (a whole paragraph). Does the list still look right?',
+      'Press "Add note" twice, fast. Do you get one note or two?',
+      'Use emoji or accented letters in the title.',
+      'Reload the page. Is your note still there?',
+    ],
   },
   {
     id: 'empty-form',
@@ -75,6 +90,11 @@ export const FLOWS: Flow[] = [
         see: 'A red message under Title saying it is required. Nothing is added.',
         check: 'Title is required',
       },
+    ],
+    tryThis: [
+      'Type only spaces in the title, then press "Add note".',
+      'Fill in the title but leave the body empty.',
+      'Use only the keyboard: Tab to each field and press Enter to submit.',
     ],
   },
 ];

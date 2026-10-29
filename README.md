@@ -117,12 +117,14 @@ blueprint file stamping is Phase-1 work — selected blueprints are recorded in 
 
 ## Walkthrough (a human clicks through every flow)
 
-Stamped projects keep every user flow in `src/flows/flows.ts`, in plain words: who takes it, and
-each step as what to do and what should happen. `npm run walkthrough` drives each flow in a browser,
-screenshots every step, and writes `walkthrough/index.html`. That one file goes to the reviewer, who
-marks each step "Works" or "Something's off" and copies back a review. CI uploads it on every run,
-a unit test fails when a page is in no flow, and the `avani-core:walkthrough` skill tells Claude to
-register flows as it builds them and to turn the review into fixes or roadmap tasks.
+Stamped projects keep every user flow in `src/flows/flows.ts`, in plain words: who takes it, each
+step as what to do and what should happen, and edge cases to try. `npm run walkthrough` starts the
+real app on realistic dev data with a guide panel: the reviewer uses the actual screens, marks each
+step "Works" or "Something's off", tries to break each flow, and notes anything else from any page.
+The review is saved to `walkthrough/review.md` for the builder to act on. For people who won't run
+the app, `npm run walkthrough:shots` makes the same flows into one page of screenshots (CI uploads
+it on every run). A unit test fails when a page is in no flow, and the `avani-core:walkthrough`
+skill tells Claude to register flows as it builds them and to turn the review into fixes or roadmap tasks.
 
 ## Model map (which model for which work)
 

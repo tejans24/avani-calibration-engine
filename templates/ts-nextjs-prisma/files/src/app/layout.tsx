@@ -1,7 +1,10 @@
 import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { WalkthroughPanel } from '@/components/walkthrough-panel';
+import { FLOWS } from '@/flows/flows';
 import { clerkConfigured } from '@/lib/auth';
+import { walkthroughProblem } from '@/lib/walkthrough';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -31,6 +34,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           ) : null}
         </header>
         <main>{children}</main>
+        {walkthroughProblem() === null ? <WalkthroughPanel flows={FLOWS} /> : null}
       </body>
     </html>
   );

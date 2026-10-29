@@ -31,7 +31,8 @@ All auth flows through the adapter in `src/lib/auth.ts` — actions and services
 | `npm test` | unit tier (services isolated, collaborators mocked) |
 | `npm run test:integration` | integration tier (real Postgres via testcontainers, migrated from empty); set `TEST_DATABASE_URL` to use an existing **disposable** Postgres instead of Docker |
 | `npm run test:e2e` | builds, then Playwright against `next start` on port 3001 (never the dev server's 3000): critical flows + the axe a11y invariant; needs a migrated + seeded db |
-| `npm run walkthrough` | drives every flow in `src/flows/flows.ts`, screenshots each step, and writes `walkthrough/index.html`: a page a person clicks through, marking each step "Works" or "Something's off" (CI uploads it as the `walkthrough` artifact) |
+| `npm run walkthrough` | the real app on realistic dev data, with a guide panel that walks a reviewer through every flow in `src/flows/flows.ts`; their review lands in `walkthrough/review.md` |
+| `npm run walkthrough:shots` | drives every flow in a browser and writes `walkthrough/index.html`, a screenshot-per-step version for people who won't run the app (CI uploads it as the `walkthrough` artifact) |
 
 ## Structure
 
@@ -50,4 +51,10 @@ The `notes` service is the exemplar: copy its shape (interface + implementation 
 
 ## Walking someone through the app
 
-Every flow lives once in `src/flows/flows.ts`: who takes it, and each step as what to do and what should happen. Adding a page or flow means adding it there in the same change (`npm test` fails if a page is in no flow). `npm run walkthrough` (needs the same migrated + seeded db as e2e) runs every flow in a browser and builds `walkthrough/index.html` with a screenshot per step. Send that one file to the reviewer. They go step by step, mark each one, and press "Copy my review" to send back a list of what's off.
+Every flow lives once in `src/flows/flows.ts`: who takes it, each step as what to do and what should happen, and edge cases to try. Adding a page or flow means adding it there in the same change (`npm test` fails if a page is in no flow).
+
+`npm run walkthrough` starts the real app on the dev seed (realistic, messy data; `npm run db:reset` first for a fresh copy) with a guide panel on every page. The reviewer uses the actual screens: the panel says what to do and what should happen, outlines what to press, and asks them to mark each step "Works" or "Something's off". After each flow it asks them to try to break it (the flow's edge cases, plus anything they think of), and "Noticed something else?" takes a note from any page. Their review is saved to `walkthrough/review.md` as they go, for whoever is building to act on.
+
+The panel only appears with `WALKTHROUGH=on` and `AVANI_STAGE` set to `dev` or `staging`, never in production. On a deployed staging app, reviews can't be written to disk, so the panel offers "Copy my review" instead.
+
+For someone who won't run the app, `npm run walkthrough:shots` makes `walkthrough/index.html`, the same flows as one page of screenshots (CI uploads it on every run).

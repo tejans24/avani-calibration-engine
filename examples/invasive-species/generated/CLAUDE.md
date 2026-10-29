@@ -21,7 +21,8 @@ npm run db:migrate:dev      # create + apply a migration in dev
 npm run db:migrate:deploy   # apply pending migrations (prod/deploy)
 npm run db:reset            # reset the dev database (DEV ONLY)
 npm run db:seed             # seed local data
-npm run walkthrough         # screenshot every flow -> walkthrough/index.html for a human to click through
+npm run walkthrough         # real app + dev data + a guide panel; the reviewer's notes land in walkthrough/review.md
+npm run walkthrough:shots   # the same flows as one page of screenshots -> walkthrough/index.html
 ```
 
 Every user flow is registered in `src/flows/flows.ts` in plain words; a new page or flow is added there in the same change (see the `avani-core:walkthrough` skill).

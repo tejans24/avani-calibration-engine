@@ -65,6 +65,8 @@ describe('blueprint stamping (ts-nextjs-prisma)', () => {
     expect(files['src/flows/flows.ts']).toContain('export const FLOWS');
     expect(files['tests/e2e/walkthrough.spec.ts']).toBeDefined();
     expect(files['package.json']).toContain('"walkthrough"');
+    expect(files['src/components/walkthrough-panel.tsx']).toBeDefined();
+    expect(files['src/app/layout.tsx']).toContain('walkthroughProblem() === null');
     expect(files['package.json']).toContain('db:migrate:deploy');
   });
 });
