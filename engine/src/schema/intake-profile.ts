@@ -30,6 +30,13 @@ export const IntakeProfileSchema = z
     timeline_weeks: z.number().int().positive().describe('Target delivery timeline in weeks.'),
     budget_usd: z.number().min(0).describe('Project budget in USD.'),
     ops_capacity: OpsCapacity,
+
+    // Added in schema 1.1.0 (optional; older documents read as the defaults).
+    audience: z
+      .enum(['none', 'internal', 'external'])
+      .default('external')
+      .describe('Who uses the UI: none (API/backend only), internal (staff tools), external (customers, clients, the public).'),
+    prototype: z.boolean().default(false).describe('Throwaway prototype or spike, not headed for real users.'),
   })
   .describe('Structured, pre-calibration facts about an application, produced by the Intake layer.');
 

@@ -1,9 +1,10 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
-import { busyWorkspace } from './scenarios/workspace';
+import { realisticWorkspace } from './scenarios/workspace';
 import { assertDevStage } from './stage';
 
-// Dev seed: rich, messy, edge-case-heavy. HARD-GATED to dev — faker-in-prod is
+// Dev seed: realistic volume and shape (believable notes, spread over months,
+// edge cases mixed in) — what the walkthrough runs on. HARD-GATED to dev — faker-in-prod is
 // a career-limiting incident. Idempotent: skips when data already exists.
 assertDevStage('db:seed');
 
@@ -15,8 +16,8 @@ async function main(): Promise<void> {
     console.log(`db:seed — ${existing} notes already present, skipping (db:reset for a fresh seed).`);
     return;
   }
-  await busyWorkspace(prisma, { seed: 1, noteCount: 24 });
-  console.log('db:seed — seeded the busy-workspace scenario (deterministic, seed=1).');
+  await realisticWorkspace(prisma, { seed: 1, noteCount: 60 });
+  console.log('db:seed — seeded the realistic-workspace scenario (deterministic, seed=1).');
 }
 
 main()

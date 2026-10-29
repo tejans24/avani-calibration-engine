@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://avani.dev/schemas/calibrated-config/v1.0.0",
+  "$id": "https://avani.dev/schemas/calibrated-config/v1.1.0",
   "title": "calibrated-config",
-  "x-schemaVersion": "1.0.0",
+  "x-schemaVersion": "1.1.0",
   "type": "object",
   "properties": {
     "schemaVersion": {
@@ -62,6 +62,16 @@
             "monorepo"
           ],
           "description": "Repo shape. monorepo when the project spans multiple apps (one monorepo per client project)."
+        },
+        "walkthrough": {
+          "default": "live",
+          "type": "string",
+          "enum": [
+            "off",
+            "screenshots",
+            "live"
+          ],
+          "description": "How a human reviews the built app. off: no flow registry (no UI, or a prototype). screenshots: flow registry + a screenshot-per-step review page (internal tools). live: also a guided tour of the real app on realistic data (anything customers or clients use)."
         }
       },
       "required": [
@@ -69,7 +79,8 @@
         "sensitivity",
         "infra",
         "runtime",
-        "topology"
+        "topology",
+        "walkthrough"
       ],
       "additionalProperties": false,
       "description": "The resolved calibration dials for the app."

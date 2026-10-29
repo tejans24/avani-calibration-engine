@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CorrectnessBar, Infra, RiskLevel, Runtime, Sensitivity, Topology } from './dials.js';
+import { CorrectnessBar, Infra, RiskLevel, Runtime, Sensitivity, Topology, Walkthrough } from './dials.js';
 import { SCHEMA_VERSION, SEMVER, isSupportedVersion } from './version.js';
 
 /**
@@ -17,6 +17,8 @@ export const DialsSchema = z
     infra: Infra,
     runtime: Runtime,
     topology: Topology,
+    // Added in schema 1.1.0; documents from 1.0.x read as the default.
+    walkthrough: Walkthrough.default('live'),
   })
   .describe('The resolved calibration dials for the app.');
 

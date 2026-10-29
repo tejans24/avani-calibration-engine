@@ -30,7 +30,19 @@ export function deriveDials(intake: IntakeProfile): Dials {
     runtime: 'ts-nextjs',
     // No multi-app signal in the intake profile yet.
     topology: 'single-app',
+    walkthrough: deriveWalkthrough(intake),
   };
+}
+
+/**
+ * How much walkthrough a project gets. A human review of every flow pays off
+ * in proportion to who will use the screens: nothing to walk without a UI or
+ * for a throwaway, a screenshot page for staff tools, and the live guided tour
+ * on realistic data for anything customers or clients touch.
+ */
+export function deriveWalkthrough(intake: IntakeProfile): Dials['walkthrough'] {
+  if (intake.prototype || intake.audience === 'none') return 'off';
+  return intake.audience === 'internal' ? 'screenshots' : 'live';
 }
 
 /**

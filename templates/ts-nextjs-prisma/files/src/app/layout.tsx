@@ -1,10 +1,14 @@
 import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+// avani:if walkthrough>=live
 import { WalkthroughPanel } from '@/components/walkthrough-panel';
 import { FLOWS, TOUR } from '@/flows/flows';
+// avani:end
 import { clerkConfigured } from '@/lib/auth';
+// avani:if walkthrough>=live
 import { walkthroughProblem } from '@/lib/walkthrough';
+// avani:end
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -34,7 +38,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           ) : null}
         </header>
         <main>{children}</main>
+        {/* avani:if walkthrough>=live */}
         {walkthroughProblem() === null ? <WalkthroughPanel flows={FLOWS} tour={TOUR} /> : null}
+        {/* avani:end */}
       </body>
     </html>
   );

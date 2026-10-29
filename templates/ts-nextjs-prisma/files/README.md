@@ -25,14 +25,18 @@ All auth flows through the adapter in `src/lib/auth.ts` — actions and services
 | `npm run db:migrate:dev` | create + apply a migration from schema changes (dev only) |
 | `npm run db:migrate:deploy` | apply committed migrations (the deploy step) |
 | `npm run db:reset` | drop + recreate + migrate + seed — **guarded, dev only** |
-| `npm run db:seed` | rich dev data — **guarded, dev only** |
+| `npm run db:seed` | realistic dev data (believable notes via committed pools + seeded faker, edge cases mixed in) — **guarded, dev only** |
 | `npm run db:seed:demo` | curated demo data (staging/demo) |
 | `npm run db:init` | reference data only — safe in any environment |
 | `npm test` | unit tier (services isolated, collaborators mocked) |
 | `npm run test:integration` | integration tier (real Postgres via testcontainers, migrated from empty); set `TEST_DATABASE_URL` to use an existing **disposable** Postgres instead of Docker |
 | `npm run test:e2e` | builds, then Playwright against `next start` on port 3001 (never the dev server's 3000): critical flows + the axe a11y invariant; needs a migrated + seeded db |
+<!-- avani:if walkthrough>=live -->
 | `npm run walkthrough` | the real app on realistic dev data, with a guide panel that walks a reviewer through every flow in `src/flows/flows.ts`; their review lands in `walkthrough/review.md` |
+<!-- avani:end -->
+<!-- avani:if walkthrough>=screenshots -->
 | `npm run walkthrough:shots` | drives every flow in a browser and writes `walkthrough/index.html`, a screenshot-per-step version for people who won't run the app (CI uploads it as the `walkthrough` artifact) |
+<!-- avani:end -->
 
 ## Structure
 
@@ -41,7 +45,9 @@ src/schemas/       Zod schemas — shared by forms and server boundaries
 src/services/      business logic: typed interfaces, injected collaborators, no framework imports
 src/lib/           composition root (prisma client, service wiring)
 src/app/           App Router pages, server actions (thin adapters over services)
+<!-- avani:if walkthrough>=screenshots -->
 src/flows/         every user flow, in plain words — drives the walkthrough; a test fails if a page has no flow
+<!-- avani:end -->
 db/                factories (seeded RNG) -> scenarios -> env seeds; stage guards
 prisma/            schema + append-only migrations
 tests/             integration (real DB), e2e (Playwright + axe), invariants
@@ -49,12 +55,18 @@ tests/             integration (real DB), e2e (Playwright + axe), invariants
 
 The `notes` service is the exemplar: copy its shape (interface + implementation + unit test + integration test) for every new service. Conventions and procedures load from the Avani plugins declared in `.claude/settings.json`; project-specific facts live in `CLAUDE.md`.
 
+<!-- avani:if walkthrough>=screenshots -->
 ## Walking someone through the app
 
 Every flow lives once in `src/flows/flows.ts`: who takes it, each step as what to do and what should happen, and edge cases to try. `TOUR` in the same file tells the whole app as one story, in chapters (who you are, what you're trying to do), ending with free exploration. Adding a page or flow means adding it there in the same change: `npm test` fails if a page is in no flow, or a flow is in no chapter.
+<!-- avani:end -->
+<!-- avani:if walkthrough>=live -->
 
 `npm run walkthrough` starts the real app on the dev seed (realistic, messy data; `npm run db:reset` first for a fresh copy) with a guide panel on every page. "Tour the whole app" goes chapter by chapter through the entire app, then asks the reviewer to explore freely and say how the whole thing felt. "Check one feature" runs a single flow. Either way the reviewer uses the actual screens: the panel says what to do and what should happen, outlines what to press, and asks them to mark each step "Works" or "Something's off". After each flow it asks them to try to break it (the flow's edge cases, plus anything they think of), and "Noticed something else?" takes a note from any page. Their review is saved to `walkthrough/review.md` as they go, for whoever is building to act on.
 
 The panel only appears with `WALKTHROUGH=on` and `AVANI_STAGE` set to `dev` or `staging`, never in production. On a deployed staging app, reviews can't be written to disk, so the panel offers "Copy my review" instead.
+<!-- avani:end -->
+<!-- avani:if walkthrough>=screenshots -->
 
-For someone who won't run the app, `npm run walkthrough:shots` makes `walkthrough/index.html`, the same flows as one page of screenshots (CI uploads it on every run).
+`npm run walkthrough:shots` makes `walkthrough/index.html`: every flow as one page of screenshots, in tour order, that anyone can click through without running the app (CI uploads it on every run).
+<!-- avani:end -->

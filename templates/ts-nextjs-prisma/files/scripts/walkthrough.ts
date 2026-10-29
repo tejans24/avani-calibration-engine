@@ -11,7 +11,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { FLOWS, type Flow } from '../src/flows/flows';
+import { FLOWS, TOUR, tourSequence, type Flow } from '../src/flows/flows';
 
 const OUT = 'walkthrough';
 const APP_NAME = (JSON.parse(readFileSync('package.json', 'utf8')) as { name: string }).name;
@@ -31,7 +31,7 @@ function shot(flow: Flow, i: number): string {
 }
 
 let failed = 0;
-const sections = FLOWS.map((flow) => {
+const sections = tourSequence().map(({ chapter, flow }, i, all) => {
   const result = resultOf(flow);
   if (!result || result.failedAt !== null) failed += 1;
   const status = !result
@@ -55,8 +55,14 @@ const sections = FLOWS.map((flow) => {
 </li>`;
     })
     .join('\n');
-  return `<section aria-labelledby="${esc(flow.id)}">
-  <h2 id="${esc(flow.id)}">${esc(flow.title)}</h2>
+  const opensChapter = i === 0 || all[i - 1]?.chapter !== chapter;
+  const ch = TOUR.chapters[chapter];
+  const heading =
+    opensChapter && ch
+      ? `<header class="chapter"><p class="meta">Chapter ${chapter + 1} of ${TOUR.chapters.length}</p><h2>${esc(ch.title)}</h2><p><strong>You are:</strong> ${esc(ch.as)}</p><p>${esc(ch.story)}</p></header>\n`
+      : '';
+  return `${heading}<section aria-labelledby="${esc(flow.id)}">
+  <h3 id="${esc(flow.id)}">${esc(flow.title)}</h3>
   <p class="meta">${esc(flow.who)} · ${esc(flow.why)}</p>
   ${status}
   <ol>${steps}</ol>
@@ -80,6 +86,7 @@ const html = `<!doctype html>
   main { max-width: 44rem; margin: 0 auto; padding: 1rem; }
   .bar { position: sticky; top: 0; z-index: 1; background: var(--bg); border-bottom: 1px solid var(--line); padding: .5rem 0; display: flex; gap: 1rem; align-items: center; justify-content: space-between; }
   section { border-top: 2px solid var(--line); margin-top: 2rem; }
+  .chapter { border-top: 4px solid var(--fg); margin-top: 3rem; padding-top: .5rem; }
   ol { padding: 0; list-style: none; }
   .step { border: 1px solid var(--line); border-radius: 8px; padding: 1rem; margin: 1rem 0; }
   img { width: 100%; max-width: 390px; border: 1px solid var(--line); display: block; margin: .5rem 0; }

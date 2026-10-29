@@ -1,6 +1,6 @@
 # intake-profile
 
-**Schema version:** 1.0.0
+**Schema version:** 1.1.0
 
 Structured, pre-calibration facts about an application, produced by the Intake layer.
 
@@ -21,5 +21,7 @@ Structured, pre-calibration facts about an application, produced by the Intake l
 | `timeline_weeks` | integer | yes |  | Target delivery timeline in weeks. |
 | `budget_usd` | number | yes |  | Project budget in USD. |
 | `ops_capacity` | enum | yes | `low` · `medium` · `high` | How much operational capacity the owner has to run the system. |
+| `audience` | enum | yes | `none` · `internal` · `external` | Who uses the UI: none (API/backend only), internal (staff tools), external (customers, clients, the public). |
+| `prototype` | boolean | yes |  | Throwaway prototype or spike, not headed for real users. |
 
 > Generated from the Zod source by `npm run schema:build`. Do not edit by hand.

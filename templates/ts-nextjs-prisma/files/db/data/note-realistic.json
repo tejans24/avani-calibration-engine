@@ -1,0 +1,25 @@
+{
+  "_comment": "Domain sample pool for the realistic scenario: what real notes in this app look like, written once and committed, each title paired with a body that belongs to it. {slots} are filled by faker (people, companies, places, dates, numbers), the same value everywhere in one note; the text around them is domain text faker cannot write convincingly. Replace with your real domain's pool when the notes exemplar goes.",
+  "notes": [
+    { "title": "Call with {person} ({company})", "body": "{firstName} wants a revised quote by {weekday}. They are comparing us with two other vendors; price matters less than setup time." },
+    { "title": "1:1 with {firstName}", "body": "- workload feels heavy since the {month} release\n- wants to lead the next retro\n- follow up on the training budget" },
+    { "title": "{company} renewal: next steps", "body": "Renewal is due in {month}. They asked about annual billing and a nonprofit discount. Said I'd check and get back by {weekday}." },
+    { "title": "Q{quarter} planning notes", "body": "Top three: fix onboarding drop-off, ship the export, hire one more engineer. Everything else waits." },
+    { "title": "Interview debrief: {person}", "body": "Strong on systems design, quieter in the pairing exercise. Leaning yes; ask {company} for a reference." },
+    { "title": "Bug: export fails for {company}", "body": "Repro: open any account created before {month}, press Export. Spinner forever. Newer accounts fine." },
+    { "title": "Offsite ideas: {city}", "body": "Budget is {amount}. Need to decide by {weekday} so we can hold the dates. Two venues near the station." },
+    { "title": "Weekly sync", "body": "Agreed to try the weekly cadence for a month and revisit. {firstName} will own the notes." },
+    { "title": "Onboarding checklist for {firstName}", "body": "- laptop and accounts\n- intro to the team on {weekday}\n- first small task by end of week one" },
+    { "title": "Data import for {company}", "body": "They have about {count} records in spreadsheets, some with merged cells. Ask for a sample file first." },
+    { "title": "Retro: {month} release", "body": "What went well: shipped on time. What didn't: two late scope changes. Try: freeze scope a week earlier." },
+    { "title": "Vendor shortlist", "body": "Three options so far. {company} is cheapest but slowest to respond." },
+    { "title": "Follow-ups from {weekday}'s standup", "body": "{firstName} is blocked on the API keys. Moving the demo to next week." },
+    { "title": "Draft: announcement email", "body": "Subject: Exports are here\n\nYou can now download everything as a spreadsheet. Find it under Settings." },
+    { "title": "Reading list", "body": "The onboarding research, the support ticket summary, and {firstName}'s write-up on churn." },
+    { "title": "Gift ideas for {firstName}", "body": "Likes hiking and coffee. Maybe a guidebook for {city}?" },
+    { "title": "Things to fix before launch", "body": "- error messages on the signup form\n- slow first load on phones\n- the empty state on the dashboard" },
+    { "title": "Budget: {month}", "body": "Spent {amount} so far this month, mostly on contractors. On track." },
+    { "title": "Feedback from {firstName} on the new flow", "body": "Liked the shorter form. Confused by the second step; expected to see the preview first." },
+    { "title": "Notes from {company} demo", "body": "They loved the reporting. Asked whether it works offline. Follow up with {person} at {email}." }
+  ]
+}

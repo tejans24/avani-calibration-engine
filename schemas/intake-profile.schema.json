@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://avani.dev/schemas/intake-profile/v1.0.0",
+  "$id": "https://avani.dev/schemas/intake-profile/v1.1.0",
   "title": "intake-profile",
-  "x-schemaVersion": "1.0.0",
+  "x-schemaVersion": "1.1.0",
   "type": "object",
   "properties": {
     "schemaVersion": {
@@ -87,6 +87,21 @@
         "high"
       ],
       "description": "How much operational capacity the owner has to run the system."
+    },
+    "audience": {
+      "default": "external",
+      "description": "Who uses the UI: none (API/backend only), internal (staff tools), external (customers, clients, the public).",
+      "type": "string",
+      "enum": [
+        "none",
+        "internal",
+        "external"
+      ]
+    },
+    "prototype": {
+      "default": false,
+      "description": "Throwaway prototype or spike, not headed for real users.",
+      "type": "boolean"
     }
   },
   "required": [
@@ -104,7 +119,9 @@
     "data_provenance_critical",
     "timeline_weeks",
     "budget_usd",
-    "ops_capacity"
+    "ops_capacity",
+    "audience",
+    "prototype"
   ],
   "additionalProperties": false,
   "description": "Structured, pre-calibration facts about an application, produced by the Intake layer."

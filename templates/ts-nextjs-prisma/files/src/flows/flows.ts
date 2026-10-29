@@ -1,18 +1,20 @@
 /**
  * Every flow a person can take through the app, in the words we would use to
  * walk them through it, and TOUR: the whole app told as one story, start to
- * finish, in chapters. One registry, four readers:
+ * finish, in chapters. One registry, several readers:
  *
+ * avani:if walkthrough>=live
  * - the live walkthrough (`npm run walkthrough`): the real app on realistic dev
  *   data, with a guide panel. "Tour the whole app" takes a person through
  *   every chapter in order, then lets them explore freely and asks how the
  *   whole thing felt; "Check one feature" runs a single flow. It highlights
  *   what to press, asks them to try to break each flow, and saves their review
  *   to walkthrough/review.md (src/components/walkthrough-panel.tsx);
+ * avani:end
  * - tests/e2e/walkthrough.spec.ts drives each flow in a real browser and takes
  *   a screenshot after every step;
  * - scripts/walkthrough.ts turns those screenshots into walkthrough/index.html,
- *   a page anyone can click through without running the app
+ *   a page in tour order that anyone can click through without running the app
  *   (`npm run walkthrough:shots`, and a CI artifact on every run);
  * - flows.test.ts fails when a page exists that no flow visits, or a flow is
  *   in no chapter of the tour.

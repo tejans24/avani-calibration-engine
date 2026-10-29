@@ -34,10 +34,16 @@ export function buildClaudeMd(config: CalibratedConfig, selection: Selection): s
     lines.push('npm run db:migrate:deploy   # apply pending migrations (prod/deploy)');
     lines.push('npm run db:reset            # reset the dev database (DEV ONLY)');
     lines.push('npm run db:seed             # seed local data');
-    lines.push('npm run walkthrough         # real app + dev data + a guide panel; the reviewer\'s notes land in walkthrough/review.md');
-    lines.push('npm run walkthrough:shots   # the same flows as one page of screenshots -> walkthrough/index.html');
+    if (config.dials.walkthrough === 'live') {
+      lines.push('npm run walkthrough         # real app + dev data + a guide panel; the reviewer\'s notes land in walkthrough/review.md');
+    }
+    if (config.dials.walkthrough !== 'off') {
+      lines.push('npm run walkthrough:shots   # every flow as one page of screenshots -> walkthrough/index.html');
+    }
     lines.push('```', '');
-    lines.push('Every user flow is registered in `src/flows/flows.ts` in plain words; a new page or flow is added there in the same change (see the `avani-core:walkthrough` skill).', '');
+    if (config.dials.walkthrough !== 'off') {
+      lines.push(`Walkthrough level: **${config.dials.walkthrough}**. Every user flow is registered in \`src/flows/flows.ts\` in plain words; a new page or flow is added there in the same change (see the \`avani-core:walkthrough\` skill).`, '');
+    }
   }
 
   lines.push('## Invariants (enforced)', '');

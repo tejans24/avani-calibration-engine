@@ -97,7 +97,7 @@ function runGenerate(argv: string[]): number {
   const files = generateProject(config, selection);
   if (argv.includes('--stamp')) {
     const name = argValue(argv, '--name') ?? 'app';
-    Object.assign(files, { ...stampBlueprints(selection, { APP_NAME: name }), ...files });
+    Object.assign(files, { ...stampBlueprints(selection, { APP_NAME: name, WALKTHROUGH: config.dials.walkthrough }), ...files });
   }
   const written = writeProject(files, outDir);
   console.log(`\nGenerated ${written.length} files into ${outDir}/:`);

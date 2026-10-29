@@ -27,7 +27,18 @@ In a stamped `ts-nextjs-prisma` project:
 
 ## Realistic data
 
-The walkthrough runs on the dev seed, so the seed has to look like real use: realistic names and volumes, long and short text, odd characters, a mix of states. It must not be three tidy rows. If a flow needs a particular state (an overdue item, a full list, a first-time user), add it to the seed's scenarios. Never ask the reviewer to set it up by hand. A walkthrough on toy data hides exactly the problems it exists to find.
+The walkthrough runs on the dev seed, so the seed has to look like real use. A reviewer who sees lorem ipsum or three tidy rows stops reading the content and misses real problems.
+
+- **Domain text from committed pools, written once** when the real domain replaces the exemplar: titles paired with bodies that belong to them, in the domain's own voice. Faker can't write these.
+- **Faker for generic slots only** (names, companies, places, dates, amounts), seeded so every run is identical, and one value per slot per record so a name stays the same within it.
+- **Real shape:** realistic volume, uneven spread across categories and users, dates over months with most activity recent, and roughly one record in ten an edge case (very long, odd characters, nearly empty).
+- **Check it like a reviewer would.** Read twenty seeded rows. If anything reads as generated, fix the pool.
+- If a flow needs a particular state (an overdue item, a full list, a first-time user), add it to a scenario. Never ask the reviewer to set it up by hand.
+- Faker stays in development dependencies and under `db/`, never in app code, and the dev seed stays blocked outside dev.
+
+## How much walkthrough
+
+The engine's `walkthrough` dial decides it per project: `off` (no UI, or a prototype), `screenshots` (flow registry and the screenshot page, for internal tools), `live` (plus the guided tour, for anything customers or clients use). Follow the level the project was stamped with, which `CLAUDE.md` names. Don't add a live tour to an internal tool, and don't drop the flow registry from anything with screens.
 
 ## Walking a human through
 

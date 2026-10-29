@@ -5,7 +5,8 @@
     "sensitivity": "protected",
     "infra": "vercel",
     "runtime": "ts-nextjs",
-    "topology": "single-app"
+    "topology": "single-app",
+    "walkthrough": "live"
   },
   "signals": {
     "offline_required": true,

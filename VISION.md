@@ -206,6 +206,8 @@ Seed data is **infrastructure with many consumers**: local dev, test fixtures, s
 | `db:seed:demo` | curated, presentable | staging/demo only |
 | `db:init` | prod: **reference data only** (roles, categories, species lists) — not seeding, *initialization*; belongs with migrations/deploy | no faker, ever |
 
+**Realistic, not just valid** (built in the `ts-nextjs-prisma` dev seed): domain text comes from committed pools with titles paired to bodies; faker fills only the generic slots (names, companies, places, dates, amounts), one value per slot per record so a name stays the same within it; about one record in ten is an edge case; dates spread over months, most recent. Faker alone writes lorem ipsum that a reviewer stops reading; the walkthrough is only as good as the data under it.
+
 **LLM as data author, not runtime:** LLM generates domain-plausible sample pools (species names, field notes) *once at authoring time*, committed as static data; runtime draws via **seeded RNG** → fully deterministic, reproducible databases (what makes shadow verification and golden tests trustworthy).
 
 **Privacy dividend:** for `sensitivity: protected`, synthetic scenario seeds *are* the production-shaped dataset — no anonymized prod snapshots ever needed.
@@ -295,6 +297,7 @@ Built: schema/contracts, selection map (DAG + viz), calibration, generate layer,
 | **L** | **Fleet ops** — conformance/drift check, fleet queries, patch playbooks (§16) — *only once a fleet exists* | B3 shipped projects |
 | **M** | **Learning loop** — decisions.jsonl, retro, override-rate | F |
 | **N** | **AWS/CDK deep support** — harvest-driven | C |
+| **O** | **Walkthrough v2** — comment on the screen (pin a note to an element, Vercel-toolbar style, collected into one list), a scenario per tour chapter (e.g. "First visit" starts empty), roles in flows, per-person access so the tour can run on a live app (reviewer invites, sandboxed tour data, reviews stored in the database). v1 built: flow registry + tour, live guided panel, screenshot page, `walkthrough` dial, realistic seed | B3 |
 
 **Sequencing:** **A → B2 → B3 is the MVP** — build it, use it on a real project, let reality correct it. Then C→D→E→F (the decision core / moat), then the rest as pulled by need. Capture-then-build; depth is vertical now, not horizontal.
 

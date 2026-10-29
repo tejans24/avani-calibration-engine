@@ -1,6 +1,6 @@
 {
   "engine_version": "0.5.0",
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "selection_version": "1.2.0",
   "profile": "field-app",
   "dials": {
@@ -8,7 +8,8 @@
     "sensitivity": "protected",
     "infra": "vercel",
     "runtime": "ts-nextjs",
-    "topology": "single-app"
+    "topology": "single-app",
+    "walkthrough": "live"
   },
   "plugins": [
     "avani-core",

@@ -34,6 +34,8 @@ export function selfPresetIntake(): IntakeProfile {
     timeline_weeks: 4,
     budget_usd: 0,
     ops_capacity: 'medium',
+    audience: 'external',
+    prototype: false,
   };
 }
 
@@ -49,7 +51,7 @@ export function buildNewProject(name: string): { files: FileMap; result: Pipelin
 
   const result = runPipeline(selfPresetIntake());
   const files: FileMap = {
-    ...stampBlueprints(result.selection, { APP_NAME: name }),
+    ...stampBlueprints(result.selection, { APP_NAME: name, WALKTHROUGH: result.config.dials.walkthrough }),
     ...generateProject(result.config, result.selection),
     'ROADMAP.md': buildRoadmapMd(name),
     '.avani/routing-policy.json': `${JSON.stringify(buildRoutingPolicy(), null, 2)}\n`,

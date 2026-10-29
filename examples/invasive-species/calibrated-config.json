@@ -1,12 +1,13 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "profile": "field-app",
   "dials": {
     "correctness_bar": "append-only",
     "sensitivity": "protected",
     "infra": "vercel",
     "runtime": "ts-nextjs",
-    "topology": "single-app"
+    "topology": "single-app",
+    "walkthrough": "live"
   },
   "invariants": [
     "observations_append_only_never_delete",

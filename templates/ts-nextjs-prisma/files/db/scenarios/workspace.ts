@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@prisma/client';
 import pool from '../data/note-pool.json';
 import { buildNotes } from '../factories/note';
+import { buildRealisticNotes, realisticFaker } from '../factories/realistic-note';
 import { createRng } from '../factories/rng';
 
 /**
@@ -28,6 +29,30 @@ export async function busyWorkspace(prisma: PrismaClient, opts: { seed?: number;
         title: draft.title,
         body: draft.body,
         categoryId: draft.categoryName ? (categories.get(draft.categoryName) ?? null) : null,
+      },
+    });
+  }
+}
+
+/**
+ * A workspace that looks like real use: `noteCount` believable notes spread
+ * over about four months (most of them recent), weighted across categories,
+ * with roughly one in ten an edge case. The dev seed, so it is what the
+ * walkthrough runs on.
+ */
+export async function realisticWorkspace(
+  prisma: PrismaClient,
+  opts: { seed?: number; noteCount?: number; now?: Date } = {},
+): Promise<void> {
+  const faker = realisticFaker(opts.seed ?? 1);
+  const categories = await seedCategories(prisma);
+  for (const note of buildRealisticNotes(faker, opts.noteCount ?? 60, opts.now ?? new Date())) {
+    await prisma.note.create({
+      data: {
+        title: note.title,
+        body: note.body,
+        createdAt: note.createdAt,
+        categoryId: note.categoryName ? (categories.get(note.categoryName) ?? null) : null,
       },
     });
   }

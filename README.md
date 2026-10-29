@@ -117,6 +117,13 @@ blueprint file stamping is Phase-1 work — selected blueprints are recorded in 
 
 ## Walkthrough (a human clicks through every flow)
 
+How much walkthrough a project gets is a dial, `walkthrough`, derived from two intake facts
+(`audience`, `prototype`): `off` for no UI or a prototype, `screenshots` (flow registry + screenshot
+page) for internal tools, `live` (plus the guided tour of the real app) for anything customers or
+clients use. The blueprint marks what each level needs (`templates/ts-nextjs-prisma/stamp.json` for
+files and scripts, `avani:if walkthrough>=…` / `avani:end` blocks inside files), and stamping leaves
+the rest out.
+
 Stamped projects keep every user flow in `src/flows/flows.ts`, in plain words: who takes it, each
 step as what to do and what should happen, and edge cases to try, plus a `TOUR` that tells the whole
 app as one story in chapters. `npm run walkthrough` starts the real app on realistic dev data with a
@@ -127,6 +134,10 @@ The review is saved to `walkthrough/review.md` for the builder to act on. For pe
 the app, `npm run walkthrough:shots` makes the same flows into one page of screenshots (CI uploads
 it on every run). A unit test fails when a page is in no flow, and the `avani-core:walkthrough`
 skill tells Claude to register flows as it builds them and to turn the review into fixes or roadmap tasks.
+
+The dev seed it runs on is realistic: domain text from committed pools (titles paired with bodies),
+faker for names, companies, places, dates and amounts (seeded, so identical every run), about one
+note in ten an edge case, and dates spread over months with most activity recent.
 
 ## Model map (which model for which work)
 

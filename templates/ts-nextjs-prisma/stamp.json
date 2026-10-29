@@ -1,0 +1,17 @@
+{
+  "_comment": "Which files (path or directory prefix) and package.json scripts each dial level needs. Read by engine/src/generate/blueprints.ts; never stamped. Blocks inside files use avani:if <condition> ... avani:end markers instead.",
+  "files": {
+    "src/flows": "walkthrough>=screenshots",
+    "tests/e2e/walkthrough.spec.ts": "walkthrough>=screenshots",
+    "scripts/walkthrough.ts": "walkthrough>=screenshots",
+    "src/flows/review.ts": "walkthrough>=live",
+    "src/flows/review.test.ts": "walkthrough>=live",
+    "src/components/walkthrough-panel.tsx": "walkthrough>=live",
+    "src/lib/walkthrough.ts": "walkthrough>=live",
+    "src/app/api/walkthrough": "walkthrough>=live"
+  },
+  "scripts": {
+    "walkthrough": "walkthrough>=live",
+    "walkthrough:shots": "walkthrough>=screenshots"
+  }
+}

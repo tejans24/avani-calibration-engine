@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CorrectnessBar, Infra, Runtime, Sensitivity, Topology } from '../schema/dials.js';
+import { CorrectnessBar, Infra, Runtime, Sensitivity, Topology, Walkthrough } from '../schema/dials.js';
 
 /**
  * The input to the selection layer.
@@ -28,6 +28,7 @@ export const SelectionContextSchema = z
         infra: Infra,
         runtime: Runtime,
         topology: Topology,
+        walkthrough: Walkthrough.default('live'),
       })
       .describe('Resolved calibration dials.'),
     signals: SelectionSignalsSchema.default({

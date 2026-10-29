@@ -28,6 +28,13 @@ export const Topology = z
   .enum(['single-app', 'monorepo'])
   .describe('Repo shape. monorepo when the project spans multiple apps (one monorepo per client project).');
 
+export const WALKTHROUGH_LEVELS = ['off', 'screenshots', 'live'] as const;
+export const Walkthrough = z
+  .enum(WALKTHROUGH_LEVELS)
+  .describe(
+    'How a human reviews the built app. off: no flow registry (no UI, or a prototype). screenshots: flow registry + a screenshot-per-step review page (internal tools). live: also a guided tour of the real app on realistic data (anything customers or clients use).',
+  );
+
 /**
  * Stage is a MUTABLE dimension, not a calibration dial — it changes over the
  * project's life and is resolved on the ground (AVANI_STAGE env / branch), so

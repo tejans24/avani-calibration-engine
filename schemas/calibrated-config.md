@@ -1,6 +1,6 @@
 # calibrated-config
 
-**Schema version:** 1.0.0
+**Schema version:** 1.1.0
 
 The calibrated configuration produced from an intake profile: dials, invariants, patterns, and risk.
 
@@ -24,6 +24,7 @@ The resolved calibration dials for the app.
 | `infra` | enum | yes | `vercel` · `aws` · `self-hosted` | Deployment target for the app. |
 | `runtime` | enum | yes | `ts-nextjs` · `python` | Per-app runtime. ts-nextjs is the default for product/UI apps; python for small backend APIs, ML workflows, and data pipelines. |
 | `topology` | enum | yes | `single-app` · `monorepo` | Repo shape. monorepo when the project spans multiple apps (one monorepo per client project). |
+| `walkthrough` | enum | yes | `off` · `screenshots` · `live` | How a human reviews the built app. off: no flow registry (no UI, or a prototype). screenshots: flow registry + a screenshot-per-step review page (internal tools). live: also a guided tour of the real app on realistic data (anything customers or clients use). |
 
 ### risk_assessment
 
