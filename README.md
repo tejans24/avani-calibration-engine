@@ -115,6 +115,15 @@ npm run calibrate -- generate examples/invasive-species/intake-profile.json --ou
 against the generator in tests. (Settings shapes verified against the Claude Code docs;
 blueprint file stamping is Phase-1 work — selected blueprints are recorded in the manifest.)
 
+## Walkthrough (a human clicks through every flow)
+
+Stamped projects keep every user flow in `src/flows/flows.ts`, in plain words: who takes it, and
+each step as what to do and what should happen. `npm run walkthrough` drives each flow in a browser,
+screenshots every step, and writes `walkthrough/index.html`. That one file goes to the reviewer, who
+marks each step "Works" or "Something's off" and copies back a review. CI uploads it on every run,
+a unit test fails when a page is in no flow, and the `avani-core:walkthrough` skill tells Claude to
+register flows as it builds them and to turn the review into fixes or roadmap tasks.
+
 ## Model map (which model for which work)
 
 `engine/src/routing/model-map.ts` maps each kind of work (roadmap complexity tags and agent

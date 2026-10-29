@@ -4,6 +4,7 @@ out/
 coverage/
 playwright-report/
 test-results/
+walkthrough/
 *.tsbuildinfo
 next-env.d.ts
 .env

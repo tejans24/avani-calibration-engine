@@ -31,6 +31,7 @@ All auth flows through the adapter in `src/lib/auth.ts` — actions and services
 | `npm test` | unit tier (services isolated, collaborators mocked) |
 | `npm run test:integration` | integration tier (real Postgres via testcontainers, migrated from empty); set `TEST_DATABASE_URL` to use an existing **disposable** Postgres instead of Docker |
 | `npm run test:e2e` | builds, then Playwright against `next start` on port 3001 (never the dev server's 3000): critical flows + the axe a11y invariant; needs a migrated + seeded db |
+| `npm run walkthrough` | drives every flow in `src/flows/flows.ts`, screenshots each step, and writes `walkthrough/index.html`: a page a person clicks through, marking each step "Works" or "Something's off" (CI uploads it as the `walkthrough` artifact) |
 
 ## Structure
 
@@ -39,9 +40,14 @@ src/schemas/       Zod schemas — shared by forms and server boundaries
 src/services/      business logic: typed interfaces, injected collaborators, no framework imports
 src/lib/           composition root (prisma client, service wiring)
 src/app/           App Router pages, server actions (thin adapters over services)
+src/flows/         every user flow, in plain words — drives the walkthrough; a test fails if a page has no flow
 db/                factories (seeded RNG) -> scenarios -> env seeds; stage guards
 prisma/            schema + append-only migrations
 tests/             integration (real DB), e2e (Playwright + axe), invariants
 ```
 
 The `notes` service is the exemplar: copy its shape (interface + implementation + unit test + integration test) for every new service. Conventions and procedures load from the Avani plugins declared in `.claude/settings.json`; project-specific facts live in `CLAUDE.md`.
+
+## Walking someone through the app
+
+Every flow lives once in `src/flows/flows.ts`: who takes it, and each step as what to do and what should happen. Adding a page or flow means adding it there in the same change (`npm test` fails if a page is in no flow). `npm run walkthrough` (needs the same migrated + seeded db as e2e) runs every flow in a browser and builds `walkthrough/index.html` with a screenshot per step. Send that one file to the reviewer. They go step by step, mark each one, and press "Copy my review" to send back a list of what's off.

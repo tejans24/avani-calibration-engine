@@ -8,7 +8,7 @@ Plugins define how Claude *behaves* (skills, hooks); blueprints define what gets
 
 | Blueprint | Status | Selected when | Stamps |
 |---|---|---|---|
-| `ts-nextjs-prisma/` | **built** | `runtime = ts-nextjs` | runnable Next.js + Prisma skeleton: app structure, schema + initial migration, stage-guarded db scripts, deterministic seeds (factories → scenarios → env seeds), exemplar service + 3 test tiers, CI ladder |
+| `ts-nextjs-prisma/` | **built** | `runtime = ts-nextjs` | runnable Next.js + Prisma skeleton: app structure, schema + initial migration, stage-guarded db scripts, deterministic seeds (factories → scenarios → env seeds), exemplar service + 3 test tiers, CI ladder, flow registry + `npm run walkthrough` review page |
 | `python-fastapi/` | planned | `runtime = python` | `pyproject.toml` (uv), ruff + pytest config, service skeleton, CI workflow |
 | `monorepo-root/` | planned | `topology = monorepo` | npm-workspaces root, `apps/` + `packages/shared` layout, root CLAUDE.md skeleton |
 

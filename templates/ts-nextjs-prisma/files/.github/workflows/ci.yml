@@ -71,6 +71,17 @@ jobs:
       # test:e2e chains the build itself (fresh-clone one-command property),
       # so no separate build step here.
       - run: npm run test:e2e
+      # The e2e run includes tests/e2e/walkthrough.spec.ts, which screenshots
+      # every flow in src/flows/flows.ts. Turn them into the review page and
+      # upload it, so anyone can download one file and click through every flow.
+      - run: npx tsx scripts/walkthrough.ts
+        if: always()
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: walkthrough
+          path: walkthrough/index.html
+          retention-days: 14
       # Failure evidence: the html report carries the screenshots + traces
       # playwright.config.ts captures on failing tests.
       - uses: actions/upload-artifact@v4

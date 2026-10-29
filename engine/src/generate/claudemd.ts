@@ -34,7 +34,9 @@ export function buildClaudeMd(config: CalibratedConfig, selection: Selection): s
     lines.push('npm run db:migrate:deploy   # apply pending migrations (prod/deploy)');
     lines.push('npm run db:reset            # reset the dev database (DEV ONLY)');
     lines.push('npm run db:seed             # seed local data');
+    lines.push('npm run walkthrough         # screenshot every flow -> walkthrough/index.html for a human to click through');
     lines.push('```', '');
+    lines.push('Every user flow is registered in `src/flows/flows.ts` in plain words; a new page or flow is added there in the same change (see the `avani-core:walkthrough` skill).', '');
   }
 
   lines.push('## Invariants (enforced)', '');
