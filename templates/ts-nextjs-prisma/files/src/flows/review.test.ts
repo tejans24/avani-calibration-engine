@@ -16,6 +16,7 @@ describe('walkthrough review', () => {
       marks: { [stepKey(flow.id, 1)]: { verdict: 'works' as const }, [stepKey(flow.id, 2)]: { verdict: 'off' as const, note: 'label is unclear' } },
       found: { [flow.id]: 'double submit adds two notes' },
       extra: [{ path: '/', note: 'header overlaps on phones' }],
+      overall: 'Quick to use, but I could not tell where my notes went.',
     };
     const md = reviewMarkdown(FLOWS, review);
     expect(progress(FLOWS, review)).toMatchObject({ checked: 2, off: 1 });
@@ -23,6 +24,7 @@ describe('walkthrough review', () => {
     expect(md).toContain('Step 2 (Type a title.) is off: label is unclear');
     expect(md).toContain('Trying to break it: double submit adds two notes');
     expect(md).toContain('On /: header overlaps on phones');
+    expect(md).toContain('## Overall impressions\n\nQuick to use, but I could not tell where my notes went.');
     expect(md).not.toContain('Step 1');
   });
 

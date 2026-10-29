@@ -1,17 +1,21 @@
 /**
  * Every flow a person can take through the app, in the words we would use to
- * walk them through it. One registry, four readers:
+ * walk them through it, and TOUR: the whole app told as one story, start to
+ * finish, in chapters. One registry, four readers:
  *
  * - the live walkthrough (`npm run walkthrough`): the real app on realistic dev
- *   data, with a guide panel that walks a person through each flow, highlights
- *   what to press, asks them to try to break it, and saves their review to
- *   walkthrough/review.md (src/components/walkthrough-panel.tsx);
+ *   data, with a guide panel. "Tour the whole app" takes a person through
+ *   every chapter in order, then lets them explore freely and asks how the
+ *   whole thing felt; "Check one feature" runs a single flow. It highlights
+ *   what to press, asks them to try to break each flow, and saves their review
+ *   to walkthrough/review.md (src/components/walkthrough-panel.tsx);
  * - tests/e2e/walkthrough.spec.ts drives each flow in a real browser and takes
  *   a screenshot after every step;
  * - scripts/walkthrough.ts turns those screenshots into walkthrough/index.html,
  *   a page anyone can click through without running the app
  *   (`npm run walkthrough:shots`, and a CI artifact on every run);
- * - flows.test.ts fails when a page exists that no flow visits.
+ * - flows.test.ts fails when a page exists that no flow visits, or a flow is
+ *   in no chapter of the tour.
  *
  * Building a flow means adding it here in the same change. Write `tell` and
  * `see` for the person doing the review, not for a developer: what they tap,
@@ -98,6 +102,60 @@ export const FLOWS: Flow[] = [
     ],
   },
 ];
+
+export interface Chapter {
+  title: string;
+  /** Who the reviewer is in this chapter (a role and a situation). */
+  as: string;
+  /** Sets the scene: what they are trying to do, and why, in a sentence or two. */
+  story: string;
+  /** Flow ids, in the order a real person would hit them. */
+  flows: string[];
+}
+
+export interface Tour {
+  /** Read first: what the reviewer is about to do and how long it takes. */
+  intro: string;
+  /** The app's whole life story, in order. Every flow belongs to exactly one chapter. */
+  chapters: Chapter[];
+  /** After the last chapter: questions about the app as a whole. */
+  explore: string[];
+}
+
+export const TOUR: Tour = {
+  intro:
+    'You are about to use {{APP_NAME}} start to finish, the way a real person would. Each chapter tells you who you are and what you are trying to do. Do it in the app itself, and say when something works, when it does not, and when it feels wrong. It takes about ten minutes.',
+  chapters: [
+    {
+      title: 'First visit',
+      as: 'Someone opening the workspace for the first time',
+      story: 'Your team keeps its notes here. You open it to write down something from today.',
+      flows: ['add-a-note'],
+    },
+    {
+      title: 'In a hurry',
+      as: 'The same person, a few days later, rushing',
+      story: 'Between meetings, you go to add a note and press the button before typing anything.',
+      flows: ['empty-form'],
+    },
+  ],
+  explore: [
+    'Now use the app freely for a few minutes, as you would on a normal day. Go anywhere.',
+    'What was confusing, slow, or harder than it should be?',
+    'What did you expect to find that is not here?',
+    'Would you come back to it tomorrow? Why or why not?',
+  ],
+};
+
+/** The tour as one ordered list of flows, each with its chapter's index. */
+export function tourSequence(tour: Tour = TOUR, flows: readonly Flow[] = FLOWS): { chapter: number; flow: Flow }[] {
+  return tour.chapters.flatMap((chapter, i) =>
+    chapter.flows.flatMap((id) => {
+      const flow = flows.find((f) => f.id === id);
+      return flow ? [{ chapter: i, flow }] : [];
+    }),
+  );
+}
 
 /** Every path any flow opens. */
 export function visitedPaths(flows: readonly Flow[] = FLOWS): Set<string> {

@@ -118,8 +118,10 @@ blueprint file stamping is Phase-1 work — selected blueprints are recorded in 
 ## Walkthrough (a human clicks through every flow)
 
 Stamped projects keep every user flow in `src/flows/flows.ts`, in plain words: who takes it, each
-step as what to do and what should happen, and edge cases to try. `npm run walkthrough` starts the
-real app on realistic dev data with a guide panel: the reviewer uses the actual screens, marks each
+step as what to do and what should happen, and edge cases to try, plus a `TOUR` that tells the whole
+app as one story in chapters. `npm run walkthrough` starts the real app on realistic dev data with a
+guide panel: "Tour the whole app" goes chapter by chapter and ends with free exploration and overall
+impressions, and "Check one feature" runs one flow. The reviewer uses the actual screens, marks each
 step "Works" or "Something's off", tries to break each flow, and notes anything else from any page.
 The review is saved to `walkthrough/review.md` for the builder to act on. For people who won't run
 the app, `npm run walkthrough:shots` makes the same flows into one page of screenshots (CI uploads

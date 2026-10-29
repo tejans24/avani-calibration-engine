@@ -51,9 +51,9 @@ The `notes` service is the exemplar: copy its shape (interface + implementation 
 
 ## Walking someone through the app
 
-Every flow lives once in `src/flows/flows.ts`: who takes it, each step as what to do and what should happen, and edge cases to try. Adding a page or flow means adding it there in the same change (`npm test` fails if a page is in no flow).
+Every flow lives once in `src/flows/flows.ts`: who takes it, each step as what to do and what should happen, and edge cases to try. `TOUR` in the same file tells the whole app as one story, in chapters (who you are, what you're trying to do), ending with free exploration. Adding a page or flow means adding it there in the same change: `npm test` fails if a page is in no flow, or a flow is in no chapter.
 
-`npm run walkthrough` starts the real app on the dev seed (realistic, messy data; `npm run db:reset` first for a fresh copy) with a guide panel on every page. The reviewer uses the actual screens: the panel says what to do and what should happen, outlines what to press, and asks them to mark each step "Works" or "Something's off". After each flow it asks them to try to break it (the flow's edge cases, plus anything they think of), and "Noticed something else?" takes a note from any page. Their review is saved to `walkthrough/review.md` as they go, for whoever is building to act on.
+`npm run walkthrough` starts the real app on the dev seed (realistic, messy data; `npm run db:reset` first for a fresh copy) with a guide panel on every page. "Tour the whole app" goes chapter by chapter through the entire app, then asks the reviewer to explore freely and say how the whole thing felt. "Check one feature" runs a single flow. Either way the reviewer uses the actual screens: the panel says what to do and what should happen, outlines what to press, and asks them to mark each step "Works" or "Something's off". After each flow it asks them to try to break it (the flow's edge cases, plus anything they think of), and "Noticed something else?" takes a note from any page. Their review is saved to `walkthrough/review.md` as they go, for whoever is building to act on.
 
 The panel only appears with `WALKTHROUGH=on` and `AVANI_STAGE` set to `dev` or `staging`, never in production. On a deployed staging app, reviews can't be written to disk, so the panel offers "Copy my review" instead.
 

@@ -2,7 +2,7 @@ import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@c
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { WalkthroughPanel } from '@/components/walkthrough-panel';
-import { FLOWS } from '@/flows/flows';
+import { FLOWS, TOUR } from '@/flows/flows';
 import { clerkConfigured } from '@/lib/auth';
 import { walkthroughProblem } from '@/lib/walkthrough';
 import './globals.css';
@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           ) : null}
         </header>
         <main>{children}</main>
-        {walkthroughProblem() === null ? <WalkthroughPanel flows={FLOWS} /> : null}
+        {walkthroughProblem() === null ? <WalkthroughPanel flows={FLOWS} tour={TOUR} /> : null}
       </body>
     </html>
   );

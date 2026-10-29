@@ -9,6 +9,7 @@ const ReviewSchema = z.object({
   marks: z.record(z.string(), z.object({ verdict: z.enum(['works', 'off']).optional(), note: z.string().max(5000).optional() })),
   found: z.record(z.string(), z.string().max(5000)),
   extra: z.array(z.object({ path: z.string().max(500), note: z.string().max(5000) })).max(200),
+  overall: z.string().max(20000).default(''),
 });
 
 // Saves the reviewer's walkthrough to walkthrough/review.md (+ .json) so the

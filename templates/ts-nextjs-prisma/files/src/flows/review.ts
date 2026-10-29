@@ -14,9 +14,11 @@ export interface Review {
   found: Record<string, string>;
   /** Anything else, noted wherever they were in the app. */
   extra: { path: string; note: string }[];
+  /** How the whole app felt, written after the tour's last chapter. */
+  overall: string;
 }
 
-export const emptyReview = (): Review => ({ marks: {}, found: {}, extra: [] });
+export const emptyReview = (): Review => ({ marks: {}, found: {}, extra: [], overall: '' });
 
 export const stepKey = (flowId: string, step: number) => `${flowId}:${step}`;
 
@@ -33,6 +35,8 @@ export function progress(flows: readonly Flow[], review: Review): { checked: num
 export function reviewMarkdown(flows: readonly Flow[], review: Review): string {
   const { checked, total, off } = progress(flows, review);
   const lines = [`# Walkthrough review`, '', `${checked} of ${total} steps checked, ${off} off.`, ''];
+  const overall = review.overall.trim();
+  if (overall) lines.push('## Overall impressions', '', overall, '');
   for (const flow of flows) {
     const items = flow.steps.flatMap((step, i) => {
       const mark = review.marks[stepKey(flow.id, i + 1)];
@@ -44,6 +48,6 @@ export function reviewMarkdown(flows: readonly Flow[], review: Review): string {
   }
   const extra = review.extra.filter((e) => e.note.trim());
   if (extra.length) lines.push('## Also noticed', '', ...extra.map((e) => `- On ${e.path}: ${e.note.trim()}`), '');
-  if (!off && !extra.length && !Object.values(review.found).some((f) => f.trim())) lines.push('Nothing to fix so far.', '');
+  if (!off && !extra.length && !overall && !Object.values(review.found).some((f) => f.trim())) lines.push('Nothing to fix so far.', '');
   return lines.join('\n');
 }

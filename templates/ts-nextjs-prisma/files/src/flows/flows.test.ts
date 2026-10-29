@@ -1,7 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { FLOWS, visitedPaths } from './flows';
+import { FLOWS, TOUR, visitedPaths } from './flows';
 
 const APP = join(process.cwd(), 'src', 'app');
 
@@ -34,6 +34,14 @@ describe('flows', () => {
   test('flow ids are unique and every flow starts by opening a page', () => {
     expect(new Set(FLOWS.map((f) => f.id)).size).toBe(FLOWS.length);
     for (const flow of FLOWS) expect(flow.steps[0]?.action, flow.id).toHaveProperty('goto');
+  });
+
+  test('the tour covers the whole app: every flow in exactly one chapter, no unknown flows', () => {
+    const inTour = TOUR.chapters.flatMap((c) => c.flows);
+    expect(inTour.filter((id) => !FLOWS.some((f) => f.id === id)), 'unknown flow ids in TOUR').toEqual([]);
+    for (const flow of FLOWS) {
+      expect(inTour.filter((id) => id === flow.id).length, `${flow.id} must be in exactly one chapter of TOUR`).toBe(1);
+    }
   });
 
   test('every step tells the reviewer what to do and what to expect', () => {

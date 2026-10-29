@@ -3,23 +3,29 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import type { Flow, FlowAction } from '@/flows/flows';
+import { tourSequence, type Flow, type FlowAction, type Tour } from '@/flows/flows';
 import { emptyReview, progress, reviewMarkdown, stepKey, type Review, type Verdict } from '@/flows/review';
 
-// The live walkthrough: a guide panel over the real app. It walks a reviewer
-// through every flow in src/flows/flows.ts, outlines what to press, asks them to
-// try to break each flow, and saves their review (walkthrough/review.md via
-// /api/walkthrough). Mounted by the root layout only when walkthroughProblem()
-// is null — never in production.
+// The live walkthrough: a guide panel over the real app. Two modes:
+//  - tour: the whole app as one story (TOUR in src/flows/flows.ts), chapter by
+//    chapter, then free exploration and "how did the whole thing feel?";
+//  - one feature: a single flow, for checking something just built.
+// Either way it outlines what to press, asks the reviewer to try to break each
+// flow, and saves their review (walkthrough/review.md via /api/walkthrough).
+// Mounted by the root layout only when walkthroughProblem() is null — never in
+// production.
 
-type Phase = 'steps' | 'break' | 'done';
+type Phase = 'intro' | 'chapter' | 'steps' | 'break' | 'explore' | 'done';
 interface Position {
-  flow: number;
+  mode: 'tour' | 'feature';
+  /** Index into the tour sequence (tour mode) or into flows (feature mode). */
+  at: number;
   step: number;
   phase: Phase;
 }
 
-const POSITION = 'walkthrough:position';
+const START: Position = { mode: 'tour', at: 0, step: 0, phase: 'intro' };
+const POSITION = 'walkthrough:position:v2';
 const REVIEW = 'walkthrough:review';
 const OUTLINE = '3px dashed #d97706';
 
@@ -58,11 +64,11 @@ const button = 'rounded border border-neutral-400 px-3 py-1 aria-pressed:bg-neut
 const primary = 'rounded bg-neutral-900 px-3 py-1 text-white disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900';
 const field = 'mt-1 block w-full rounded border border-neutral-300 p-2 dark:border-neutral-700 dark:bg-neutral-900';
 
-export function WalkthroughPanel({ flows }: { flows: Flow[] }) {
+export function WalkthroughPanel({ flows, tour }: { flows: Flow[]; tour: Tour }) {
   const pathname = usePathname();
   const [ready, setReady] = useState(false);
   const [open, setOpen] = useState(true);
-  const [pos, setPos] = useState<Position>({ flow: 0, step: 0, phase: 'steps' });
+  const [pos, setPos] = useState<Position>(START);
   const [review, setReview] = useState<Review>(emptyReview);
   const [saved, setSaved] = useState<'idle' | 'saved' | 'copy'>('idle');
   const [extraNote, setExtraNote] = useState('');
@@ -71,7 +77,7 @@ export function WalkthroughPanel({ flows }: { flows: Flow[] }) {
   const panel = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    setPos(load(POSITION, { flow: 0, step: 0, phase: 'steps' }));
+    setPos(load(POSITION, START));
     setReview(load(REVIEW, emptyReview()));
     setReady(true);
   }, []);
@@ -127,7 +133,10 @@ export function WalkthroughPanel({ flows }: { flows: Flow[] }) {
     };
   }, [ready]);
 
-  const flow = flows[pos.flow] ?? flows[0];
+  const sequence = tourSequence(tour, flows);
+  const here = pos.mode === 'tour' ? sequence[pos.at] : undefined;
+  const flow = pos.mode === 'tour' ? here?.flow : flows[pos.at];
+  const chapter = here ? tour.chapters[here.chapter] : undefined;
   const step = pos.phase === 'steps' ? flow?.steps[pos.step] : undefined;
 
   // Outline what the step is about; re-found as the page changes under it.
@@ -159,19 +168,42 @@ export function WalkthroughPanel({ flows }: { flows: Flow[] }) {
   const mark = review.marks[key] ?? {};
   const setMark = (patch: { verdict?: Verdict; note?: string }) =>
     setReview((r) => ({ ...r, marks: { ...r.marks, [key]: { ...r.marks[key], ...patch } } }));
-  const isLastFlow = pos.flow === flows.length - 1;
+  const startsChapter = (at: number) => at === 0 || sequence[at]?.chapter !== sequence[at - 1]?.chapter;
+  const lastStepOf = (at: number) => Math.max(0, (sequence[at]?.flow.steps.length ?? 1) - 1);
   const next = () =>
-    setPos((p) =>
-      p.phase === 'steps'
-        ? p.step + 1 < flow.steps.length
-          ? { ...p, step: p.step + 1 }
-          : { ...p, phase: 'break' }
-        : isLastFlow
-          ? { ...p, phase: 'done' }
-          : { flow: p.flow + 1, step: 0, phase: 'steps' },
-    );
+    setPos((p): Position => {
+      switch (p.phase) {
+        case 'intro':
+          return { ...p, at: 0, step: 0, phase: 'chapter' };
+        case 'chapter':
+          return { ...p, step: 0, phase: 'steps' };
+        case 'steps':
+          return p.step + 1 < flow.steps.length ? { ...p, step: p.step + 1 } : { ...p, phase: 'break' };
+        case 'break':
+          if (p.mode === 'feature') return { ...p, phase: 'done' };
+          if (p.at + 1 >= sequence.length) return { ...p, phase: 'explore' };
+          return { ...p, at: p.at + 1, step: 0, phase: startsChapter(p.at + 1) ? 'chapter' : 'steps' };
+        default:
+          return { ...p, phase: 'done' };
+      }
+    });
   const back = () =>
-    setPos((p) => (p.phase === 'break' ? { ...p, phase: 'steps', step: flow.steps.length - 1 } : { ...p, step: Math.max(0, p.step - 1) }));
+    setPos((p): Position => {
+      switch (p.phase) {
+        case 'chapter':
+          return p.at === 0 ? { ...p, phase: 'intro' } : { ...p, at: p.at - 1, phase: 'break' };
+        case 'steps':
+          if (p.step > 0) return { ...p, step: p.step - 1 };
+          if (p.mode === 'feature') return p;
+          return startsChapter(p.at) ? { ...p, phase: 'chapter' } : { ...p, at: p.at - 1, phase: 'break' };
+        case 'break':
+          return { ...p, phase: 'steps', step: p.mode === 'tour' ? lastStepOf(p.at) : flow.steps.length - 1 };
+        case 'explore':
+          return { ...p, at: sequence.length - 1, phase: 'break' };
+        default:
+          return p;
+      }
+    });
   const copy = () => navigator.clipboard?.writeText(reviewMarkdown(flows, review)).catch(() => undefined);
 
   return (
@@ -193,26 +225,68 @@ export function WalkthroughPanel({ flows }: { flows: Flow[] }) {
 
       {open ? (
         <div className="mt-3 space-y-3">
-          <div>
-            <label htmlFor="walkthrough-flow" className="block text-sm font-medium">
-              Flow {pos.flow + 1} of {flows.length}
-            </label>
-            <select
-              id="walkthrough-flow"
-              className={field}
-              value={pos.flow}
-              onChange={(e) => setPos({ flow: Number(e.target.value), step: 0, phase: 'steps' })}
+          <div className="flex gap-2" role="group" aria-label="What to walk through">
+            <button type="button" className={button} aria-pressed={pos.mode === 'tour'} onClick={() => setPos(START)}>
+              Tour the whole app
+            </button>
+            <button
+              type="button"
+              className={button}
+              aria-pressed={pos.mode === 'feature'}
+              onClick={() => setPos({ mode: 'feature', at: 0, step: 0, phase: 'steps' })}
             >
-              {flows.map((f, i) => (
-                <option key={f.id} value={i}>
-                  {f.title}
-                </option>
-              ))}
-            </select>
-            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-              {flow.who} · {flow.why}
-            </p>
+              Check one feature
+            </button>
           </div>
+
+          {pos.mode === 'feature' ? (
+            <div>
+              <label htmlFor="walkthrough-flow" className="block text-sm font-medium">
+                Feature
+              </label>
+              <select
+                id="walkthrough-flow"
+                className={field}
+                value={pos.at}
+                onChange={(e) => setPos({ mode: 'feature', at: Number(e.target.value), step: 0, phase: 'steps' })}
+              >
+                {flows.map((f, i) => (
+                  <option key={f.id} value={i}>
+                    {f.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
+
+          {pos.phase === 'intro' ? (
+            <div className="space-y-2">
+              <p>{tour.intro}</p>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                {tour.chapters.length} chapters, {sequence.length} flows, then time to explore on your own.
+              </p>
+            </div>
+          ) : null}
+
+          {pos.phase === 'chapter' && chapter && here ? (
+            <div className="space-y-2">
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                Chapter {here.chapter + 1} of {tour.chapters.length}
+              </p>
+              <p className="text-lg font-semibold">{chapter.title}</p>
+              <p>
+                <strong>You are:</strong> {chapter.as}
+              </p>
+              <p>{chapter.story}</p>
+            </div>
+          ) : null}
+
+          {pos.phase === 'steps' || pos.phase === 'break' ? (
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              {chapter && here ? `Chapter ${here.chapter + 1}: ${chapter.title} · ` : ''}
+              <strong>{flow.title}</strong> · {flow.who}
+            </p>
+          ) : null}
 
           {step ? (
             <div className="space-y-2">
@@ -273,28 +347,65 @@ export function WalkthroughPanel({ flows }: { flows: Flow[] }) {
             </div>
           ) : null}
 
+          {pos.phase === 'explore' ? (
+            <div className="space-y-2">
+              <p>
+                <strong>That&apos;s the whole story.</strong> Last part: the app as a whole.
+              </p>
+              <ul className="list-disc pl-5">
+                {tour.explore.map((q) => (
+                  <li key={q}>{q}</li>
+                ))}
+              </ul>
+              <label htmlFor="walkthrough-overall" className="block text-sm font-medium">
+                How did the whole app feel?
+              </label>
+              <textarea
+                id="walkthrough-overall"
+                rows={5}
+                className={field}
+                value={review.overall}
+                onChange={(e) => setReview((r) => ({ ...r, overall: e.target.value }))}
+              />
+            </div>
+          ) : null}
+
           {pos.phase === 'done' ? (
             <div className="space-y-2">
               <p>
-                <strong>That&apos;s every flow.</strong> {off ? `${off} steps are off.` : 'Nothing marked off.'}{' '}
+                <strong>{pos.mode === 'tour' ? 'Thank you, that was the whole app.' : 'That feature is done.'}</strong> {off ? `${off} steps are off.` : 'Nothing marked off.'}{' '}
                 {saved === 'copy' ? 'Copy your review and send it to whoever is building.' : 'Your review is saved for the builder.'}
               </p>
               <div className="flex gap-2">
                 <button type="button" className={primary} onClick={copy}>
                   Copy my review
                 </button>
-                <button type="button" className={button} onClick={() => setPos({ flow: 0, step: 0, phase: 'steps' })}>
-                  Start over
+                <button type="button" className={button} onClick={() => setPos(START)}>
+                  Tour the whole app
                 </button>
               </div>
             </div>
           ) : (
             <div className="flex gap-2">
-              <button type="button" className={button} onClick={back} disabled={pos.phase === 'steps' && pos.step === 0}>
+              <button
+                type="button"
+                className={button}
+                onClick={back}
+                disabled={pos.phase === 'intro' || (pos.mode === 'feature' && pos.phase === 'steps' && pos.step === 0)}
+              >
                 Back
               </button>
               <button type="button" className={primary} onClick={next} disabled={pos.phase === 'steps' && !mark.verdict}>
-                {pos.phase === 'steps' ? 'Next' : isLastFlow ? 'Finish' : 'Next flow'}
+                {
+                  {
+                    intro: 'Start the tour',
+                    chapter: 'Begin',
+                    steps: 'Next',
+                    break: pos.mode === 'feature' ? 'Finish' : pos.at + 1 >= sequence.length ? 'On to the last part' : 'Next',
+                    explore: 'Finish',
+                    done: '',
+                  }[pos.phase]
+                }
               </button>
             </div>
           )}
