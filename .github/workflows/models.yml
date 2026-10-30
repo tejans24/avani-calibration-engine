@@ -1,0 +1,55 @@
+# Daily: is the model map (engine/src/routing/model-map.ts) still current?
+# Projects never wait on this: their tiers use family aliases, which already
+# point at the newest model in each family. This keeps the record honest and
+# puts the one human decision (should a route move?) in front of someone the
+# day a model is available, not when it is announced.
+#
+#  - a newer model in a routed family -> one pull request ("models: …")
+#    updating the record and REVIEWED_ON; merging it is the review
+#  - a family nobody has decided about, a recorded model the API no longer
+#    lists, or an overdue review -> the run goes red with the report
+#
+# Needs the ANTHROPIC_API_KEY repository secret; without it only the review
+# age is checked.
+name: models
+
+on:
+  schedule:
+    - cron: '17 6 * * *' # daily, 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - id: check
+        run: npm run models:check -- --write --report "$RUNNER_TEMP/models-report.md"
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # Proves the rewritten map still compiles and every routing test passes
+      # before anyone is asked to merge it.
+      - if: steps.check.outputs.changed == 'yes'
+        run: npm run typecheck && npm test
+      - if: steps.check.outputs.changed == 'yes'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: models/refresh
+          title: 'models: new models in routed families'
+          commit-message: 'models: record the newest model in each routed family'
+          body-path: ${{ runner.temp }}/models-report.md
+          add-paths: engine/src/routing/model-map.ts
+      - if: steps.check.outputs.attention == 'yes'
+        run: |
+          cat "$RUNNER_TEMP/models-report.md"
+          echo "::error::The model map needs a decision; see the report above."
+          exit 1

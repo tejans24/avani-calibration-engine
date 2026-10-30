@@ -151,8 +151,11 @@ Generated projects get it as `.avani/routing-policy.json`.
 npm run models:check     # compares the map with the live Models API (needs ANTHROPIC_API_KEY)
 ```
 
-CI runs it weekly. It fails when a routed family has a newer model than the map records, or the map
-hasn't been reviewed in 90 days — the prompt to re-check whether the routes still hold.
+`.github/workflows/models.yml` runs it daily. A newer model in a routed family opens one pull request
+updating the record, with the routes listed and the one question to answer before merging: should any
+route move? A family nobody has decided about (neither routed nor in `UNROUTED_FAMILIES`), a recorded
+model the API no longer lists, or a review older than 90 days turns the run red with the report. It needs
+the `ANTHROPIC_API_KEY` repository secret; without it only the review age is checked.
 
 ## Roadmap
 

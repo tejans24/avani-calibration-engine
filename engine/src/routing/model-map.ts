@@ -10,10 +10,15 @@
  *    resolves an alias to the newest model in that family, so a new release
  *    reaches every generated project with no edit here and no regeneration.
  * 3. `current` + REVIEWED_ON — the model each alias resolved to when a human
- *    last looked. Informational only: nothing routes on it. `npm run
- *    models:check` (weekly in CI) compares it to the live Models API and fails
- *    when a newer model ships or the review is older than REVIEW_EVERY_DAYS —
- *    that red run is the prompt to re-check the routes, not just the names.
+ *    last looked. Informational only: nothing routes on it.
+ *
+ * `npm run models:check` (daily, .github/workflows/models.yml) compares the
+ * map with the live Models API. When a routed family has a newer model it
+ * opens a pull request updating `current` and REVIEWED_ON; merging it is the
+ * review, so its description asks the one human question: should any route
+ * move? It also reports a family nobody has decided about yet (not routed,
+ * not in UNROUTED_FAMILIES), a recorded model the API no longer lists, and a
+ * review older than REVIEW_EVERY_DAYS.
  */
 
 export const TIER_NAMES = ['frontier', 'standard', 'fast'] as const;
@@ -70,6 +75,15 @@ export const WORK_ROUTES = {
 } as const satisfies Record<string, WorkRoute>;
 export type WorkKind = keyof typeof WORK_ROUTES;
 
+/**
+ * Families the API lists that no tier routes to, on purpose, with why. A
+ * family in neither TIERS nor here is new, and the check asks for a decision.
+ */
+export const UNROUTED_FAMILIES: Record<string, string> = {
+  fable: 'Most capable, priced above Opus; route to it only by a deliberate decision for a named kind of work.',
+  mythos: 'Available only through an access program.',
+};
+
 /** When `current` was last checked against the live Models API by a human. */
 export const REVIEWED_ON = '2026-10-29';
 export const REVIEW_EVERY_DAYS = 90;
@@ -89,10 +103,44 @@ export interface Drift {
   newest: string;
 }
 
+/** Any family name in a model id (`claude-fable-5-1` -> `fable`), routed or not. */
+export function rawFamily(id: string): string | null {
+  return /^claude-([a-z]+)-/.exec(id)?.[1] ?? null;
+}
+
 /** Family of a model id (`claude-opus-5-5` -> `opus`), or null for families we don't route to. */
 export function familyOf(id: string): Family | null {
-  const m = /^claude-([a-z]+)-/.exec(id);
-  return m && (FAMILIES as readonly string[]).includes(m[1]!) ? (m[1] as Family) : null;
+  const f = rawFamily(id);
+  return f && (FAMILIES as readonly string[]).includes(f) ? (f as Family) : null;
+}
+
+/** Families the API lists that are neither routed nor deliberately left out: each needs a decision. */
+export function findNewFamilies(live: readonly LiveModel[], unrouted: Record<string, string> = UNROUTED_FAMILIES): string[] {
+  const seen = new Set(live.flatMap((m) => rawFamily(m.id) ?? []));
+  return [...seen].filter((f) => !(FAMILIES as readonly string[]).includes(f) && !(f in unrouted)).sort();
+}
+
+/** Tiers whose recorded model the API no longer lists (retired, or a typo). Aliases still work; anything pinned to the id would not. */
+export function findMissing(live: readonly LiveModel[], tiers: Record<Tier, TierSpec> = TIERS): Tier[] {
+  const ids = new Set(live.map((m) => m.id));
+  return TIER_NAMES.filter((tier) => !ids.has(tiers[tier].current));
+}
+
+/**
+ * This file's source with each drifted tier's `current` set to the newest
+ * model and REVIEWED_ON set to `today`. Text in, text out, so the daily job
+ * can open a pull request with exactly this diff.
+ */
+export function rewriteModelMap(source: string, drift: readonly Drift[], today: string, tiers: Record<Tier, TierSpec> = TIERS): string {
+  let out = source;
+  for (const d of drift) {
+    const re = new RegExp(`(alias: '${tiers[d.tier].alias}',\\s*current: ')[^']+(')`);
+    if (!re.test(out)) throw new Error(`model map: no current for the ${d.tier} tier to update`);
+    out = out.replace(re, `$1${d.newest}$2`);
+  }
+  const reviewed = /export const REVIEWED_ON = '[^']+';/;
+  if (!reviewed.test(out)) throw new Error('model map: no REVIEWED_ON to update');
+  return out.replace(reviewed, `export const REVIEWED_ON = '${today}';`);
 }
 
 /** Tiers whose family has a model newer than the one recorded as `current`. */
