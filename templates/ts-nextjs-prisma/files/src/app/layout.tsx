@@ -6,6 +6,7 @@ import { WalkthroughPanel } from '@/components/walkthrough-panel';
 import { FLOWS, TOUR } from '@/flows/flows';
 // avani:end
 import { clerkConfigured } from '@/lib/auth';
+import { currentTestLogin } from '@/lib/test-login';
 // avani:if walkthrough>=live
 import { walkthroughProblem } from '@/lib/walkthrough';
 // avani:end
@@ -17,12 +18,19 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  // Test login is never silent: whoever is signed in by it sees it on every page.
+  const testLogin = currentTestLogin();
   const page = (
     <html lang="en">
       <body className="mx-auto max-w-2xl p-4 font-sans leading-relaxed text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
+        {testLogin ? (
+          <p role="status" className="mb-4 rounded bg-amber-100 px-3 py-2 text-sm text-amber-950 dark:bg-amber-900/40 dark:text-amber-100">
+            Test login: everyone here is signed in as <strong>{testLogin.userId}</strong>. Local testing only.
+          </p>
+        ) : null}
         <header className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold">{{APP_NAME}}</h1>
-          {clerkConfigured ? (
+          {clerkConfigured && !testLogin ? (
             <nav aria-label="Account">
               <SignedOut>
                 <SignInButton mode="modal">

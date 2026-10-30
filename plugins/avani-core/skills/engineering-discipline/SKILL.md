@@ -69,6 +69,18 @@ A failing test is an instruction with a reproduction attached. **Never make a te
 - Every optional integration degrades quietly when its configuration is unset: the feature stays off, nothing crashes, no scary logs. Unset key → dormant feature is the contract.
 - A new env var ships with its full plumbing in the same change: the example env file, the CI/deploy secret sync, and the docs row. The owner's only manual step should be pasting the value into the secret store.
 
+## Test login (mocking sign-in safely)
+
+Every signed-in screen must be reachable without real credentials, both by the automated suite and by a human walking through the app. Otherwise the screens that matter most get the least testing. Mock **who** is signed in, never **what** they may do:
+
+- **One switch, one place.** A single setting (e.g. `TEST_LOGIN=on`, or a role name for that role's test user) read by the auth adapter and the middleware, nowhere else. Code above the adapter never knows a test login exists.
+- **Swap the identity, not the authorization.** The test user goes through the same membership, role and scoping code as a real one. A test login that skips a permission check tests nothing.
+- **Fail closed, and say why.** It is off unless explicitly asked for, and refuses wherever it could reach someone else or real data: anything but an explicit dev stage (an unset stage counts as no), a hosting platform's environment, or a database not on this machine. A refused switch logs one line with the reason.
+- **Never silent.** While it is on, every page shows it ("everyone here is signed in as test-owner").
+- **The absence of a provider is not a login.** With no auth keys and no test login, everyone is signed out. A fallback "dev user" that applies in every environment fails open the day a deploy forgets its keys.
+- **Test the gate itself**: on locally; off by default; refused in each forbidden setting. And check once, against the production build, that a refused switch really leaves everyone signed out.
+- **Test the production build.** Gate on the stage and the database, not only on dev-server mode, so the e2e suite can sign in against the build that actually ships, on a CI runner's own database.
+
 ## Definition of done
 
 1. Typecheck and lint pass.

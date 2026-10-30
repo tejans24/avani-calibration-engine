@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { requireUserId } from '@/lib/auth';
+import { NotSignedInError, requireUserId } from '@/lib/auth';
 import { getNoteService } from '@/lib/services';
 
 // Server boundary: parse happens inside the service (NoteInputSchema), so this
@@ -11,7 +11,8 @@ export async function createNoteAction(raw: unknown): Promise<{ ok: true } | { o
   try {
     await requireUserId();
     await getNoteService().createNote(raw);
-  } catch {
+  } catch (err) {
+    if (err instanceof NotSignedInError) return { ok: false, error: 'Sign in to add a note.' };
     return { ok: false, error: 'Could not save the note. Check the fields and try again.' };
   }
   revalidatePath('/');

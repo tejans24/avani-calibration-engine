@@ -25,6 +25,10 @@ In a stamped `ts-nextjs-prisma` project:
 - **Keep the whole-app tour a story.** The registry's tour puts every flow in exactly one chapter, in the order a real person would meet them. Each chapter says who the reviewer is (role and situation) and what they're trying to do, and the tour ends with open questions about the app as a whole. A new flow goes where it happens in that story, not at the end. The test fails if a flow is in no chapter.
 - **Checks keep it honest.** Give a step a `check` (text that must be on screen) whenever its outcome is visible. The automated run fails a flow that breaks rather than skipping it.
 
+## Signing in
+
+A reviewer must be able to take the whole tour, every role, without real accounts. Use the project's test login (see `avani-core:engineering-discipline`, "Test login"). Where the tour changes role, the chapter says who the reviewer is now and how to become them, for example by restarting with that role's test login, or by opening an emailed link. Never ask a reviewer to create a real account to test with.
+
 ## Realistic data
 
 The walkthrough runs on the dev seed, so the seed has to look like real use. A reviewer who sees lorem ipsum or three tidy rows stops reading the content and misses real problems.

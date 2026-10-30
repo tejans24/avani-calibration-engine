@@ -66,6 +66,9 @@ describe('blueprint stamping (ts-nextjs-prisma)', () => {
     expect(files['tests/e2e/walkthrough.spec.ts']).toBeDefined();
     expect(files['package.json']).toContain('"walkthrough"');
     expect(files['src/components/walkthrough-panel.tsx']).toBeDefined();
+    // test login: signed-in screens reachable without real credentials, fail-closed
+    expect(files['src/lib/test-login.ts']).toContain('testLoginProblem');
+    expect(files['.env.example']).toContain('TEST_LOGIN="on"');
     expect(files['src/app/layout.tsx']).toContain('walkthroughProblem() === null');
     expect(files['package.json']).toContain('db:migrate:deploy');
   });

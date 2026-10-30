@@ -8,6 +8,11 @@ test('home page renders the workspace', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 2, name: 'Notes' })).toBeVisible();
 });
 
+test('test login is on, and says so', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('status').filter({ hasText: 'Test login' })).toContainText('test-owner');
+});
+
 test('a note can be created through the form', async ({ page }) => {
   await page.goto('/');
   await page.getByLabel('Title').fill('From Playwright');

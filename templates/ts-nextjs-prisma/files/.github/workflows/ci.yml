@@ -56,6 +56,9 @@ jobs:
           --health-retries 15
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/app_dev?schema=public
+      # Signed-in screens without a real auth provider (src/lib/test-login.ts):
+      # the runner's own database, AVANI_STAGE=dev above, never Vercel.
+      TEST_LOGIN: 'on'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

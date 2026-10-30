@@ -13,7 +13,11 @@ That's it — `db:ready` bootstraps `.env`, the database container, migrations, 
 
 ## Auth (Clerk, pre-wired)
 
-Auth is **disabled until you add Clerk keys** to `.env` (see `.env.example`) — a fresh clone runs, and CI passes, without a Clerk account. With keys present, the middleware activates, the header shows sign-in/user controls, and `getCurrentUserId()` returns the real user.
+Who is signed in comes from `src/lib/auth.ts`, in this order:
+
+1. **Test login** (`TEST_LOGIN`, on in `.env.example`): everyone is signed in as a made-up user (`test-owner`, or `test-<role>` with `TEST_LOGIN="<role>"`), with an amber banner on every page saying so. It is how a fresh clone runs, how the e2e suite reaches signed-in screens, and how a human walks through the app. It refuses unless `AVANI_STAGE` is explicitly `dev` and `DATABASE_URL` is on this machine, and never runs on Vercel (`src/lib/test-login.ts`, unit-tested). It swaps who is signed in, never what they may do.
+2. **Clerk**, once its keys are in `.env`: the middleware activates and the header shows sign-in/user controls.
+3. **Nobody**: without Clerk keys or test login, everyone is signed out, so a deploy that forgot its keys signs nobody in.
 
 All auth flows through the adapter in `src/lib/auth.ts` — actions and services never import Clerk directly. Swapping providers later (including a custom auth with its own management dashboard) touches only `src/lib/auth.ts` and `src/middleware.ts`.
 

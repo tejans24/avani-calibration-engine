@@ -156,6 +156,8 @@ Structure up to the complexity boundary; human architect beyond it. **Codify-eve
 
 **Services are the task decomposition unit:** a roadmap task = "implement service X to satisfy contract Y; tests are acceptance criteria" — one session, self-verifying. Contracts-first enables parallelism: lead commits interfaces + mocks; workers implement in parallel; integration verifies the join.
 
+**Test login is infrastructure, not a hack.** Every signed-in screen must be reachable by the e2e suite and by a human reviewer without real credentials, through one fail-closed switch in the auth adapter: it swaps who is signed in, never what they may do; it refuses outside an explicit dev stage, on a hosting platform, or against a non-local database; it is visible on every page while on; and with no provider and no test login, nobody is signed in. Harvested from Sycamore's `TEST_ADMIN`; stamped in `ts-nextjs-prisma` as `TEST_LOGIN` (`avani-core:engineering-discipline` has the rules).
+
 **Anti-pattern (LLM-era):** green-by-weakening — agents "fixing" a failing test by softening the assertion. Rule: *fix the code, not the test; changing assertions is a declared decision, never a fix.* (Future: a hook that flags assertion-softening diffs.) Churn prevention: test behavior at the contract, not internals.
 
 **Real DB best practice:** ephemeral Postgres via testcontainers/compose (hermetic, codified); integration setup runs `prisma migrate deploy` from empty — **the migration path itself is continuously tested**; `migrate diff` drift check in CI; template-database + rollback-per-test for speed; CI ladder: unit → integration (service container) → e2e, fail cheap first. Invariants test at the tier where they live (append-only at DB tier, fuzzing at service tier).
