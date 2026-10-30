@@ -21,6 +21,10 @@ Who is signed in comes from `src/lib/auth.ts`, in this order:
 
 All auth flows through the adapter in `src/lib/auth.ts` — actions and services never import Clerk directly. Swapping providers later (including a custom auth with its own management dashboard) touches only `src/lib/auth.ts` and `src/middleware.ts`.
 
+## Monitoring
+
+The app writes one line of JSON per event to stdout (`src/lib/monitoring.ts`): every server error Next.js catches (`src/instrumentation.ts`) and anything reported with `reportError`. `GET /api/health` answers 200 when the database is reachable and 503 when it is not, for an uptime monitor. Wiring the alerts on Vercel or AWS, and who is told: [MONITORING.md](./MONITORING.md).
+
 ## Commands
 
 | Command | Does |

@@ -44,3 +44,12 @@ test('a11y invariant: 404 page is axe-clean', async ({ page }) => {
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
 });
+
+// Monitoring (MONITORING.md): the uptime check answers, and gives nothing away.
+test('health check reports the database up, with no error detail', async ({ request }) => {
+  const res = await request.get('/api/health');
+  expect(res.status()).toBe(200);
+  const body = await res.json();
+  expect(body).toMatchObject({ ok: true, database: 'ok' });
+  expect(Object.keys(body).sort()).toEqual(['build', 'database', 'ms', 'ok']);
+});

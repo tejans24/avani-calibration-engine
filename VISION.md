@@ -187,7 +187,8 @@ The engine also generates the *plan for building* and the *compute policy for ex
 3. **Shadow-DB verification:** apply migration + backfill to a production-shaped shadow DB, then **run the invariant suite against post-migration state** — a migration cannot pass CI if it violates append-only or uniqueness. Guarantees survive schema evolution by construction.
 4. **Human gate = native GitHub Environments** required-reviewer on dangerous prod migrations — the Ask tier as a literal pipeline pause, checklist attached (backup? backfill verified? plan?). No custom tooling.
 5. **Disciplines stated outright:** migrations run *before* app deploy (expand-phase compatible with old code = zero-downtime ordering); **forward-only** (a down-migration that pretends to un-backfill data is a lie; roll forward).
-6. **Gates arm at the stage flip only** — never leak into dev; pre-launch speed is the point.
+6. **Monitoring is part of the launch gate.** Production promotion requires server errors as a signal, a health endpoint behind an outside uptime monitor, a heartbeat per scheduled job, and an owner and first step for every alert (`avani-core:monitoring`; stamped as `src/lib/monitoring.ts`, `src/instrumentation.ts`, `/api/health`, `MONITORING.md`). The app emits structured signals; the host alerts on them, so the choice of host (Vercel, AWS) never changes the code.
+7. **Gates arm at the stage flip only** — never leak into dev; pre-launch speed is the point.
 
 Launch = `calibrate stage promote`: a one-time recorded transition that swaps the fast-loop pipeline for the gated one — fleet-wide, because the blueprint stamps the same pipeline everywhere.
 
@@ -299,6 +300,12 @@ Built: schema/contracts, selection map (DAG + viz), calibration, generate layer,
 | **L** | **Fleet ops** — conformance/drift check, fleet queries, patch playbooks (§16) — *only once a fleet exists* | B3 shipped projects |
 | **M** | **Learning loop** — decisions.jsonl, retro, override-rate | F |
 | **N** | **AWS/CDK deep support** — harvest-driven | C |
+| **P** | **Fleet sync** (`calibrate sync`) — re-stamp engine-owned files into existing projects as a reviewed diff, so fixes (the test-login fail-open, monitoring) reach every project, not only new ones. **Next.** | B3 |
+| **Q** | **Process metrics** — per task: tier, redo, cost; per review: issues found; per release: escaped bugs. Feeds the learning loop (M) and the model routes | H |
+| **R** | **Monitoring v2** — browser errors, job heartbeats in the blueprint, an optional error-tracker adapter, launch gate enforced by `stage promote`. v1 built: signals, error hook, `/api/health`, MONITORING.md | J |
+| **S** | **Security & privacy pass at planning** — a short threat/privacy review for anything touching auth, personal data, payments or public pages, before it is built | F |
+| **T** | **Decision rights** — `PRINCIPLES.md` product filter from intake, and the list of decisions that are the owner's (direction, routes, scope, launch) | F |
+| **U** | **Process weight dial** — planning depth (brief, definition of ready, plan review) scaled per project like the walkthrough dial; none of it for a prototype | C |
 | **O** | **Walkthrough v2** — comment on the screen (pin a note to an element, Vercel-toolbar style, collected into one list), a scenario per tour chapter (e.g. "First visit" starts empty), roles in flows, per-person access so the tour can run on a live app (reviewer invites, sandboxed tour data, reviews stored in the database). v1 built: flow registry + tour, live guided panel, screenshot page, `walkthrough` dial, realistic seed | B3 |
 
 **Sequencing:** **A → B2 → B3 is the MVP** — build it, use it on a real project, let reality correct it. Then C→D→E→F (the decision core / moat), then the rest as pulled by need. Capture-then-build; depth is vertical now, not horizontal.
